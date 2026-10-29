@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/message_bus_service.dart';
+import 'package:cfbrowser/services/message_bus_service.dart';
 
 void main() {
   group('MessageBusService.extractNextChunkForTest', () {

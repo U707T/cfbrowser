@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/connect_stats.dart';
+import 'package:cfbrowser/models/connect_stats.dart';
 
 void main() {
   group('ConnectStats.fromHtml', () {

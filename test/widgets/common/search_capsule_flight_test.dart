@@ -2,9 +2,9 @@ import 'package:app_icons/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/widgets/common/search_capsule.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/widgets/common/search_capsule.dart';
 
 /// 搜索胶囊 Hero shuttle:插值飞行体在中途帧必须同时携带两端要素
 /// (图标渐隐+双 hint 交叉),起飞/落地帧与两端真实视觉一致,不再是

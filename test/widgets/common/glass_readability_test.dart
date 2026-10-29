@@ -6,8 +6,8 @@ import 'package:common_ui/common_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_island.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_object_surface.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_island.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_object_surface.dart';
 
 const recipes = [
   GlassRecipe.navigation,

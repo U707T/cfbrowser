@@ -3,10 +3,10 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/media_transcoder/ffmpeg_process_transcoder.dart';
-import 'package:fluxdo/services/media_transcoder/media_compressor.dart';
-import 'package:fluxdo/services/media_transcoder/media_transcoder.dart';
-import 'package:fluxdo/services/uploads/media_upload_limits.dart';
+import 'package:cfbrowser/services/media_transcoder/ffmpeg_process_transcoder.dart';
+import 'package:cfbrowser/services/media_transcoder/media_compressor.dart';
+import 'package:cfbrowser/services/media_transcoder/media_transcoder.dart';
+import 'package:cfbrowser/services/uploads/media_upload_limits.dart';
 
 void main() {
   test('媒体使用站点附件上限，不再固定4MiB', () {

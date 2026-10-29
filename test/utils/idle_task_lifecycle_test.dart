@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/idle_task.dart';
-import 'package:fluxdo/widgets/topic/topic_card_prewarmer.dart';
+import 'package:cfbrowser/utils/idle_task.dart';
+import 'package:cfbrowser/widgets/topic/topic_card_prewarmer.dart';
 
 void main() {
   testWidgets('取消空闲任务立即清除计时器且不会执行', (tester) async {

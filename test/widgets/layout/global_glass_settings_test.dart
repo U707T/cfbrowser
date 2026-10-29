@@ -4,11 +4,11 @@ import 'package:common_ui/common_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/providers/preferences_provider.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/widgets/common/app_glass_settings.dart';
-import 'package:fluxdo/widgets/layout/adaptive_navigation.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_island.dart';
+import 'package:cfbrowser/providers/preferences_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/widgets/common/app_glass_settings.dart';
+import 'package:cfbrowser/widgets/layout/adaptive_navigation.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_island.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/theme/mojian_theme.dart';
+import 'package:cfbrowser/theme/mojian_theme.dart';
 import 'package:m3e_ui/m3e_ui.dart';
 
 ThemeData _mojian() => MojianTheme.build(

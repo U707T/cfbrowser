@@ -3,13 +3,13 @@ import 'package:app_icons/app_icons.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/app_localizations.dart';
-import 'package:fluxdo/models/emoji.dart';
-import 'package:fluxdo/providers/emoji_provider.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/utils/emoji_shortcodes.dart';
-import 'package:fluxdo/widgets/post/post_boost/boost_input.dart';
+import 'package:cfbrowser/l10n/app_localizations.dart';
+import 'package:cfbrowser/models/emoji.dart';
+import 'package:cfbrowser/providers/emoji_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/utils/emoji_shortcodes.dart';
+import 'package:cfbrowser/widgets/post/post_boost/boost_input.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

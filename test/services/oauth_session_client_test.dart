@@ -4,9 +4,9 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/auth_session.dart';
-import 'package:fluxdo/services/network/exceptions/oauth_exception.dart';
-import 'package:fluxdo/services/oauth_session_client.dart';
+import 'package:cfbrowser/services/auth_session.dart';
+import 'package:cfbrowser/services/network/exceptions/oauth_exception.dart';
+import 'package:cfbrowser/services/oauth_session_client.dart';
 
 // 取自上游 v0.2.29。业务 Cookie 轮换/有效期的几条用例依赖上游的 CookieJar
 // 测试平台，cfluxdo 的 Cookie 同步是另一套，这里只保留会话读取策略的用例。

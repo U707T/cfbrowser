@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/semantic_recovery_store.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/semantic_recovery_store.dart';
 import 'package:fluxdo_render/semantic_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

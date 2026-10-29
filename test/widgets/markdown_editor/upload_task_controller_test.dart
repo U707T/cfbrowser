@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:fluxdo/l10n/s.dart';
+import 'package:cfbrowser/l10n/s.dart';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:fluxdo/widgets/markdown_editor/uploads/upload_task_panel.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
-import 'package:fluxdo/widgets/markdown_editor/uploads/task_controller.dart';
+import 'package:cfbrowser/widgets/markdown_editor/uploads/upload_task_panel.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/widgets/markdown_editor/uploads/task_controller.dart';
 
 UploadResult result() =>
     UploadResult(shortUrl: 'upload://example', originalFilename: '图片.png');

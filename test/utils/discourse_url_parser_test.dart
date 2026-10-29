@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/discourse_url_parser.dart';
+import 'package:cfbrowser/utils/discourse_url_parser.dart';
 
 void main() {
   group('平行视界左栏链接解析', () {

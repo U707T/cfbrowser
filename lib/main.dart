@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:native_animated_image/native_animated_image.dart'
     show NativeAnimatedImageProvider;
 import 'pages/appearance_page.dart';
+import 'pages/browser_home_page.dart';
 import 'pages/topics_page.dart';
 import 'pages/data_management_page.dart';
 import 'providers/discourse_providers.dart';
@@ -48,6 +49,7 @@ import 'l10n/s.dart';
 import 'pages/network_settings_page/widgets/cf_select_privacy_dialog.dart';
 import 'services/network/doh/cf_select_notice.dart';
 import 'services/network/doh/cfhub_probe_auth_service.dart';
+import 'services/browser/browser_scope_service.dart';
 import 'services/network/doh/network_settings_service.dart';
 import 'services/network/proxy/proxy_settings_service.dart';
 import 'services/network/rhttp/rhttp_settings_service.dart';
@@ -385,6 +387,8 @@ Future<void> main(List<String> args) async {
     debugPrint('[Main] 初始 VPN 状态同步失败: $e');
   }
   await NetworkSettingsService.instance.initialize(prefs);
+  // cfbrowser：读取「加速范围」（MITM/ECH 域名），必须在网关启动前完成
+  await BrowserScopeService.instance.initialize(prefs);
   StartupTimeline.mark('proxy');
   // WindowsWebViewEnvironmentService 必须等 NetworkSettingsService 把本次
   // 会话真正要用的代理端口定下来之后再创建 Environment。之前放在最早那批
@@ -932,7 +936,18 @@ class MainApp extends ConsumerWidget {
 
                 return AppGlassSettings(child: result);
               },
-              home: const OnboardingGate(child: PreheatGate(child: MainPage())),
+              home: OnboardingGate(
+                child: PreheatGate(
+                  // cfbrowser：首页换成浏览器，论坛入口从标题栏进入
+                  child: Builder(
+                    builder: (context) => BrowserHomePage(
+                      onOpenForum: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const MainPage()),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         );

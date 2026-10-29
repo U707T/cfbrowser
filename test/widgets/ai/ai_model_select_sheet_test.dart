@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/app_localizations.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/widgets/ai/ai_model_select_sheet.dart';
+import 'package:cfbrowser/l10n/app_localizations.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/widgets/ai/ai_model_select_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

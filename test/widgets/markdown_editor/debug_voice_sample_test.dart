@@ -10,9 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/widgets/markdown_editor/debug_voice_sample.dart';
-import 'package:fluxdo/widgets/markdown_editor/voice_recorder_sheet.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/widgets/markdown_editor/debug_voice_sample.dart';
+import 'package:cfbrowser/widgets/markdown_editor/voice_recorder_sheet.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 class _FakePathProvider extends PathProviderPlatform {

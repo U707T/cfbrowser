@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/cf_verification_round.dart';
+import 'package:cfbrowser/services/cf_verification_round.dart';
 
 /// 验证轮次测试用的假时钟：只有 [advance] 才推进时间、触发到期的计时器。
 class FakeRoundClock implements CfRoundClock {

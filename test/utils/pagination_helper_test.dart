@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/pagination_helper.dart';
+import 'package:cfbrowser/utils/pagination_helper.dart';
 
 void main() {
   group('PaginationHelpers.forTopics', () {

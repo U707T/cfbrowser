@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/composer_raw_mirror.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/composer_raw_mirror.dart';
 import 'package:fluxdo_render/editor.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/topic.dart';
+import 'package:cfbrowser/models/topic.dart';
 
 void main() {
   test('话题详情会识别顶层书签字段', () {

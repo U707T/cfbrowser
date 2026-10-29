@@ -5,8 +5,8 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/uploads/s3_multipart_upload.dart';
-import 'package:fluxdo/services/uploads/upload_progress.dart';
+import 'package:cfbrowser/services/uploads/s3_multipart_upload.dart';
+import 'package:cfbrowser/services/uploads/upload_progress.dart';
 
 class _Adapter implements HttpClientAdapter {
   _Adapter(this.respond);

@@ -3,9 +3,9 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/user.dart';
-import 'package:fluxdo/providers/core_providers.dart';
-import 'package:fluxdo/services/startup/app_startup.dart';
+import 'package:cfbrowser/models/user.dart';
+import 'package:cfbrowser/providers/core_providers.dart';
+import 'package:cfbrowser/services/startup/app_startup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/startup/app_startup_fakes.dart';

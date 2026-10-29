@@ -1,9 +1,9 @@
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/auth_session.dart';
-import 'package:fluxdo/services/network/cookie/cookie_jar_service.dart';
-import 'package:fluxdo/services/session/session_token_authority.dart';
-import 'package:fluxdo/services/session/webview_use.dart';
+import 'package:cfbrowser/services/auth_session.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_jar_service.dart';
+import 'package:cfbrowser/services/session/session_token_authority.dart';
+import 'package:cfbrowser/services/session/webview_use.dart';
 
 import 'session_token_fakes.dart';
 

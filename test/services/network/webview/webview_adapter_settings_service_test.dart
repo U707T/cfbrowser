@@ -1,4 +1,4 @@
-import 'package:fluxdo/services/network/webview/webview_adapter_settings_service.dart';
+import 'package:cfbrowser/services/network/webview/webview_adapter_settings_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

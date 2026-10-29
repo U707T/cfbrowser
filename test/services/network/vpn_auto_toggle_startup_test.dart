@@ -1,7 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh/network_settings_service.dart';
-import 'package:fluxdo/services/network/vpn_auto_toggle_service.dart';
+import 'package:cfbrowser/services/network/doh/network_settings_service.dart';
+import 'package:cfbrowser/services/network/vpn_auto_toggle_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

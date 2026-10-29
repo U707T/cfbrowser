@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:fluxdo/services/network/doh/connect_bound_token.dart';
-import 'package:fluxdo/services/network/doh/connect_code_flow.dart';
+import 'package:cfbrowser/services/network/doh/connect_bound_token.dart';
+import 'package:cfbrowser/services/network/doh/connect_code_flow.dart';
 
 /// 假令牌服务端收到的一次请求
 class FakeTokenCall {

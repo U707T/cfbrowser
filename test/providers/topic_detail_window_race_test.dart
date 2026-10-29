@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/providers/core_providers.dart';
-import 'package:fluxdo/providers/topic_detail_provider.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/providers/core_providers.dart';
+import 'package:cfbrowser/providers/topic_detail_provider.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
 
 /// 测试约定:帖子 id == 楼层号
 Post _post(int id) {

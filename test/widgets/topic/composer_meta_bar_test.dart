@@ -4,11 +4,11 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/widgets/topic/topic_editor_helpers.dart';
-import 'package:fluxdo/utils/platform_utils.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/widgets/topic/topic_editor_helpers.dart';
+import 'package:cfbrowser/utils/platform_utils.dart';
 
 Widget _wrap(Widget child) {
   return TranslationProvider(

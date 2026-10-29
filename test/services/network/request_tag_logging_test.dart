@@ -4,8 +4,8 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/log/log_writer.dart';
-import 'package:fluxdo/services/network/interceptors/network_log_interceptor.dart';
+import 'package:cfbrowser/services/log/log_writer.dart';
+import 'package:cfbrowser/services/network/interceptors/network_log_interceptor.dart';
 
 /// `requestTag` 的诊断链路契约。
 ///

@@ -2,7 +2,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/media_upload_helper.dart';
+import 'package:cfbrowser/widgets/markdown_editor/media_upload_helper.dart';
 
 void main() {
   test('upload:// 短链 → /uploads/short-url/<b62>.xz(去原扩展)', () {

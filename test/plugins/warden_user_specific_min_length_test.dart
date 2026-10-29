@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/plugins/plugins.dart';
+import 'package:cfbrowser/plugins/plugins.dart';
 
 ComposerMinLengthContext _context({
   bool hasUserSpecificMinPostLength = false,

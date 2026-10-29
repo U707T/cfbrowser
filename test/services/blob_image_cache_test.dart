@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/blob_image_cache.dart';
+import 'package:cfbrowser/services/blob_image_cache.dart';
 
 void main() {
   // 与 Telegram ImageLoader.getHttpUrlExtension 同款的规则:

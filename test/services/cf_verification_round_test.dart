@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/cf_verification_round.dart';
+import 'package:cfbrowser/services/cf_verification_round.dart';
 
 import 'cf_round_fakes.dart';
 

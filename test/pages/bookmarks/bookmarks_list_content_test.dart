@@ -3,14 +3,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/slang/strings.g.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/pages/bookmarks/bookmarks_models.dart';
-import 'package:fluxdo/providers/category_provider.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/utils/platform_utils.dart';
-import 'package:fluxdo/widgets/bookmark/bookmarks_list_content.dart';
+import 'package:cfbrowser/l10n/slang/strings.g.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/pages/bookmarks/bookmarks_models.dart';
+import 'package:cfbrowser/providers/category_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/utils/platform_utils.dart';
+import 'package:cfbrowser/widgets/bookmark/bookmarks_list_content.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Topic _topic({required int id, required String title, String? bookmarkName}) {

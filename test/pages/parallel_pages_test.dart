@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/pages/search_page.dart';
-import 'package:fluxdo/pages/settings_page.dart';
+import 'package:cfbrowser/pages/search_page.dart';
+import 'package:cfbrowser/pages/settings_page.dart';
 
 Widget _layoutProbe(Size size) {
   return MaterialApp(

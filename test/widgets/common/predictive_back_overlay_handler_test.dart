@@ -6,7 +6,7 @@ library;
 import 'package:flutter/services.dart' show PredictiveBackEvent;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/common/predictive_back_overlay_handler.dart';
+import 'package:cfbrowser/widgets/common/predictive_back_overlay_handler.dart';
 
 PredictiveBackEvent _gesture(double progress) => PredictiveBackEvent.fromMap({
   'touchOffset': <Object?>[0.0, 400.0],

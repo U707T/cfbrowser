@@ -2,6 +2,29 @@
 
 所有版本的变更记录。beta / rc 版本提交在 stable 发版时会折叠并入对应 stable 版本。
 
+## [1.0.0] - 2026-10-29
+
+首个 cfbrowser 版本：把 cfluxdo 的「Cloudflare 边缘直连」网络层提升为浏览器主干。
+
+### 🌟 新功能
+
+- 首页换成浏览器：地址栏 + 加速范围快捷入口 + 出口 IP 状态 + 最近访问，论坛改为标题栏入口
+- 加速范围可配置（默认 `linux.do`）：范围内的域名走本地网关做 MITM + ECH，
+  范围外一律 CONNECT 隧道直通、端到端校验
+- 新增「加速范围」设置页：编辑域名范围、固定出口 IP，保存后自动重启网关
+
+### 🔧 变更
+
+- 项目重命名：包名 `fluxdo` → `cfbrowser`，applicationId → `com.github.molchuan.cfbrowser`，
+  桌面端二进制/窗口标题/`.desktop` 同步改名
+- `preconnectHosts` 跟随加速范围，不再写死 `linux.do`
+- MITM 范围下发去掉平台判断，移动端与桌面端语义一致
+
+### 🐛 修复
+
+- 无
+
+
 ## [0.2.28] - 2026-09-04
 
 

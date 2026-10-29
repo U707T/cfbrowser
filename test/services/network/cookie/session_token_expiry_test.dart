@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cookie/cookie_jar_service.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_jar_service.dart';
 
 void main() {
   group('CookieJarService.resolveSessionTokenExpiry', () {

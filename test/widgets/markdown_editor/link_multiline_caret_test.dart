@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/semantic_composer_codec.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/semantic_composer_codec.dart';
 import 'package:fluxdo_render/editor.dart';
 import 'package:fluxdo_render/semantic_editor.dart';
 import 'package:fluxdo_render/src/editor/widget/editable_paragraph.dart';

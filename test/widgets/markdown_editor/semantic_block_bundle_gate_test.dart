@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/semantic_composer_codec.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/semantic_composer_codec.dart';
 
 import 'composer_token_codec_test.dart' show parseWithNode, cookWithNode;
 

@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_menu_placement.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_menu_placement.dart';
 
 void main() {
   test(

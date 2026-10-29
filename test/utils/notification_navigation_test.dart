@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/notification.dart';
-import 'package:fluxdo/models/user.dart';
-import 'package:fluxdo/providers/core_providers.dart';
-import 'package:fluxdo/providers/message_bus/notification_providers.dart';
-import 'package:fluxdo/providers/notification_list_provider.dart';
-import 'package:fluxdo/providers/recent_notifications_provider.dart';
-import 'package:fluxdo/utils/notification_navigation.dart';
+import 'package:cfbrowser/models/notification.dart';
+import 'package:cfbrowser/models/user.dart';
+import 'package:cfbrowser/providers/core_providers.dart';
+import 'package:cfbrowser/providers/message_bus/notification_providers.dart';
+import 'package:cfbrowser/providers/notification_list_provider.dart';
+import 'package:cfbrowser/providers/recent_notifications_provider.dart';
+import 'package:cfbrowser/utils/notification_navigation.dart';
 
 // 移植自上游 PR #250 的回归测试:点开单条通知后,快捷面板、历史页列表
 // 和角标计数要一起变,不能只改快捷面板。

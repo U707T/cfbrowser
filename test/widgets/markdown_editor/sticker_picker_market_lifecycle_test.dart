@@ -3,14 +3,14 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/sticker.dart';
-import 'package:fluxdo/providers/sticker_provider.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/services/sticker_market_service.dart';
-import 'package:fluxdo/widgets/markdown_editor/sticker_picker.dart';
-import 'package:fluxdo/widgets/markdown_editor/sticker_market_sheet.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/sticker.dart';
+import 'package:cfbrowser/providers/sticker_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/services/sticker_market_service.dart';
+import 'package:cfbrowser/widgets/markdown_editor/sticker_picker.dart';
+import 'package:cfbrowser/widgets/markdown_editor/sticker_market_sheet.dart';
 
 class _Service extends StickerMarketService {
   _Service(super.prefs);

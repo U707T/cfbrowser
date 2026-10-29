@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/storage/secret_store.dart';
+import 'package:cfbrowser/services/storage/secret_store.dart';
 
 void main() {
   test('SecretKey 使用稳定命名空间并编码账号与名称', () {

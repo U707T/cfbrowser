@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/services/draft_controller.dart';
-import 'package:fluxdo/services/local_notification_service.dart'
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/services/draft_controller.dart';
+import 'package:cfbrowser/services/local_notification_service.dart'
     show navigatorKey;
-import 'package:fluxdo/utils/platform_utils.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_header_actions.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_draft_status.dart';
+import 'package:cfbrowser/utils/platform_utils.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_header_actions.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_draft_status.dart';
 
 Future<void> _pump(
   WidgetTester tester,

@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/user.dart';
-import 'package:fluxdo/services/network/doh/cfhub_api.dart';
-import 'package:fluxdo/services/network/doh/cfhub_probe_auth_service.dart';
-import 'package:fluxdo/services/network/doh/connect_code_flow.dart';
-import 'package:fluxdo/services/network/doh/network_settings_service.dart';
-import 'package:fluxdo/services/network/doh_proxy/doh_proxy_service.dart';
+import 'package:cfbrowser/models/user.dart';
+import 'package:cfbrowser/services/network/doh/cfhub_api.dart';
+import 'package:cfbrowser/services/network/doh/cfhub_probe_auth_service.dart';
+import 'package:cfbrowser/services/network/doh/connect_code_flow.dart';
+import 'package:cfbrowser/services/network/doh/network_settings_service.dart';
+import 'package:cfbrowser/services/network/doh_proxy/doh_proxy_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'connect_token_fakes.dart';

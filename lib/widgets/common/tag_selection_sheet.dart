@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:app_icons/app_icons.dart';
 import 'package:m3e_ui/m3e_ui.dart';
 import 'dart:async';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/tag_search_result.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
-import 'package:fluxdo/services/toast_service.dart';
-import 'package:fluxdo/widgets/common/app_bottom_sheet.dart';
-import 'package:fluxdo/widgets/common/topic_badges.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/tag_search_result.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/services/toast_service.dart';
+import 'package:cfbrowser/widgets/common/app_bottom_sheet.dart';
+import 'package:cfbrowser/widgets/common/topic_badges.dart';
 
 class TagSelectionSheet extends StatefulWidget {
   /// 分类 ID（用于联动过滤标签）

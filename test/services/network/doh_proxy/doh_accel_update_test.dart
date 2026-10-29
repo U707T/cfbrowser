@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh_proxy/doh_proxy_ffi.dart';
+import 'package:cfbrowser/services/network/doh_proxy/doh_proxy_ffi.dart';
 
 void main() {
   group('DohAccelUpdate.isEmpty', () {

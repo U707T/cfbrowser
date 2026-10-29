@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/draft.dart';
+import 'package:cfbrowser/models/draft.dart';
 
 void main() {
   group('DraftData 标签兼容', () {

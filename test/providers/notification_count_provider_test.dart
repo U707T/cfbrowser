@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/user.dart';
-import 'package:fluxdo/providers/core_providers.dart';
-import 'package:fluxdo/providers/message_bus/notification_providers.dart';
+import 'package:cfbrowser/models/user.dart';
+import 'package:cfbrowser/providers/core_providers.dart';
+import 'package:cfbrowser/providers/message_bus/notification_providers.dart';
 
 /// 通知计数 provider:冷启动渐进 emit(缓存用户无计数 → 接口终态带
 /// 计数)下徽章不得被首个 emit 钉死;实时更新后服务端旧值不得回刷。

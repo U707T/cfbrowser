@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_object_toolbar.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_action_menu.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_object_toolbar.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_action_menu.dart';
 
 void main() {
   const labels = [

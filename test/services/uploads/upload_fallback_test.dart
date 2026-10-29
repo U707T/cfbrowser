@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
-import 'package:fluxdo/services/preloaded_data_service.dart';
-import 'package:fluxdo/services/uploads/s3_multipart_upload.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/services/preloaded_data_service.dart';
+import 'package:cfbrowser/services/uploads/s3_multipart_upload.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FailingStorage implements HttpClientAdapter {

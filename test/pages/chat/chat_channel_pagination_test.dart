@@ -4,29 +4,29 @@ import 'dart:convert';
 
 // ignore: depend_on_referenced_packages
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
-import 'package:fluxdo/widgets/markdown_editor/image_upload_dialog.dart';
+import 'package:cfbrowser/widgets/markdown_editor/image_upload_dialog.dart';
 
 import 'package:m3e_ui/m3e_ui.dart';
 import 'package:common_ui/common_ui.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_submit_button.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_submit_button.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/chat/chat_message.dart';
-import 'package:fluxdo/models/user.dart';
-import 'package:fluxdo/pages/chat/channel/chat_channel_page.dart';
-import 'package:fluxdo/providers/chat/chat_channels_provider.dart';
-import 'package:fluxdo/providers/chat/chat_messages_provider.dart';
-import 'package:fluxdo/providers/core_providers.dart';
-import 'package:fluxdo/providers/theme_provider.dart'
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/chat/chat_message.dart';
+import 'package:cfbrowser/models/user.dart';
+import 'package:cfbrowser/pages/chat/channel/chat_channel_page.dart';
+import 'package:cfbrowser/providers/chat/chat_channels_provider.dart';
+import 'package:cfbrowser/providers/chat/chat_messages_provider.dart';
+import 'package:cfbrowser/providers/core_providers.dart';
+import 'package:cfbrowser/providers/theme_provider.dart'
     show sharedPreferencesProvider;
-import 'package:fluxdo/services/local_notification_service.dart'
+import 'package:cfbrowser/services/local_notification_service.dart'
     show navigatorKey;
-import 'package:fluxdo/utils/platform_utils.dart';
+import 'package:cfbrowser/utils/platform_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 

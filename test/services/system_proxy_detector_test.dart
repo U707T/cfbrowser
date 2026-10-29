@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/system_proxy_detector.dart';
+import 'package:cfbrowser/services/network/system_proxy_detector.dart';
 
 void main() {
   group('SystemProxyDetector.parseProxyServer', () {

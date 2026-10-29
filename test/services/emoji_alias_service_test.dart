@@ -5,7 +5,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/emoji_alias_service.dart';
+import 'package:cfbrowser/services/emoji_alias_service.dart';
 
 void main() {
   final svc = EmojiAliasService();

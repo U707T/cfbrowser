@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/app_localizations.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/widgets/post/post_item/widgets/boost_flag_sheet.dart';
+import 'package:cfbrowser/l10n/app_localizations.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/widgets/post/post_item/widgets/boost_flag_sheet.dart';
 
 void main() {
   group('Boost 操作权限', () {

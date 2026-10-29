@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/exceptions/api_exception.dart';
-import 'package:fluxdo/services/network/interceptors/error_interceptor.dart';
+import 'package:cfbrowser/services/network/exceptions/api_exception.dart';
+import 'package:cfbrowser/services/network/interceptors/error_interceptor.dart';
 
 /// 「限流重试」跨层契约。
 ///

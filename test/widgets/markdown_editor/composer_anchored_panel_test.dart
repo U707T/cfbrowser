@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_anchored_panel.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_anchored_panel.dart';
 
 void main() {
   for (final scenario in ['nested', 'keyboard', 'large-text']) {

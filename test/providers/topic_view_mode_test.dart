@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/providers/topic_detail/topic_view_mode.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/providers/topic_detail/topic_view_mode.dart';
 
 Post _post(int number, String username) {
   return Post(

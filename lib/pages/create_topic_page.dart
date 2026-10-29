@@ -1,8 +1,8 @@
-import 'package:fluxdo/widgets/markdown_editor/composer_submission_snapshot.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_submission_snapshot.dart';
 
 import '../widgets/markdown_editor/uploads/upload_task_labels.dart';
 
-import 'package:fluxdo/widgets/markdown_editor/composer_draft_status.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_draft_status.dart';
 
 import '../widgets/markdown_editor/composer_chrome.dart';
 import '../utils/platform_utils.dart';
@@ -15,37 +15,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/draft_store_provider.dart';
 
-import 'package:fluxdo/widgets/common/error_view.dart';
-import 'package:fluxdo/widgets/common/progressive_top_blur.dart';
+import 'package:cfbrowser/widgets/common/error_view.dart';
+import 'package:cfbrowser/widgets/common/progressive_top_blur.dart';
 import 'package:m3e_ui/m3e_ui.dart';
-import 'package:fluxdo/providers/preferences_provider.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_shortcuts.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_switch_fade.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_workbench.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_page_chrome.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_header_actions.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_view_mode_switcher.dart';
-import 'package:fluxdo/widgets/markdown_editor/markdown_editor.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/rich_composer_editor.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/models/draft.dart';
-import 'package:fluxdo/models/shortcut_binding.dart';
+import 'package:cfbrowser/providers/preferences_provider.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_shortcuts.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_switch_fade.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_workbench.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_page_chrome.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_header_actions.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_view_mode_switcher.dart';
+import 'package:cfbrowser/widgets/markdown_editor/markdown_editor.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/rich_composer_editor.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/models/draft.dart';
+import 'package:cfbrowser/models/shortcut_binding.dart';
 
-import 'package:fluxdo/providers/discourse_providers.dart';
-import 'package:fluxdo/services/composer_min_length_resolver.dart';
-import 'package:fluxdo/widgets/common/character_counts_overlay.dart';
-import 'package:fluxdo/services/toast_service.dart';
+import 'package:cfbrowser/providers/discourse_providers.dart';
+import 'package:cfbrowser/services/composer_min_length_resolver.dart';
+import 'package:cfbrowser/widgets/common/character_counts_overlay.dart';
+import 'package:cfbrowser/services/toast_service.dart';
 import 'package:dio/dio.dart';
-import 'package:fluxdo/services/ai_post_review_service.dart';
-import 'package:fluxdo/services/app_error_handler.dart';
-import 'package:fluxdo/services/network/exceptions/api_exception.dart';
-import 'package:fluxdo/widgets/ai/ai_post_review_button.dart';
-import 'package:fluxdo/widgets/markdown_editor/markdown_renderer.dart';
-import 'package:fluxdo/services/draft_controller.dart';
-import 'package:fluxdo/services/preloaded_data_service.dart';
-import 'package:fluxdo/providers/shortcut_provider.dart';
-import 'package:fluxdo/widgets/topic/topic_editor_helpers.dart';
-import 'package:fluxdo/services/local_notification_service.dart'
+import 'package:cfbrowser/services/ai_post_review_service.dart';
+import 'package:cfbrowser/services/app_error_handler.dart';
+import 'package:cfbrowser/services/network/exceptions/api_exception.dart';
+import 'package:cfbrowser/widgets/ai/ai_post_review_button.dart';
+import 'package:cfbrowser/widgets/markdown_editor/markdown_renderer.dart';
+import 'package:cfbrowser/services/draft_controller.dart';
+import 'package:cfbrowser/services/preloaded_data_service.dart';
+import 'package:cfbrowser/providers/shortcut_provider.dart';
+import 'package:cfbrowser/widgets/topic/topic_editor_helpers.dart';
+import 'package:cfbrowser/services/local_notification_service.dart'
     show navigatorKey;
 
 import '../constants.dart';

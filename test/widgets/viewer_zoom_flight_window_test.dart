@@ -2,9 +2,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/pages/image_viewer_page.dart';
-import 'package:fluxdo/utils/hero_visibility_controller.dart';
-import 'package:fluxdo/widgets/common/hero_image.dart';
+import 'package:cfbrowser/pages/image_viewer_page.dart';
+import 'package:cfbrowser/utils/hero_visibility_controller.dart';
+import 'package:cfbrowser/widgets/common/hero_image.dart';
 
 /// 放大后返回,飞行过程中取景框必须张回完整图。
 ///

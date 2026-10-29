@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/storage/bookmark_cache_dao.dart';
+import 'package:cfbrowser/storage/bookmark_cache_dao.dart';
 
 import 'bookmark_hive_test_support.dart';
 

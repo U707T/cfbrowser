@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/download_request_queue.dart';
+import 'package:cfbrowser/services/download_request_queue.dart';
 
 void main() {
   test('下层下载一直不完成时市场仍获得保留槽', () async {

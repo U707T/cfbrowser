@@ -1,8 +1,8 @@
 import 'package:common_ui/common_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/providers/preferences_provider.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
+import 'package:cfbrowser/providers/preferences_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<ProviderContainer> _createContainer({

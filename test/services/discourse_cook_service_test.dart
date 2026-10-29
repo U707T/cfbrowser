@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/discourse_cook_service.dart';
+import 'package:cfbrowser/services/discourse_cook_service.dart';
 
 void main() {
   group('DiscourseCookService.postProcessCooked', () {

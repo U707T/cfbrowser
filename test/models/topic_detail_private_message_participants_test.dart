@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/topic.dart';
+import 'package:cfbrowser/models/topic.dart';
 
 Map<String, dynamic> _topicJson({
   Map<String, dynamic>? details,

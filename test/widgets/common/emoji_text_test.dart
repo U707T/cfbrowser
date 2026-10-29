@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/common/emoji_text.dart';
+import 'package:cfbrowser/widgets/common/emoji_text.dart';
 
 void main() {
   testWidgets('editable emoji spans preserve source text length', (tester) async {

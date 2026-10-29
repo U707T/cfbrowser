@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/common/hero_image.dart';
+import 'package:cfbrowser/widgets/common/hero_image.dart';
 
 /// [ViewerSourceStyle] 是「源端展示方式」的单一真相:一次给出,同时产出
 /// Hero 飞行体参数与 `openViewer` 的 `heroSource*` 参数。

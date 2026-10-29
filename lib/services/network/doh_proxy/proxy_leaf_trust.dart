@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../../browser/browser_scope_service.dart';
 import '../../network_logger.dart';
 import 'doh_proxy_ffi.dart';
 
@@ -26,11 +27,14 @@ class ProxyLeafTrust {
 
   static const _channel = MethodChannel('cfluxdo/wpe_tls');
 
-  /// 必须经 ECH 的主机（后缀匹配），传给代理作为 MITM 范围
-  static const mitmHosts = ['linux.do'];
+  /// 必须经 ECH 的主机（后缀匹配），传给代理作为 MITM 范围。
+  ///
+  /// 上游这里是 `const ['linux.do']`；cfbrowser 改成运行时配置
+  /// （见 [BrowserScopeService]），默认值仍是 `linux.do`。
+  static List<String> get mitmHosts => BrowserScopeService.instance.mitmHosts;
 
-  /// 代理启动后预先放行的主机：linux.do 主站与 App 里出现过的子域
-  static const _preallowHosts = [
+  /// linux.do 主站与 App 里出现过的子域，随包固定，不参与用户配置
+  static const _knownSiteHosts = [
     'linux.do',
     'www.linux.do',
     'cdn.linux.do',
@@ -43,6 +47,18 @@ class ProxyLeafTrust {
     'linuxdo-uploads.s3.linux.do',
   ];
 
+  /// 代理启动后预先放行的主机：已知子域 + 用户配置范围内域名及其常见子域
+  static List<String> get _preallowHosts {
+    final hosts = <String>{..._knownSiteHosts};
+    for (final scope in mitmHosts) {
+      hosts
+        ..add(scope)
+        ..add('www.$scope')
+        ..add('cdn.$scope');
+    }
+    return hosts.toList(growable: false);
+  }
+
   /// 证书出错时按「是否代理签发的那张叶子」裁定（Linux / Windows）
   static bool get isApplicable => Platform.isLinux || Platform.isWindows;
 
@@ -52,8 +68,10 @@ class ProxyLeafTrust {
   /// 代理（重新）启动后调用：代理每次启动叶子都会换，要整批重新放行
   static Future<void> preallowProxyLeaves() async {
     if (!_needsPreallow) return;
+    // 范围可能来自配置文件，取一次快照，避免循环里反复重建
+    final targets = _preallowHosts;
     var ok = 0;
-    for (final host in _preallowHosts) {
+    for (final host in targets) {
       final pem = DohProxyFfi.instance.mitmLeafPem(host);
       if (pem == null) continue;
       try {
@@ -66,7 +84,7 @@ class ProxyLeafTrust {
         debugPrint('[ProxyLeafTrust] 放行 $host 失败: $e');
       }
     }
-    NetworkLogger.log('[ProxyLeafTrust] 已预先放行 $ok/${_preallowHosts.length} 个主机的代理叶子证书');
+    NetworkLogger.log('[ProxyLeafTrust] 已预先放行 $ok/${targets.length} 个主机的代理叶子证书');
   }
 
   /// 主文档证书出错时的判定：[der] 与代理为 [host] 签发的叶子完全相同才返回 true

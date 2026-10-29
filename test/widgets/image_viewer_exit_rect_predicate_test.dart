@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/pages/image_viewer_page.dart';
+import 'package:cfbrowser/pages/image_viewer_page.dart';
 
 /// 退场飞行起点(exitFlightRect)的发布判据。
 ///

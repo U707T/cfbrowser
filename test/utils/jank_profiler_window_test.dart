@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/jank_profiler.dart';
+import 'package:cfbrowser/utils/jank_profiler.dart';
 
 void main() {
   test('帧窗口使用单调时间，不混入墙上时钟', () {

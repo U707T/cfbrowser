@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxdo_render/editor.dart';
 import 'package:fluxdo_render/fluxdo_render.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/insertion_bookmark.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/insertion_bookmark.dart';
 
 void main() {
   test('替换选区一次撤销恢复原文和选区', () {

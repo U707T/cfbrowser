@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:common_ui/common_ui.dart';
-import 'package:fluxdo/widgets/markdown_editor/uploads/upload_task_panel.dart';
-import 'package:fluxdo/widgets/markdown_editor/uploads/task_controller.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/widgets/markdown_editor/uploads/upload_task_panel.dart';
+import 'package:cfbrowser/widgets/markdown_editor/uploads/task_controller.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/markdown_toolbar.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_desktop_layout.dart';
+import 'package:cfbrowser/widgets/markdown_editor/markdown_toolbar.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_desktop_layout.dart';
 
 import 'composer_interaction_test.dart' show pumpApp;
 

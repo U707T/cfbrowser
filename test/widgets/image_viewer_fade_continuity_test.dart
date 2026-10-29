@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/pages/image_viewer_page.dart';
+import 'package:cfbrowser/pages/image_viewer_page.dart';
 
 /// Hero 飞行未结束就关闭查看器 → 黑闪 的回归防线。
 ///

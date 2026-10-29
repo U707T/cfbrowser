@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/draft.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
-import 'package:fluxdo/services/draft_controller.dart';
+import 'package:cfbrowser/models/draft.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/services/draft_controller.dart';
 
 class _DraftService implements DiscourseService {
   final pending = <Completer<int>>[];

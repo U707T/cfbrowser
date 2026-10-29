@@ -2,10 +2,10 @@ import 'package:common_ui/common_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/theme/mojian_theme.dart';
-import 'package:fluxdo/widgets/common/app_glass_settings.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_island.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/theme/mojian_theme.dart';
+import 'package:cfbrowser/widgets/common/app_glass_settings.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_island.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> _pump(WidgetTester tester, {required bool mojian}) async {

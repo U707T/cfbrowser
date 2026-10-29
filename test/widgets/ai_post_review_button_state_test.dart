@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/ai_post_review_service.dart';
-import 'package:fluxdo/widgets/ai/ai_post_review_button.dart';
+import 'package:cfbrowser/services/ai_post_review_service.dart';
+import 'package:cfbrowser/widgets/ai/ai_post_review_button.dart';
 
 void main() {
   group('AiPostReviewInputSnapshot', () {

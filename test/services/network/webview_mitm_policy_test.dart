@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh/webview_mitm_policy.dart';
+import 'package:cfbrowser/services/network/doh/webview_mitm_policy.dart';
 
 void main() {
   group('WebViewMitmPolicy', () {

@@ -2,21 +2,21 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/providers/category_provider.dart';
-import 'package:fluxdo/providers/core_providers.dart';
-import 'package:fluxdo/providers/message_bus/topic_list_events.dart';
-import 'package:fluxdo/providers/message_bus/topic_tracking_providers.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/providers/topic_list/filter_provider.dart';
-import 'package:fluxdo/providers/topic_list/sort_provider.dart';
-import 'package:fluxdo/providers/topic_list/tab_state_provider.dart';
-import 'package:fluxdo/providers/topic_list/topic_list_provider.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
-import 'package:fluxdo/services/message_bus_service.dart';
-import 'package:fluxdo/services/preloaded_data_service.dart';
-import 'package:fluxdo/utils/topic_list_updates.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/providers/category_provider.dart';
+import 'package:cfbrowser/providers/core_providers.dart';
+import 'package:cfbrowser/providers/message_bus/topic_list_events.dart';
+import 'package:cfbrowser/providers/message_bus/topic_tracking_providers.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/providers/topic_list/filter_provider.dart';
+import 'package:cfbrowser/providers/topic_list/sort_provider.dart';
+import 'package:cfbrowser/providers/topic_list/tab_state_provider.dart';
+import 'package:cfbrowser/providers/topic_list/topic_list_provider.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/services/message_bus_service.dart';
+import 'package:cfbrowser/services/preloaded_data_service.dart';
+import 'package:cfbrowser/utils/topic_list_updates.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Tracking extends TopicTrackingStateNotifier {

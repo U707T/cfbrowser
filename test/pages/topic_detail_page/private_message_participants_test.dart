@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/pages/topic_detail_page/widgets/private_message_participants.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/pages/topic_detail_page/widgets/private_message_participants.dart';
 
 TopicUser _user(int id, String username, {String? name}) {
   return TopicUser(id: id, username: username, name: name, avatarTemplate: '');

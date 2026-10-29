@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/nested/nested_reading_scope.dart';
+import 'package:cfbrowser/widgets/nested/nested_reading_scope.dart';
 
 void main() {
   testWidgets('已构建的屏外后代和折叠帖不计入已读，锚点按屏幕位置而非楼层号', (tester) async {

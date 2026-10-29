@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/pages/topic_detail_page/widgets/ai_chat_input.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/pages/topic_detail_page/widgets/ai_chat_input.dart';
 
 void main() {
   testWidgets('AI 输入框聚焦时 Esc 只触发页内返回', (tester) async {

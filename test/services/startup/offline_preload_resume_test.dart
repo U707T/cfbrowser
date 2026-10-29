@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/discourse_dio.dart';
-import 'package:fluxdo/services/startup/app_startup.dart';
+import 'package:cfbrowser/services/network/discourse_dio.dart';
+import 'package:cfbrowser/services/startup/app_startup.dart';
 
 import 'app_startup_fakes.dart';
 

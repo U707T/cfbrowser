@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/modules/ldc_reward/providers/ldc_reward_provider.dart';
-import 'package:fluxdo/providers/secret_store_provider.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/services/storage/secret_store.dart';
+import 'package:cfbrowser/modules/ldc_reward/providers/ldc_reward_provider.dart';
+import 'package:cfbrowser/providers/secret_store_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/services/storage/secret_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/deep_link_service.dart';
+import 'package:cfbrowser/services/deep_link_service.dart';
 
 class _RecordingNavigatorObserver extends NavigatorObserver {
   final pushedRoutes = <Route<dynamic>>[];

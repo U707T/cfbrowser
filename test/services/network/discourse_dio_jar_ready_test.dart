@@ -3,11 +3,11 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cookie/app_cookie_manager.dart';
-import 'package:fluxdo/services/network/cookie/cookie_jar_service.dart';
-import 'package:fluxdo/services/network/discourse_dio.dart';
-import 'package:fluxdo/services/network/recovery/recovery_coordinator.dart';
-import 'package:fluxdo/services/network/recovery/session_heal_policy.dart';
+import 'package:cfbrowser/services/network/cookie/app_cookie_manager.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_jar_service.dart';
+import 'package:cfbrowser/services/network/discourse_dio.dart';
+import 'package:cfbrowser/services/network/recovery/recovery_coordinator.dart';
+import 'package:cfbrowser/services/network/recovery/session_heal_policy.dart';
 
 /// Dio 工厂与 jar 初始化顺序的契约。
 ///

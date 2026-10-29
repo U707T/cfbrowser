@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/log/log_writer.dart';
-import 'package:fluxdo/services/uploads/upload_trace.dart';
+import 'package:cfbrowser/services/log/log_writer.dart';
+import 'package:cfbrowser/services/uploads/upload_trace.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

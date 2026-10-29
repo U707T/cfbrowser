@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:fluxdo/l10n/s.dart';
+import 'package:cfbrowser/l10n/s.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_tools_anchor.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_tools_panel.dart';
-import 'package:fluxdo/services/local_notification_service.dart'
+import 'package:cfbrowser/widgets/markdown_editor/composer_tools_anchor.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_tools_panel.dart';
+import 'package:cfbrowser/services/local_notification_service.dart'
     show navigatorKey;
 
 void main() {

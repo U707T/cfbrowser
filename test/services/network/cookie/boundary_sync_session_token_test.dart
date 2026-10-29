@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cookie/boundary_sync_service.dart';
-import 'package:fluxdo/services/network/cookie/cookie_jar_service.dart';
+import 'package:cfbrowser/services/network/cookie/boundary_sync_service.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_jar_service.dart';
 
 /// WebView → jar 的边界同步从不写 `_t`（登录收口由
 /// SessionTokenAuthority.adoptLoginToken 写，其余交它对账）。

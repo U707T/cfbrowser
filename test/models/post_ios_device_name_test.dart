@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/topic.dart';
+import 'package:cfbrowser/models/topic.dart';
 
 void main() {
   group('Post ios_device_name', () {

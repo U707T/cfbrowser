@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/theme/app_palettes.dart';
-import 'package:fluxdo/theme/mojian_theme.dart';
-import 'package:fluxdo/utils/appearance_warmup.dart';
-import 'package:fluxdo/utils/seed_color_scheme.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/theme/app_palettes.dart';
+import 'package:cfbrowser/theme/mojian_theme.dart';
+import 'package:cfbrowser/utils/appearance_warmup.dart';
+import 'package:cfbrowser/utils/seed_color_scheme.dart';
 
 void main() {
   testWidgets('经典风格：预热覆盖外观页首帧用到的全部配色组合', (tester) async {

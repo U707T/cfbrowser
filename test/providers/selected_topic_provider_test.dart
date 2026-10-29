@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fluxdo/providers/selected_topic_provider.dart';
+import 'package:cfbrowser/providers/selected_topic_provider.dart';
 
 void main() {
   test('从列表选中的首层会立即绑定稳定 instanceId', () {

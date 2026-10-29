@@ -157,7 +157,7 @@ mixin FrameSchedulerProbe on WidgetsFlutterBinding {
           line.contains('(dart:')) {
         continue;
       }
-      // "#4  _FooState._tick (package:fluxdo/....dart:42:7)"
+      // "#4  _FooState._tick (package:cfbrowser/....dart:42:7)"
       // → "_FooState._tick(lib/....dart:42:7)"
       final match = RegExp(r'#\d+\s+(\S+)\s+\((.+?)\)').firstMatch(line);
       if (match != null) {

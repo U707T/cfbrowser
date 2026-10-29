@@ -4,16 +4,16 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/cdk_user_info.dart';
-import 'package:fluxdo/models/ldc_user_info.dart';
-import 'package:fluxdo/models/user.dart';
-import 'package:fluxdo/providers/cdk_providers.dart';
-import 'package:fluxdo/providers/core_providers.dart';
-import 'package:fluxdo/providers/ldc_providers.dart';
-import 'package:fluxdo/services/cdk_oauth_service.dart';
-import 'package:fluxdo/services/ldc_oauth_service.dart';
-import 'package:fluxdo/services/network/exceptions/api_exception.dart';
-import 'package:fluxdo/services/network/exceptions/oauth_exception.dart';
+import 'package:cfbrowser/models/cdk_user_info.dart';
+import 'package:cfbrowser/models/ldc_user_info.dart';
+import 'package:cfbrowser/models/user.dart';
+import 'package:cfbrowser/providers/cdk_providers.dart';
+import 'package:cfbrowser/providers/core_providers.dart';
+import 'package:cfbrowser/providers/ldc_providers.dart';
+import 'package:cfbrowser/services/cdk_oauth_service.dart';
+import 'package:cfbrowser/services/ldc_oauth_service.dart';
+import 'package:cfbrowser/services/network/exceptions/api_exception.dart';
+import 'package:cfbrowser/services/network/exceptions/oauth_exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _userInfo = <String, dynamic>{

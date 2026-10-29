@@ -1,0 +1,122 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  # 静态检查与针对性单测。仓库里还有大量 info 级 lint（上游遗留），
+  # 因此这里只做提示，不阻断构建；真正的门禁是下面的编译。
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate l10n
+        run: dart run tool/project_prep.dart app
+
+      # devtools_extension 是独立包（不参与 App 构建），排除掉
+      - name: Analyze
+        continue-on-error: true
+        run: flutter analyze --no-pub lib test
+
+      - name: Targeted tests
+        run: |
+          flutter test --no-pub \
+            test/services/browser_scope_service_test.dart \
+            test/services/proxy_leaf_trust_test.dart
+
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 21
+
+      # flutter.ndkVersion 在 3.47 是 28.2.13676358，runner 自带的不一定对得上
+      - name: Set up Android NDK
+        run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "ndk;28.2.13676358" > /dev/null
+
+      # core/doh_proxy 由 Rust 实现，Android 侧经 cargo-ndk 产出 .so
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      # flutterw 会先跑 project_prep（pub get / l10n / 代理证书），再 cargo ndk 编译 Rust
+      - name: Build arm64
+        run: |
+          dart tool/flutterw.dart build apk --release --target-platform android-arm64
+          cp build/app/outputs/flutter-apk/app-release.apk cfbrowser-arm64-v8a.apk
+
+      - name: Build armv7
+        run: |
+          dart tool/flutterw.dart build apk --release --target-platform android-arm
+          cp build/app/outputs/flutter-apk/app-release.apk cfbrowser-armeabi-v7a.apk
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfbrowser-apk
+          path: |
+            cfbrowser-arm64-v8a.apk
+            cfbrowser-armeabi-v7a.apk
+          if-no-files-found: error
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            cfbrowser-arm64-v8a.apk
+            cfbrowser-armeabi-v7a.apk
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') }}

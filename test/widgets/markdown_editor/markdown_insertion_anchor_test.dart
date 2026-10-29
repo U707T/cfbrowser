@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/uploads/markdown_insertion_anchor.dart';
+import 'package:cfbrowser/widgets/markdown_editor/uploads/markdown_insertion_anchor.dart';
 
 void main() {
   test('编辑前文后锚点跟随，完成不抢选区', () {

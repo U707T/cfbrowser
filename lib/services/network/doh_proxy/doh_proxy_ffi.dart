@@ -818,11 +818,14 @@ class DohProxyFfi {
       'gateway_mode': gatewayMode,
       'mitm_connect': mitmConnect,
       'h2_mitm': h2Mitm,
-      // 空 = 除 CF 验证域名外全部 MITM；Linux 的 WPE 只能逐主机放行叶子证书，
-      // 只 MITM 必须走 ECH 的主机（见 ProxyLeafTrust）
+      // cfbrowser：MITM/ECH 范围改为「显式下发」，不再依赖平台上默认值。
+      // 上游只在 Linux/Windows 下发（那两个平台的 WPE/WebView2 只能逐主机放行叶子），
+      // 移动端留空 = 除 CF 验证域名外全部 MITM。浏览器不需要解密全部站点，
+      // 因此这里统一走 ProxyLeafTrust.mitmHosts（默认仍只有 linux.do），
+      // 范围外的域名一律 CONNECT 隧道直通、端到端校验。
       if (mitmHosts.isNotEmpty)
         'mitm_hosts': mitmHosts
-      else if (Platform.isLinux || Platform.isWindows)
+      else
         'mitm_hosts': ProxyLeafTrust.mitmHosts,
       'doh_server': dohServer ?? 'cloudflare',
       'prefer_ipv6': preferIpv6,

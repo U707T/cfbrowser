@@ -8,7 +8,7 @@ library;
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/draft.dart';
+import 'package:cfbrowser/models/draft.dart';
 
 void main() {
   // linux.do/drafts.json?offset=0&limit=30 实际返回的一行

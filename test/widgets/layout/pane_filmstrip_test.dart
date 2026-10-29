@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/layout/pane_filmstrip.dart';
+import 'package:cfbrowser/widgets/layout/pane_filmstrip.dart';
 
 /// 胶片带契约:
 /// - 格子 Element 恒驻:压栈后旧顶格滑去左栏(unpinned),State 不丢;

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/plugins/plugins.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/plugins/plugins.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 包一层 ProviderScope + 本地化 + MaterialApp，并回抄内层 context

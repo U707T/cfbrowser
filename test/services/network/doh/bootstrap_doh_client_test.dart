@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh/bootstrap_doh_client.dart';
+import 'package:cfbrowser/services/network/doh/bootstrap_doh_client.dart';
 
 /// 找到 HTTP 头部结束位置（\r\n\r\n 的起点）
 int _headerEnd(Uint8List bytes) {

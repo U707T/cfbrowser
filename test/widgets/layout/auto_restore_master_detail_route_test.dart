@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/layout/auto_restore_master_detail_route.dart';
+import 'package:cfbrowser/widgets/layout/auto_restore_master_detail_route.dart';
 
 void main() {
   testWidgets('窗口恢复宽屏后移除话题与资料临时路由', (tester) async {

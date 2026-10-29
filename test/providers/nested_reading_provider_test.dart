@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluxdo/models/nested_reading_position.dart';
-import 'package:fluxdo/providers/nested_reading_provider.dart';
+import 'package:cfbrowser/models/nested_reading_position.dart';
+import 'package:cfbrowser/providers/nested_reading_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

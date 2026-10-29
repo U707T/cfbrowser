@@ -3,8 +3,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/dio_http_client.dart';
-import 'package:fluxdo/services/sticker_thumbnail_provider.dart';
+import 'package:cfbrowser/services/dio_http_client.dart';
+import 'package:cfbrowser/services/sticker_thumbnail_provider.dart';
 
 Future<ui.Image> makeImage() async {
   final recorder = ui.PictureRecorder();

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/modules/ldc_reward/models/ldc_reward_credentials.dart';
-import 'package:fluxdo/modules/ldc_reward/services/ldc_reward_credential_store.dart';
-import 'package:fluxdo/services/storage/secret_store.dart';
+import 'package:cfbrowser/modules/ldc_reward/models/ldc_reward_credentials.dart';
+import 'package:cfbrowser/modules/ldc_reward/services/ldc_reward_credential_store.dart';
+import 'package:cfbrowser/services/storage/secret_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

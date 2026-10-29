@@ -1,6 +1,6 @@
 import 'package:enhanced_cookie_jar/enhanced_cookie_jar.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cookie/raw_cookie_writer_fallback.dart';
+import 'package:cfbrowser/services/network/cookie/raw_cookie_writer_fallback.dart';
 
 void main() {
   group('RawCookieWriterFallback.resolveCookieDomain', () {

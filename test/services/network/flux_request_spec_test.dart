@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/flux_request_spec.dart';
+import 'package:cfbrowser/services/network/flux_request_spec.dart';
 
 /// `FluxRequestSpec` 是请求语义的读取侧单一真相源。
 ///

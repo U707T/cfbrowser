@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/qr_login_service.dart';
+import 'package:cfbrowser/services/qr_login_service.dart';
 
 void main() {
   group('QrLoginService payload codec v2', () {

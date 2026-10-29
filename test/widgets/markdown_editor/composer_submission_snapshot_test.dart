@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_submission_snapshot.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_submission_snapshot.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

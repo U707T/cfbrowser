@@ -4,7 +4,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/html_to_markdown.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/html_to_markdown.dart';
 
 void main() {
   test('基本块与行内:标题/粗斜体/链接/列表/引用', () {

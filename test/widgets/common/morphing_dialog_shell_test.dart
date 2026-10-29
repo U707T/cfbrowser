@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/common/morphing_dialog_anchor.dart';
-import 'package:fluxdo/widgets/common/morphing_dialog_shell.dart';
+import 'package:cfbrowser/widgets/common/morphing_dialog_anchor.dart';
+import 'package:cfbrowser/widgets/common/morphing_dialog_shell.dart';
 
 const _anchor = Rect.fromLTWH(20, 400, 360, 78);
 final _shell = find.byKey(const ValueKey('morphing-shell'));

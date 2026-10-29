@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh/accel_doh_nodes.dart';
-import 'package:fluxdo/services/network/doh/network_settings_service.dart';
+import 'package:cfbrowser/services/network/doh/accel_doh_nodes.dart';
+import 'package:cfbrowser/services/network/doh/network_settings_service.dart';
 
 void main() {
   group('accelRoutesUrlFor', () {

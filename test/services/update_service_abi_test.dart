@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/update_service.dart';
+import 'package:cfbrowser/services/update_service.dart';
 
 void main() {
   ApkAsset asset(String name) => ApkAsset(

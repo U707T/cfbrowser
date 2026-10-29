@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/theme/mojian_theme.dart';
-import 'package:fluxdo/widgets/topic/painted_topic_card.dart';
-import 'package:fluxdo/widgets/topic/topic_card_layout.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/theme/mojian_theme.dart';
+import 'package:cfbrowser/widgets/topic/painted_topic_card.dart';
+import 'package:cfbrowser/widgets/topic/topic_card_layout.dart';
 
 ThemeData _mojianTheme(Brightness b) => MojianTheme.build(
   scheme: MojianTheme.colorScheme(b, MojianAccent.cinnabar),

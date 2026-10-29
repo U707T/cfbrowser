@@ -2,12 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/providers/category_provider.dart';
-import 'package:fluxdo/utils/platform_utils.dart';
-import 'package:fluxdo/widgets/topic/painted_topic_card.dart';
-import 'package:fluxdo/widgets/topic/topic_item_builder.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/providers/category_provider.dart';
+import 'package:cfbrowser/utils/platform_utils.dart';
+import 'package:cfbrowser/widgets/topic/painted_topic_card.dart';
+import 'package:cfbrowser/widgets/topic/topic_item_builder.dart';
 
 Topic _topic() {
   return Topic(

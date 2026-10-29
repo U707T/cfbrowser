@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/log/log_writer.dart';
-import 'package:fluxdo/services/network/doh/network_settings_service.dart';
-import 'package:fluxdo/services/network/doh_proxy/doh_proxy_ffi.dart';
-import 'package:fluxdo/services/network/health/network_health_controller.dart';
-import 'package:fluxdo/services/network/request_scheduler_config.dart';
-import 'package:fluxdo/services/network/webview/webview_adapter_settings_service.dart';
+import 'package:cfbrowser/services/log/log_writer.dart';
+import 'package:cfbrowser/services/network/doh/network_settings_service.dart';
+import 'package:cfbrowser/services/network/doh_proxy/doh_proxy_ffi.dart';
+import 'package:cfbrowser/services/network/health/network_health_controller.dart';
+import 'package:cfbrowser/services/network/request_scheduler_config.dart';
+import 'package:cfbrowser/services/network/webview/webview_adapter_settings_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// NetworkHealthController 是通道健康的只读投影。

@@ -1,9 +1,9 @@
 import 'package:common_ui/common_ui.dart' show MenuQuickActionStyle;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/theme/mojian_theme.dart';
-import 'package:fluxdo/widgets/layout/master_detail_layout.dart';
-import 'package:fluxdo/widgets/share/share_image_preview.dart';
+import 'package:cfbrowser/theme/mojian_theme.dart';
+import 'package:cfbrowser/widgets/layout/master_detail_layout.dart';
+import 'package:cfbrowser/widgets/share/share_image_preview.dart';
 
 ThemeData _mojian() => MojianTheme.build(
   scheme: MojianTheme.colorScheme(Brightness.light, MojianAccent.cinnabar),

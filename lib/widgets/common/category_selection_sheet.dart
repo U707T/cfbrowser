@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:app_icons/app_icons.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/utils/font_awesome_helper.dart';
-import 'package:fluxdo/services/discourse_cache_manager.dart';
-import 'package:fluxdo/utils/url_helper.dart';
-import 'package:fluxdo/widgets/common/app_bottom_sheet.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/utils/font_awesome_helper.dart';
+import 'package:cfbrowser/services/discourse_cache_manager.dart';
+import 'package:cfbrowser/utils/url_helper.dart';
+import 'package:cfbrowser/widgets/common/app_bottom_sheet.dart';
 
 class CategorySelectionSheet extends StatefulWidget {
   final List<Category> categories;

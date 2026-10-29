@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
 
 void main() {
   test('发布新话题带上当前草稿 key，并回写服务端版本号', () async {

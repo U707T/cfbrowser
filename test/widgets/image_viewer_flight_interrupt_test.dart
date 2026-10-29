@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/hero_visibility_controller.dart';
+import 'package:cfbrowser/utils/hero_visibility_controller.dart';
 
 /// **push Hero 飞行未跑完就被 pop 打断**(开图立刻返回/连点两下)时,
 /// 源端缩略图必须恢复可见 —— 否则飞行体撤走的瞬间那个位置是空洞,

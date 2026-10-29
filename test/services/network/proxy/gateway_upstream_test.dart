@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/proxy/gateway_upstream.dart';
-import 'package:fluxdo/services/network/proxy/proxy_settings_service.dart';
+import 'package:cfbrowser/services/network/proxy/gateway_upstream.dart';
+import 'package:cfbrowser/services/network/proxy/proxy_settings_service.dart';
 
 void main() {
   group('GatewayUpstream.resolve', () {

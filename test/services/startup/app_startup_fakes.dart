@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:fluxdo/models/user.dart';
-import 'package:fluxdo/services/startup/app_startup.dart';
-import 'package:fluxdo/services/startup_progress.dart';
+import 'package:cfbrowser/models/user.dart';
+import 'package:cfbrowser/services/startup/app_startup.dart';
+import 'package:cfbrowser/services/startup_progress.dart';
 
 /// 记录调用顺序的假启动端口。所有步骤写进同一份 [log]，测试按顺序断言。
 class FakeStartupPorts implements AppStartupPorts {

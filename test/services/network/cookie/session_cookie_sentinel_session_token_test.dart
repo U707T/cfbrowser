@@ -1,11 +1,11 @@
 import 'package:enhanced_cookie_jar/enhanced_cookie_jar.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cookie/cookie_full_info.dart';
-import 'package:fluxdo/services/network/cookie/cookie_jar_service.dart';
-import 'package:fluxdo/services/network/cookie/raw_cookie_writer.dart';
-import 'package:fluxdo/services/network/cookie/session_cookie_sentinel.dart';
-import 'package:fluxdo/services/network/recovery/session_heal_policy.dart';
-import 'package:fluxdo/services/session/session_token_authority.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_full_info.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_jar_service.dart';
+import 'package:cfbrowser/services/network/cookie/raw_cookie_writer.dart';
+import 'package:cfbrowser/services/network/cookie/session_cookie_sentinel.dart';
+import 'package:cfbrowser/services/network/recovery/session_heal_policy.dart';
+import 'package:cfbrowser/services/session/session_token_authority.dart';
 
 import '../../session/session_token_fakes.dart';
 

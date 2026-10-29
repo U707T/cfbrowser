@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/providers/topic_list/filter_provider.dart';
-import 'package:fluxdo/widgets/topic/topic_list_update_banner.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/providers/topic_list/filter_provider.dart';
+import 'package:cfbrowser/widgets/topic/topic_list_update_banner.dart';
 
 void main() {
   for (final size in [const Size(375, 812), const Size(812, 375)]) {

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/cf_challenge_service.dart';
+import 'package:cfbrowser/services/cf_challenge_service.dart';
 
 /// 「切兼容模式」询问里第二条出路:关掉自动过盾。
 ///

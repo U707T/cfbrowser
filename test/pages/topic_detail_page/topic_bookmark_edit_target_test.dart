@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/pages/topic_detail_page/topic_bookmark_edit_target.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/pages/topic_detail_page/topic_bookmark_edit_target.dart';
 
 Post _post({
   required int id,

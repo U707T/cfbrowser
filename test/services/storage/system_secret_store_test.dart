@@ -1,7 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/storage/secret_store.dart';
-import 'package:fluxdo/services/storage/system_secret_store.dart';
+import 'package:cfbrowser/services/storage/secret_store.dart';
+import 'package:cfbrowser/services/storage/system_secret_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

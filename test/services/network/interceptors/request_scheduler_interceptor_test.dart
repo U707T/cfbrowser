@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/interceptors/request_scheduler_interceptor.dart';
-import 'package:fluxdo/services/network/request_scheduler_config.dart';
+import 'package:cfbrowser/services/network/interceptors/request_scheduler_interceptor.dart';
+import 'package:cfbrowser/services/network/request_scheduler_config.dart';
 
 class _Adapter implements HttpClientAdapter {
   int calls = 0;

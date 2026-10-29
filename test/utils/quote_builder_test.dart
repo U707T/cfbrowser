@@ -3,7 +3,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/quote_builder.dart';
+import 'package:cfbrowser/utils/quote_builder.dart';
 
 void main() {
   test('无显示名:首字段为 username,不带 username: 参数', () {

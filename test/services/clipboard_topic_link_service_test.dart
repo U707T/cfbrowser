@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/clipboard_topic_link_service.dart';
+import 'package:cfbrowser/services/clipboard_topic_link_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

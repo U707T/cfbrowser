@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluxdo/models/nested_topic.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/providers/core_providers.dart';
-import 'package:fluxdo/providers/nested_reading_provider.dart';
-import 'package:fluxdo/providers/nested_topic_provider.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/models/nested_topic.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/providers/core_providers.dart';
+import 'package:cfbrowser/providers/nested_reading_provider.dart';
+import 'package:cfbrowser/providers/nested_topic_provider.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
 
 Post post(int number) => Post(
   id: number,

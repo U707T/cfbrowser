@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/emoji_handler.dart';
-import 'package:fluxdo/utils/emoji_shortcodes.dart';
+import 'package:cfbrowser/services/emoji_handler.dart';
+import 'package:cfbrowser/utils/emoji_shortcodes.dart';
 import 'package:flutter/services.dart';
 
 void main() {

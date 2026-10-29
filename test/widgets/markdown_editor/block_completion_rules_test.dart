@@ -2,7 +2,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/block_completion_rules.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/block_completion_rules.dart';
 
 BlockCompletion? at(List<String?> texts, [int? index]) =>
     detectBlockCompletion(texts, index ?? texts.length - 1);

@@ -15,16 +15,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/providers/theme_provider.dart'
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/providers/theme_provider.dart'
     show sharedPreferencesProvider;
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/widgets/post/post_item/post_item.dart';
-import 'package:fluxdo/widgets/post/post_item/post_render_prep.dart';
-import 'package:fluxdo/widgets/post/post_item/render_parse_cache.dart';
-import 'package:fluxdo/widgets/post/post_item/segmented_long_post.dart';
-import 'package:fluxdo/widgets/post/small_action_item.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/widgets/post/post_item/post_item.dart';
+import 'package:cfbrowser/widgets/post/post_item/post_render_prep.dart';
+import 'package:cfbrowser/widgets/post/post_item/render_parse_cache.dart';
+import 'package:cfbrowser/widgets/post/post_item/segmented_long_post.dart';
+import 'package:cfbrowser/widgets/post/small_action_item.dart';
 import 'package:fluxdo_render/fluxdo_render.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

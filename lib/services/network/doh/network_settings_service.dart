@@ -23,6 +23,7 @@ import '../proxy/proxy_settings_service.dart';
 import '../rhttp/rhttp_settings_service.dart';
 import '../system_proxy_service.dart';
 import '../webview/webview_adapter_settings_service.dart';
+import '../../browser/browser_scope_service.dart';
 import '../../windows_webview_environment_service.dart';
 import 'accel_doh_auth_service.dart';
 import 'accel_doh_nodes.dart';
@@ -271,7 +272,7 @@ class NetworkSettingsService {
   static const selectNoticeVersionKey = 'doh_select_notice_version';
 
   /// atlas（CF 橙云入口）的路由表接口，只回源 hk2，表按线路选池
-  static const _linuxDoHost = 'linux.do';
+  /// 注：默认 ECH 范围（linux.do）已移到 BrowserScopeService，不再在这里写死
   static const _atlasHost = 'atlas.1molchuan.top';
   static const accelAtlasRoutesUrl = 'https://$_atlasHost/v1/routes';
 
@@ -975,8 +976,9 @@ class NetworkSettingsService {
         extraCoveredHosts: const [_atlasHost, cfhubHost],
         appVersion: _appVersion,
         networkSig: ConnectivityService().networkSignature.value,
-        // 优选出结果后先预建一条到 linux.do 的上游连接，首个请求不用再等握手
-        preconnectHosts: const [_linuxDoHost],
+        // 优选出结果后先预建一条到范围域名的上游连接，首个请求不用再等握手。
+        // cfbrowser：范围可配置（BrowserScopeService），默认仍是 linux.do
+        preconnectHosts: BrowserScopeService.instance.preconnectHosts,
       );
 
       if (!success) {

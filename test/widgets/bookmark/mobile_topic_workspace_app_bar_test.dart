@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/bookmark/mobile_topic_workspace_app_bar.dart';
+import 'package:cfbrowser/widgets/bookmark/mobile_topic_workspace_app_bar.dart';
 
 void main() {
   testWidgets('移动端帖子工作区顶栏按预期顺序排列控件', (tester) async {

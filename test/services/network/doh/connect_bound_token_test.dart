@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh/accel_doh_api.dart';
-import 'package:fluxdo/services/network/doh/cfhub_api.dart';
-import 'package:fluxdo/services/network/doh/connect_bound_token.dart';
-import 'package:fluxdo/services/network/doh/connect_code_flow.dart';
+import 'package:cfbrowser/services/network/doh/accel_doh_api.dart';
+import 'package:cfbrowser/services/network/doh/cfhub_api.dart';
+import 'package:cfbrowser/services/network/doh/connect_bound_token.dart';
+import 'package:cfbrowser/services/network/doh/connect_code_flow.dart';
 
 import 'connect_token_fakes.dart';
 

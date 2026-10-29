@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:fluxdo/services/session/session_token_authority.dart';
+import 'package:cfbrowser/services/session/session_token_authority.dart';
 
 /// [SessionTokenAuthority] 场景测试用的内存假实现：jar、WebView、服务端
 /// （探测 / User API Key / 认证层回调）都在内存里，时钟可拨。

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/semantic_composer_codec.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/composer_import_pipeline.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/semantic_composer_codec.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/composer_import_pipeline.dart';
 import 'package:fluxdo_render/src/editor/semantic_editor/semantic_editor.dart';
 import 'package:fluxdo_render/editor.dart';
 import 'composer_token_codec_test.dart' show parseWithNode, cookWithNode;

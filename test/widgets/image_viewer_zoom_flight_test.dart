@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/hero_visibility_controller.dart';
+import 'package:cfbrowser/utils/hero_visibility_controller.dart';
 
 /// 放大态返回的飞行几何契约(修「大图先变小图,再播返回动画」)。
 ///

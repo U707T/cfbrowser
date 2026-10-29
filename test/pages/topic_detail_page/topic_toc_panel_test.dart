@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/pages/topic_detail_page/controllers/topic_detail_controller.dart';
-import 'package:fluxdo/pages/topic_detail_page/controllers/topic_toc_controller.dart';
-import 'package:fluxdo/pages/topic_detail_page/widgets/topic_toc_panel.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
-import 'package:fluxdo/services/screen_track.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/pages/topic_detail_page/controllers/topic_detail_controller.dart';
+import 'package:cfbrowser/pages/topic_detail_page/controllers/topic_toc_controller.dart';
+import 'package:cfbrowser/pages/topic_detail_page/widgets/topic_toc_panel.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/services/screen_track.dart';
 import 'package:fluxdo_render/fluxdo_render.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 

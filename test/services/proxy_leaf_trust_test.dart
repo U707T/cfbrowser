@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh_proxy/proxy_leaf_trust.dart';
+import 'package:cfbrowser/services/network/doh_proxy/proxy_leaf_trust.dart';
 
 void main() {
   group('ProxyLeafTrust.pemToDer', () {
@@ -25,7 +25,7 @@ void main() {
     });
   });
 
-  test('MITM 范围只含必须走 ECH 的 linux.do', () {
+  test('MITM 范围默认只含必须走 ECH 的 linux.do（cfbrowser 改为可配置）', () {
     expect(ProxyLeafTrust.mitmHosts, ['linux.do']);
   });
 }

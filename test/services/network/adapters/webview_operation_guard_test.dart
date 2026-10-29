@@ -4,8 +4,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/adapters/webview_operation_guard.dart';
-import 'package:fluxdo/services/network/adapters/webview_request_codec.dart';
+import 'package:cfbrowser/services/network/adapters/webview_operation_guard.dart';
+import 'package:cfbrowser/services/network/adapters/webview_request_codec.dart';
 
 void main() {
   test('发送卡住时取消会停止传输并取消上游订阅，迟到结果不再发送', () async {

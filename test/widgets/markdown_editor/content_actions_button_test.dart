@@ -9,10 +9,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/widgets/markdown_editor/content_actions_button.dart';
-import 'package:fluxdo/widgets/markdown_editor/content_actions_providers.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/widgets/markdown_editor/content_actions_button.dart';
+import 'package:cfbrowser/widgets/markdown_editor/content_actions_providers.dart';
 
 /// 可编程的假 provider，用来精确摆布各种可用性组合
 class _FakeProvider extends ChangeNotifier implements ContentActionsProvider {

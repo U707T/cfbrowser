@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/svg_utils.dart';
+import 'package:cfbrowser/utils/svg_utils.dart';
 
 void main() {
   group('SvgUtils.isSvgBytes', () {

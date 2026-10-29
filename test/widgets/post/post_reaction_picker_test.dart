@@ -2,13 +2,13 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/services/discourse_cache_manager.dart';
-import 'package:fluxdo/services/emoji_handler.dart';
-import 'package:fluxdo/utils/platform_utils.dart';
-import 'package:fluxdo/widgets/post/post_item/widgets/post_action_bar.dart';
-import 'package:fluxdo/widgets/post/post_item/widgets/post_reaction_picker.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/services/discourse_cache_manager.dart';
+import 'package:cfbrowser/services/emoji_handler.dart';
+import 'package:cfbrowser/utils/platform_utils.dart';
+import 'package:cfbrowser/widgets/post/post_item/widgets/post_action_bar.dart';
+import 'package:cfbrowser/widgets/post/post_item/widgets/post_reaction_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _reactionIds = [

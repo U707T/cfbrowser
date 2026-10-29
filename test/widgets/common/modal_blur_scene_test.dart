@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/utils/blur_config.dart';
-import 'package:fluxdo/utils/dialog_utils.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/utils/blur_config.dart';
+import 'package:cfbrowser/utils/dialog_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

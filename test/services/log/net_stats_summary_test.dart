@@ -1,4 +1,4 @@
-import 'package:fluxdo/services/log/logger_utils.dart';
+import 'package:cfbrowser/services/log/logger_utils.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

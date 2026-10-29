@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/discourse/session_check_verdict.dart';
+import 'package:cfbrowser/services/discourse/session_check_verdict.dart';
 
 /// 启动时的登录态检查不能把"被盾挡住"当成"会话失效"。
 ///

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/download_service.dart';
+import 'package:cfbrowser/services/download_service.dart';
 import 'package:path/path.dart' as p;
 
 void main() {

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/shortcut_binding.dart';
-import 'package:fluxdo/providers/shortcut_provider.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/providers/preferences_provider.dart';
-import 'package:fluxdo/utils/platform_utils.dart';
-import 'package:fluxdo/widgets/keyboard_shortcut_handler.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/shortcut_binding.dart';
+import 'package:cfbrowser/providers/shortcut_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/providers/preferences_provider.dart';
+import 'package:cfbrowser/utils/platform_utils.dart';
+import 'package:cfbrowser/widgets/keyboard_shortcut_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluxdo/pages/topics_page.dart' show barVisibilityProvider;
-import 'package:fluxdo/widgets/topics/topics_fab.dart';
+import 'package:cfbrowser/pages/topics_page.dart' show barVisibilityProvider;
+import 'package:cfbrowser/widgets/topics/topics_fab.dart';
 
 void main() {
   final trigger = find.byKey(const ValueKey('topics-create-menu'));

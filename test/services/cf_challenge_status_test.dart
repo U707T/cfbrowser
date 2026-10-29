@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cf/cf_challenge_classifier.dart';
-import 'package:fluxdo/services/network/exceptions/api_exception.dart';
+import 'package:cfbrowser/services/network/cf/cf_challenge_classifier.dart';
+import 'package:cfbrowser/services/network/exceptions/api_exception.dart';
 
 /// 挑战识别不能只认 403/429。
 ///

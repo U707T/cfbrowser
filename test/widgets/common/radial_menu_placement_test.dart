@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/common/radial_long_press_menu.dart';
+import 'package:cfbrowser/widgets/common/radial_long_press_menu.dart';
 
 const _screen = Size(411, 914);
 const _padding = EdgeInsets.only(top: 24, bottom: 24);

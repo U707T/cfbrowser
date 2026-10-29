@@ -12,10 +12,10 @@ library;
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/crypto/algorithms/rsa_algorithm.dart';
-import 'package:fluxdo/services/crypto/crypto_algorithm.dart';
-import 'package:fluxdo/services/crypto/crypto_cipher_format.dart';
-import 'package:fluxdo/services/crypto/crypto_toolbox.dart';
+import 'package:cfbrowser/services/crypto/algorithms/rsa_algorithm.dart';
+import 'package:cfbrowser/services/crypto/crypto_algorithm.dart';
+import 'package:cfbrowser/services/crypto/crypto_cipher_format.dart';
+import 'package:cfbrowser/services/crypto/crypto_toolbox.dart';
 
 const String _openSslPassword = 'fluxdo-test-\u5bc6\u7801123';
 const String _plainText =

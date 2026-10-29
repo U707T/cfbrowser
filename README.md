@@ -1,4 +1,9 @@
-# cfluxdo
+> **本仓库已移植为 cfbrowser**：在 [fluxdo](https://github.com/1molchuan/fluxdo)（cfluxdo）基础上，
+> 把内置 WebView 浏览器提升为首页，并把 ECH/MITM 范围从写死的 `linux.do` 改为可配置。
+> 移植说明、构建与验证见 [docs/cfbrowser.md](docs/cfbrowser.md)。
+> 上游代码遵循 GPL-3.0，本移植同样以 GPL-3.0 发布。
+
+# cfbrowser
 
 > 面向国内网络环境的 [Linux.do](https://linux.do/) 第三方 Android 客户端（另有 Windows / Linux 桌面预览版），基于 [FluxDO](https://github.com/Lingyan000/fluxdo) 独立发行
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/providers/selected_topic_provider.dart';
-import 'package:fluxdo/utils/fluxdo_render_callbacks.dart';
+import 'package:cfbrowser/providers/selected_topic_provider.dart';
+import 'package:cfbrowser/utils/fluxdo_render_callbacks.dart';
 
 void main() {
   testWidgets('正文站内链接压入当前平行视界栈', (tester) async {

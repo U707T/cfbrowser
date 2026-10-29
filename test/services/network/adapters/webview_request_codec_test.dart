@@ -3,8 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/adapters/webview_request_codec.dart';
-import 'package:fluxdo/services/network/adapters/webview_http_adapter.dart';
+import 'package:cfbrowser/services/network/adapters/webview_request_codec.dart';
+import 'package:cfbrowser/services/network/adapters/webview_http_adapter.dart';
 
 void main() {
   for (final base64 in [true, false]) {

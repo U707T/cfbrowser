@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/dialog_utils.dart';
+import 'package:cfbrowser/utils/dialog_utils.dart';
 import 'package:common_ui/common_ui.dart';
 
 /// 底部弹框的 Android 预测返回(差异点 8)。

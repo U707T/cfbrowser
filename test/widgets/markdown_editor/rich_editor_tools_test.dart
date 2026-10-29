@@ -7,7 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxdo_render/editor.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/rich_editor_tools.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/rich_editor_tools.dart';
 
 EditorState _makeState() => EditorState.fromTexts(const ['第一段']);
 

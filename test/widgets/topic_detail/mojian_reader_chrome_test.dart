@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/slang/strings.g.dart';
-import 'package:fluxdo/pages/topic_detail_page/widgets/mojian_reader_chrome.dart';
-import 'package:fluxdo/providers/preferences_provider.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/theme/mojian_theme.dart';
+import 'package:cfbrowser/l10n/slang/strings.g.dart';
+import 'package:cfbrowser/pages/topic_detail_page/widgets/mojian_reader_chrome.dart';
+import 'package:cfbrowser/providers/preferences_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/theme/mojian_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 ThemeData _mojian() => MojianTheme.build(

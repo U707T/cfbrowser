@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh_proxy/cert_spki.dart';
+import 'package:cfbrowser/services/network/doh_proxy/cert_spki.dart';
 
 // 期望值由 openssl 算出：
 // openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64

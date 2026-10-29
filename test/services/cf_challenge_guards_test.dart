@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/cf_challenge_service.dart';
+import 'package:cfbrowser/services/cf_challenge_service.dart';
 
 /// CF 验证服务里两条与"什么时候该放弃/该再问"相关的契约。
 ///

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:app_icons/app_icons.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_view_mode_switcher.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_header_actions.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_view_mode_switcher.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_header_actions.dart';
 
 void main() {
   testWidgets('图标提交保留动作说明，加载时尺寸稳定且不可重复提交', (tester) async {

@@ -1,5 +1,5 @@
-import 'package:fluxdo/models/draft.dart';
-import 'package:fluxdo/services/local_draft_store.dart';
+import 'package:cfbrowser/models/draft.dart';
+import 'package:cfbrowser/services/local_draft_store.dart';
 
 class MemoryDraftStore extends LocalDraftStore {
   LocalDraftEntry? entry;

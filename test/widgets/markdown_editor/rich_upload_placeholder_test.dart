@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/rich_composer_editor.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/rich_composer_editor.dart';
 import 'package:fluxdo_render/editor.dart';
 import 'package:fluxdo_render/fluxdo_render.dart';
 

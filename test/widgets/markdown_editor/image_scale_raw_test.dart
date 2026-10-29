@@ -3,7 +3,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/markdown_renderer.dart';
+import 'package:cfbrowser/widgets/markdown_editor/markdown_renderer.dart';
 import 'package:fluxdo_render/fluxdo_render.dart' show ImageRun;
 
 ImageRun _img(int index, {double? scale}) => ImageRun(

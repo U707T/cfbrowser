@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/settings/settings_model.dart';
-import 'package:fluxdo/settings/settings_renderer.dart';
+import 'package:cfbrowser/settings/settings_model.dart';
+import 'package:cfbrowser/settings/settings_renderer.dart';
 
 void main() {
   // 断言渲染结果而不是 maxLines/overflow 这两个参数本身:换成任何等价实现

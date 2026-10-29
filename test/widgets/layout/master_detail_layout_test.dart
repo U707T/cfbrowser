@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/widgets/layout/draggable_divider.dart';
-import 'package:fluxdo/widgets/layout/master_detail_layout.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/widgets/layout/draggable_divider.dart';
+import 'package:cfbrowser/widgets/layout/master_detail_layout.dart';
 
 void main() {
   Future<void> pumpLayout(WidgetTester tester, {required double width}) async {

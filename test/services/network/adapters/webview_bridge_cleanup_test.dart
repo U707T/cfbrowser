@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/adapters/webview_http_adapter.dart';
+import 'package:cfbrowser/services/network/adapters/webview_http_adapter.dart';
 
 class _Port implements WebMessagePort {
   int closes = 0;

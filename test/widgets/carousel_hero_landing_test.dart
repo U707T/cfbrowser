@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/hero_visibility_controller.dart';
-import 'package:fluxdo/widgets/content/discourse_html_content/builders/image_carousel_builder.dart';
-import 'package:fluxdo/widgets/content/discourse_html_content/builders/image_grid_builder.dart';
-import 'package:fluxdo/widgets/content/discourse_html_content/image_utils.dart';
+import 'package:cfbrowser/utils/hero_visibility_controller.dart';
+import 'package:cfbrowser/widgets/content/discourse_html_content/builders/image_carousel_builder.dart';
+import 'package:cfbrowser/widgets/content/discourse_html_content/builders/image_grid_builder.dart';
+import 'package:cfbrowser/widgets/content/discourse_html_content/image_utils.dart';
 
 /// 轮播源端 Hero 的飞行几何。
 ///

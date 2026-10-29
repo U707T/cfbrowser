@@ -3,7 +3,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/html_text_mapper.dart';
+import 'package:cfbrowser/utils/html_text_mapper.dart';
 
 void main() {
   test('全选:选中文本等于整帖时直接返回完整 cooked', () {

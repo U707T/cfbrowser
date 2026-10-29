@@ -1,7 +1,7 @@
-name: fluxdo
-description: "cfluxdo：基于 FluxDO 的 Linux.do 第三方 Android 客户端"
+name: cfbrowser
+description: "cfbrowser：Cloudflare 边缘直连浏览器（基于 fluxdo 移植）"
 publish_to: 'none'
-version: 1.2.1+2026102408
+version: 1.0.0+2026102901
 
 environment:
   sdk: ^3.13.0

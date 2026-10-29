@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/interceptors/redirect_interceptor.dart';
+import 'package:cfbrowser/services/network/interceptors/redirect_interceptor.dart';
 
 void main() {
   test('内部重定向绕过调度器并保留原请求计数标记', () async {

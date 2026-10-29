@@ -4,12 +4,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/services/discourse/discourse_service.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/services/session/session_token_authority.dart';
-import 'package:fluxdo/services/startup/app_startup.dart';
-import 'package:fluxdo/services/startup_progress.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/services/discourse/discourse_service.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/services/session/session_token_authority.dart';
+import 'package:cfbrowser/services/startup/app_startup.dart';
+import 'package:cfbrowser/services/startup_progress.dart';
 
 import '../session/session_token_fakes.dart';
 import 'app_startup_fakes.dart';

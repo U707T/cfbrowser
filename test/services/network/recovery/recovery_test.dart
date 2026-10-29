@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/exceptions/api_exception.dart';
-import 'package:fluxdo/services/network/recovery/policies.dart';
-import 'package:fluxdo/services/network/recovery/recovery_coordinator.dart';
-import 'package:fluxdo/services/network/recovery/recovery_policy.dart';
+import 'package:cfbrowser/services/network/exceptions/api_exception.dart';
+import 'package:cfbrowser/services/network/recovery/policies.dart';
+import 'package:cfbrowser/services/network/recovery/recovery_coordinator.dart';
+import 'package:cfbrowser/services/network/recovery/recovery_policy.dart';
 
 /// 恢复层的行为契约。
 ///

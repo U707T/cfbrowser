@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxdo_render/fluxdo_render.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/local_date_edit_dialog.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/local_date_edit_dialog.dart';
 
 void main() {
   testWidgets('日期编辑保留周期、显式 false、秒和范围终点', (tester) async {

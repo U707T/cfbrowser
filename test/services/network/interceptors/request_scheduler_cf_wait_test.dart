@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/cf_challenge_service.dart';
-import 'package:fluxdo/services/network/exceptions/api_exception.dart';
-import 'package:fluxdo/services/network/flux_request_spec.dart';
-import 'package:fluxdo/services/network/interceptors/request_scheduler_interceptor.dart';
+import 'package:cfbrowser/services/cf_challenge_service.dart';
+import 'package:cfbrowser/services/network/exceptions/api_exception.dart';
+import 'package:cfbrowser/services/network/flux_request_spec.dart';
+import 'package:cfbrowser/services/network/interceptors/request_scheduler_interceptor.dart';
 
 /// CF 验证期间,用户可见请求要排队等结果,而不是一律取消。
 ///

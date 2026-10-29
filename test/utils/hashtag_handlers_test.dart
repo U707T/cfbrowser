@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/font_awesome_helper.dart';
-import 'package:fluxdo/utils/hashtag_handlers.dart';
+import 'package:cfbrowser/utils/font_awesome_helper.dart';
+import 'package:cfbrowser/utils/hashtag_handlers.dart';
 import 'package:fluxdo_render/fluxdo_render.dart' show hashtagIconResolver;
 
 /// hashtag 药丸宿主图标解析的回归:发帖器预览(客户端 cook)给的标签 href

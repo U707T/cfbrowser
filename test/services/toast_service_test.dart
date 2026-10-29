@@ -1,9 +1,9 @@
 import 'package:common_ui/common_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/services/toast_service.dart';
-import 'package:fluxdo/theme/mojian_theme.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/services/toast_service.dart';
+import 'package:cfbrowser/theme/mojian_theme.dart';
 
 /// 入场 560ms、退场 300ms，多给一点余量
 const _enter = Duration(milliseconds: 700);

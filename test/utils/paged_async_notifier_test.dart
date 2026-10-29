@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/paged_async_notifier.dart';
+import 'package:cfbrowser/utils/paged_async_notifier.dart';
 
 final _pagedTestProvider =
     AsyncNotifierProvider<_PagedTestNotifier, List<int>>(

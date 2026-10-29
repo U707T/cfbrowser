@@ -1,7 +1,7 @@
 import 'package:app_icons/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_submit_button.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_submit_button.dart';
 
 void main() {
   for (final compact in [false, true]) {

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/navigation/back_exit_guard.dart';
+import 'package:cfbrowser/services/navigation/back_exit_guard.dart';
 
 void main() {
   test('两秒内第二次返回才允许退出', () {

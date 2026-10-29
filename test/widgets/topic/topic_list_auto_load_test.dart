@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/providers/category_provider.dart';
-import 'package:fluxdo/providers/message_bus/topic_list_events.dart';
-import 'package:fluxdo/providers/message_bus/topic_tracking_providers.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/providers/topic_list/filter_provider.dart';
-import 'package:fluxdo/widgets/topic/topic_list_updates_mixin.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/providers/category_provider.dart';
+import 'package:cfbrowser/providers/message_bus/topic_list_events.dart';
+import 'package:cfbrowser/providers/message_bus/topic_tracking_providers.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/providers/topic_list/filter_provider.dart';
+import 'package:cfbrowser/widgets/topic/topic_list_updates_mixin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _QuietMessageBus extends MessageBusInitNotifier {

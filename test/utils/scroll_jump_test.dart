@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 
-import 'package:fluxdo/utils/scroll_jump.dart';
+import 'package:cfbrowser/utils/scroll_jump.dart';
 
 /// 跳转落点贴底后内容收缩，位置不得越界（越界 ⇒ BouncingScrollSimulation 回弹）
 ///

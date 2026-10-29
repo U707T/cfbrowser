@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=cfluxdo
+Name=cfbrowser
 Comment=linux.do 客户端
-Exec=cfluxdo %u
-Icon=com.github.molchuan.cfluxdo
+Exec=cfbrowser %u
+Icon=com.github.molchuan.cfbrowser
 Terminal=false
 Type=Application
 Categories=Network;
 MimeType=x-scheme-handler/fluxdo;x-scheme-handler/discourse;
-StartupWMClass=com.github.molchuan.cfluxdo
+StartupWMClass=com.github.molchuan.cfbrowser

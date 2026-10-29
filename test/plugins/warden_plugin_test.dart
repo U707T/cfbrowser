@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/services/local_notification_service.dart' show navigatorKey;
-import 'package:fluxdo/plugins/plugins.dart';
-import 'package:fluxdo/widgets/common/character_counts_overlay.dart';
-import 'package:fluxdo/widgets/topic/topic_editor_helpers.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/services/local_notification_service.dart' show navigatorKey;
+import 'package:cfbrowser/plugins/plugins.dart';
+import 'package:cfbrowser/widgets/common/character_counts_overlay.dart';
+import 'package:cfbrowser/widgets/topic/topic_editor_helpers.dart';
 
 /// linux.do 真实分类 JSON 的最小形态（搞七捻三：回复 16 字）
 Map<String, dynamic> _categoryJson({

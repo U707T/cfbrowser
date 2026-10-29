@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/cf_challenge_service.dart';
+import 'package:cfbrowser/services/cf_challenge_service.dart';
 
 /// CF 失败计数必须按**验证轮次**去重,不能按请求个数累加。
 ///

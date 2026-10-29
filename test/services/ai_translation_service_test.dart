@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/ai_translation_service.dart';
+import 'package:cfbrowser/services/ai_translation_service.dart';
 
 void main() {
   test('从 cooked HTML 提取可翻译文本并保留图片 alt', () {

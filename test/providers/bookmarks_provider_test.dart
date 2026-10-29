@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/providers/bookmarks_repository.dart';
-import 'package:fluxdo/storage/bookmark_cache_dao.dart';
+import 'package:cfbrowser/providers/bookmarks_repository.dart';
+import 'package:cfbrowser/storage/bookmark_cache_dao.dart';
 
 import '../storage/bookmark_hive_test_support.dart';
 

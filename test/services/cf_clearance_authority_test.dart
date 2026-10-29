@@ -1,7 +1,7 @@
 import 'package:enhanced_cookie_jar/enhanced_cookie_jar.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/cf_clearance_authority.dart';
-import 'package:fluxdo/services/network/cookie/cookie_value_codec.dart';
+import 'package:cfbrowser/services/cf_clearance_authority.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_value_codec.dart';
 
 /// 「在位值粘性」的契约。
 ///

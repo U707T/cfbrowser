@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/pages/topic_detail_page/topic_more_menu_actions.dart';
+import 'package:cfbrowser/pages/topic_detail_page/topic_more_menu_actions.dart';
 
 void main() {
   /// 归档入口共用 `archive_message` 一个 value，双态（归档 / 移回收件箱）

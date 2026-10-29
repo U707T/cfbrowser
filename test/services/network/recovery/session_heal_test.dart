@@ -5,10 +5,10 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:enhanced_cookie_jar/enhanced_cookie_jar.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cookie/app_cookie_manager.dart';
-import 'package:fluxdo/services/network/recovery/recovery_coordinator.dart';
-import 'package:fluxdo/services/network/recovery/recovery_policy.dart';
-import 'package:fluxdo/services/network/recovery/session_heal_policy.dart';
+import 'package:cfbrowser/services/network/cookie/app_cookie_manager.dart';
+import 'package:cfbrowser/services/network/recovery/recovery_coordinator.dart';
+import 'package:cfbrowser/services/network/recovery/recovery_policy.dart';
+import 'package:cfbrowser/services/network/recovery/session_heal_policy.dart';
 
 /// 会话自愈的行为契约(自 SelfHealingInterceptor 迁移至恢复层后重建)。
 ///

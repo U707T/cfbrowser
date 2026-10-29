@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh/cf_select_notice.dart';
+import 'package:cfbrowser/services/network/doh/cf_select_notice.dart';
 
 void main() {
   group('CfSelectNotice.majorMinor', () {

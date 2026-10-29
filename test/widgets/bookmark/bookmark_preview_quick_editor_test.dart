@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/slang/strings.g.dart';
-import 'package:fluxdo/widgets/bookmark/bookmark_preview_quick_editor.dart';
+import 'package:cfbrowser/l10n/slang/strings.g.dart';
+import 'package:cfbrowser/widgets/bookmark/bookmark_preview_quick_editor.dart';
 
 void main() {
   testWidgets('快速编辑会复用缓存候选并后台刷新完整补全列表', (tester) async {

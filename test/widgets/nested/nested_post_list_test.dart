@@ -4,18 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/nested_topic.dart';
-import 'package:fluxdo/models/nested_reading_position.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/pages/topic_detail_page/widgets/nested_post_list.dart';
-import 'package:fluxdo/providers/nested_reading_provider.dart';
-import 'package:fluxdo/providers/nested_topic_provider.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/providers/category_provider.dart';
-import 'package:fluxdo/widgets/nested/nested_post_card.dart';
-import 'package:fluxdo/models/category.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/nested_topic.dart';
+import 'package:cfbrowser/models/nested_reading_position.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/pages/topic_detail_page/widgets/nested_post_list.dart';
+import 'package:cfbrowser/providers/nested_reading_provider.dart';
+import 'package:cfbrowser/providers/nested_topic_provider.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/providers/category_provider.dart';
+import 'package:cfbrowser/widgets/nested/nested_post_card.dart';
+import 'package:cfbrowser/models/category.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
 
 Post _post(int number, {bool long = false}) => Post(
   id: number,

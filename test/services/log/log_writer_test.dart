@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/log/log_writer.dart';
+import 'package:cfbrowser/services/log/log_writer.dart';
 
 void main() {
   late Directory tempDir;

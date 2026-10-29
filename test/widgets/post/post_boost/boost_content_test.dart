@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/widgets/post/post_boost/boost_content.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/widgets/post/post_boost/boost_content.dart';
 
 void main() {
   group('BoostContentParser', () {

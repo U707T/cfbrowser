@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/draft.dart';
+import 'package:cfbrowser/models/draft.dart';
 
 void main() {
   test('网页端省略字段和客户端空值、默认原型表达相同内容', () {

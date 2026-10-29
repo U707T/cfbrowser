@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/rich_composer/composer_import_pipeline.dart';
+import 'package:cfbrowser/widgets/markdown_editor/rich_composer/composer_import_pipeline.dart';
 
 void main() {
   test('token 门禁诊断不改变拒绝结果', () async {

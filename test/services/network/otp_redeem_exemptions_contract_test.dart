@@ -2,9 +2,9 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cookie/csrf_token_service.dart';
-import 'package:fluxdo/services/network/interceptors/redirect_interceptor.dart';
-import 'package:fluxdo/services/network/interceptors/request_header_interceptor.dart';
+import 'package:cfbrowser/services/network/cookie/csrf_token_service.dart';
+import 'package:cfbrowser/services/network/interceptors/redirect_interceptor.dart';
+import 'package:cfbrowser/services/network/interceptors/request_header_interceptor.dart';
 
 /// UserApiKey 的 OTP 兑换(`user_api_key_service.dart` 的 redeemOtp)对拦截器
 /// 链的两条豁免语义。两者都是事故驱动的设计,却一直没有测试保护。

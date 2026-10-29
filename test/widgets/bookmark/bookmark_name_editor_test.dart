@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/slang/strings.g.dart';
-import 'package:fluxdo/widgets/bookmark/bookmark_name_editor.dart';
+import 'package:cfbrowser/l10n/slang/strings.g.dart';
+import 'package:cfbrowser/widgets/bookmark/bookmark_name_editor.dart';
 
 void main() {
   testWidgets('带保存按钮模式下可以直接修改标签名并保存', (tester) async {

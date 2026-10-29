@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fluxdo/pages/topics_page.dart';
-import 'package:fluxdo/providers/theme_provider.dart';
-import 'package:fluxdo/widgets/layout/adaptive_navigation.dart';
-import 'package:fluxdo/widgets/layout/adaptive_scaffold.dart';
+import 'package:cfbrowser/pages/topics_page.dart';
+import 'package:cfbrowser/providers/theme_provider.dart';
+import 'package:cfbrowser/widgets/layout/adaptive_navigation.dart';
+import 'package:cfbrowser/widgets/layout/adaptive_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

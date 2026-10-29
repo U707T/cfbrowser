@@ -1,8 +1,8 @@
-import 'package:fluxdo/widgets/markdown_editor/composer_submission_snapshot.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_submission_snapshot.dart';
 
 import '../markdown_editor/uploads/upload_task_labels.dart';
 
-import 'package:fluxdo/widgets/markdown_editor/composer_draft_status.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_draft_status.dart';
 
 import '../../utils/platform_utils.dart';
 

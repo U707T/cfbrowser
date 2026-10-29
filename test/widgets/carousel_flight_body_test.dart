@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/common/hero_image.dart';
+import 'package:cfbrowser/widgets/common/hero_image.dart';
 
 /// 轮播返回「尾帧尺寸对了但图是裁切的、不完整」的回归防线。
 ///

@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/adapters/webview_response_codec.dart';
+import 'package:cfbrowser/services/network/adapters/webview_response_codec.dart';
 
 /// 运行生产代码生成的 JS，而非另写一份编码器，验证真实发送格式。
 Future<Map<String, dynamic>> runSender({

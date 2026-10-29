@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/webm_opus_to_caf.dart';
+import 'package:cfbrowser/utils/webm_opus_to_caf.dart';
 
 // ── 合成 EBML 构造器 ──────────────────────────────────────────────
 

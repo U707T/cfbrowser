@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh/connect_code_flow.dart';
-import 'package:fluxdo/services/network/exceptions/api_exception.dart';
+import 'package:cfbrowser/services/network/doh/connect_code_flow.dart';
+import 'package:cfbrowser/services/network/exceptions/api_exception.dart';
 
 DioException _bad(
   int status, {

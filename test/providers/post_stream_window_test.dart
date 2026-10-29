@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/providers/topic_detail/post_stream_window.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/providers/topic_detail/post_stream_window.dart';
 
 /// 测试约定:帖子 id == 楼层号,便于读断言
 Post _post(int id, {int? postNumber, int replyTo = 0, int replyCount = 0}) {

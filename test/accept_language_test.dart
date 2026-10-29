@@ -1,7 +1,7 @@
 import 'dart:ui' show Locale;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/constants.dart';
+import 'package:cfbrowser/constants.dart';
 
 void main() {
   group('Accept-Language 按系统语言生成（对齐 Chromium）', () {

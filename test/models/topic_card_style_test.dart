@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/models/topic_card_style.dart';
-import 'package:fluxdo/models/topic.dart';
+import 'package:cfbrowser/models/topic_card_style.dart';
+import 'package:cfbrowser/models/topic.dart';
 
 void main() {
   test('新用户、旧配置和恢复默认均不会自动展示或请求正文', () {

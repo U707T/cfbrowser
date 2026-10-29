@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/providers/message_bus/topic_tracking_providers.dart';
-import 'package:fluxdo/services/preloaded_data_service.dart';
+import 'package:cfbrowser/providers/message_bus/topic_tracking_providers.dart';
+import 'package:cfbrowser/services/preloaded_data_service.dart';
 
 /// 标签静音判定（对齐 Discourse 网页版 hasMutedTags）
 ///

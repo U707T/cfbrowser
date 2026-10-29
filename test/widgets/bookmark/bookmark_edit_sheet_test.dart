@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/slang/strings.g.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/widgets/bookmark/bookmark_edit_sheet.dart';
+import 'package:cfbrowser/l10n/slang/strings.g.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/widgets/bookmark/bookmark_edit_sheet.dart';
 
 void main() {
   testWidgets('未显式传入候选时也会异步加载书签名称自动补全', (tester) async {

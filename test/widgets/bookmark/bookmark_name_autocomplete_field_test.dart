@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/bookmark/bookmark_name_autocomplete_field.dart';
+import 'package:cfbrowser/widgets/bookmark/bookmark_name_autocomplete_field.dart';
 
 void main() {
   testWidgets('空输入聚焦后会展示全部书签名称候选', (tester) async {

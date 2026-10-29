@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cookie/cookie_full_info.dart';
-import 'package:fluxdo/services/network/cookie/cookie_jar_service.dart';
-import 'package:fluxdo/services/network/cookie/session_cookie_sentinel.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_full_info.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_jar_service.dart';
+import 'package:cfbrowser/services/network/cookie/session_cookie_sentinel.dart';
 
 /// 只记录写入的假 jar：Sentinel 反向同步只会调 setCookie / setSessionTokenTrusted
 /// （`_t` 两者都不该调）

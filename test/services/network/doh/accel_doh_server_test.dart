@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh/network_settings_service.dart';
-import 'package:fluxdo/services/network/doh_proxy/doh_proxy_service.dart';
+import 'package:cfbrowser/services/network/doh/network_settings_service.dart';
+import 'package:cfbrowser/services/network/doh_proxy/doh_proxy_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_app_dirs.dart';

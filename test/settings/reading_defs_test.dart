@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/settings/definitions/reading_defs.dart';
-import 'package:fluxdo/settings/settings_model.dart';
-import 'package:fluxdo/utils/platform_utils.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/settings/definitions/reading_defs.dart';
+import 'package:cfbrowser/settings/settings_model.dart';
+import 'package:cfbrowser/utils/platform_utils.dart';
 
 Future<List<SettingsModel>> _pumpAndCollectBasicItems(
   WidgetTester tester, {

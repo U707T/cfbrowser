@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/discourse_dio.dart';
-import 'package:fluxdo/services/network/flux_request_spec.dart';
+import 'package:cfbrowser/services/network/discourse_dio.dart';
+import 'package:cfbrowser/services/network/flux_request_spec.dart';
 
 /// 请求旁观者契约：恢复层决定重放时通知挂在请求上的旁观者。
 ///

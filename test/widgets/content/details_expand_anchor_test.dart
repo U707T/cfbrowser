@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxdo_render/fluxdo_render.dart';
 
-import 'package:fluxdo/widgets/common/anchor_guard_sliver.dart';
+import 'package:cfbrowser/widgets/common/anchor_guard_sliver.dart';
 
 final _detailsHtml =
     '<details><summary>标题</summary>'

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/slang/strings.g.dart';
-import 'package:fluxdo/services/linux_webview_render_service.dart';
-import 'package:fluxdo/settings/definitions/preferences_defs.dart';
+import 'package:cfbrowser/l10n/slang/strings.g.dart';
+import 'package:cfbrowser/services/linux_webview_render_service.dart';
+import 'package:cfbrowser/settings/definitions/preferences_defs.dart';
 
 void main() {
   test('原生状态解析：未知取值回落到自动，改了没重启算待生效', () {

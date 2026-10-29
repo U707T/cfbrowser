@@ -1,6 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/connectivity_service.dart';
+import 'package:cfbrowser/services/connectivity_service.dart';
 
 void main() {
   group('ConnectivityService.signatureOf', () {

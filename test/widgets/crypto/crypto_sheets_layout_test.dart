@@ -8,15 +8,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/providers/theme_provider.dart' show sharedPreferencesProvider;
-import 'package:fluxdo/widgets/crypto/crypto_algorithm_field.dart';
-import 'package:fluxdo/providers/secret_store_provider.dart';
-import 'package:fluxdo/services/crypto/crypto_toolbox.dart';
-import 'package:fluxdo/services/storage/secret_store.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/providers/theme_provider.dart' show sharedPreferencesProvider;
+import 'package:cfbrowser/widgets/crypto/crypto_algorithm_field.dart';
+import 'package:cfbrowser/providers/secret_store_provider.dart';
+import 'package:cfbrowser/services/crypto/crypto_toolbox.dart';
+import 'package:cfbrowser/services/storage/secret_store.dart';
 import 'package:common_ui/common_ui.dart' show AppSheetScaffold, AppSheetStyle;
-import 'package:fluxdo/widgets/crypto/crypto_decrypt_sheet.dart';
-import 'package:fluxdo/widgets/crypto/crypto_encrypt_sheet.dart';
+import 'package:cfbrowser/widgets/crypto/crypto_decrypt_sheet.dart';
+import 'package:cfbrowser/widgets/crypto/crypto_encrypt_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Widget _wrap(Widget child,

@@ -4,8 +4,8 @@
 // 回调;惯性滚动的每帧由一条 ballistic ScrollUpdate 起头(记本帧 UI 工作
 // 起点),帧余量 = 半帧 − 本帧已用 − 0.5ms,封顶 4ms。
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/pages/topic_detail_page/controllers/post_warm_scheduler.dart';
-import 'package:fluxdo/widgets/post/post_item/post_render_prep.dart';
+import 'package:cfbrowser/pages/topic_detail_page/controllers/post_warm_scheduler.dart';
+import 'package:cfbrowser/widgets/post/post_item/post_render_prep.dart';
 
 class _FakeClock implements WarmClock {
   int now = 0;

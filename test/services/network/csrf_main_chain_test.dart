@@ -2,9 +2,9 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/cookie/csrf_token_service.dart';
-import 'package:fluxdo/services/network/flux_request_spec.dart';
-import 'package:fluxdo/services/network/interceptors/request_header_interceptor.dart';
+import 'package:cfbrowser/services/network/cookie/csrf_token_service.dart';
+import 'package:cfbrowser/services/network/flux_request_spec.dart';
+import 'package:cfbrowser/services/network/interceptors/request_header_interceptor.dart';
 
 /// CSRF 刷新走主链后的关键契约。
 ///

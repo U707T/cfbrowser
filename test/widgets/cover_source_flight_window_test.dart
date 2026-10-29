@@ -2,8 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/hero_visibility_controller.dart';
-import 'package:fluxdo/widgets/common/hero_image.dart';
+import 'package:cfbrowser/utils/hero_visibility_controller.dart';
+import 'package:cfbrowser/widgets/common/hero_image.dart';
 
 /// cover 源(聊天气泡)返回「两端完整、中间帧被裁」的回归防线。
 ///

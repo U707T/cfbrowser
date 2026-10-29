@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/seed_color_scheme.dart';
+import 'package:cfbrowser/utils/seed_color_scheme.dart';
 
 void main() {
   setUp(SeedColorScheme.resetCache);

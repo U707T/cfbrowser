@@ -9,10 +9,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:html/parser.dart' as html_parser;
 
-import 'package:fluxdo/l10n/s.dart';
-import 'package:fluxdo/models/topic.dart';
-import 'package:fluxdo/services/local_notification_service.dart';
-import 'package:fluxdo/widgets/content/discourse_html_content/builders/poll_builder.dart';
+import 'package:cfbrowser/l10n/s.dart';
+import 'package:cfbrowser/models/topic.dart';
+import 'package:cfbrowser/services/local_notification_service.dart';
+import 'package:cfbrowser/widgets/content/discourse_html_content/builders/poll_builder.dart';
 
 void main() {
   Poll makePoll({required int voters, int votesA = 0, int votesB = 0}) {

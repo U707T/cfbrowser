@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_object_controller.dart';
-import 'package:fluxdo/widgets/markdown_editor/composer_object_adapter.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_object_controller.dart';
+import 'package:cfbrowser/widgets/markdown_editor/composer_object_adapter.dart';
 import 'package:fluxdo_render/editor.dart';
 import 'package:fluxdo_render/fluxdo_render.dart';
 

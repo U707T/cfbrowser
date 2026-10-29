@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/utils/load_more_coordinator.dart';
+import 'package:cfbrowser/utils/load_more_coordinator.dart';
 
 void main() {
   group('LoadMoreCoordinator', () {

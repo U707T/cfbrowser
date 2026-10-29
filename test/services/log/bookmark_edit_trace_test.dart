@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/log/bookmark_edit_trace.dart';
+import 'package:cfbrowser/services/log/bookmark_edit_trace.dart';
 
 void main() {
   test('编辑书签 trace 日志会保留关键上下文字段且脱敏书签名', () {

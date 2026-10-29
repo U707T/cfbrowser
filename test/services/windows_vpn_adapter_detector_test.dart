@@ -1,7 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/vpn_auto_toggle_service.dart';
-import 'package:fluxdo/services/network/windows_vpn_adapter_detector.dart';
+import 'package:cfbrowser/services/network/vpn_auto_toggle_service.dart';
+import 'package:cfbrowser/services/network/windows_vpn_adapter_detector.dart';
 
 void main() {
   group('Windows VPN/TUN 网卡识别', () {

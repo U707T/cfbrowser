@@ -4,13 +4,13 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:enhanced_cookie_jar/enhanced_cookie_jar.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/cf_clearance_authority.dart';
-import 'package:fluxdo/services/cf_verification_round.dart';
-import 'package:fluxdo/services/network/cf/cf_challenge_recovery.dart';
-import 'package:fluxdo/services/network/cookie/cookie_jar_service.dart';
-import 'package:fluxdo/services/network/exceptions/api_exception.dart';
-import 'package:fluxdo/services/network/flux_request_spec.dart';
-import 'package:fluxdo/services/network/interceptors/cf_challenge_interceptor.dart';
+import 'package:cfbrowser/services/cf_clearance_authority.dart';
+import 'package:cfbrowser/services/cf_verification_round.dart';
+import 'package:cfbrowser/services/network/cf/cf_challenge_recovery.dart';
+import 'package:cfbrowser/services/network/cookie/cookie_jar_service.dart';
+import 'package:cfbrowser/services/network/exceptions/api_exception.dart';
+import 'package:cfbrowser/services/network/flux_request_spec.dart';
+import 'package:cfbrowser/services/network/interceptors/cf_challenge_interceptor.dart';
 
 import '../../cf_round_fakes.dart';
 

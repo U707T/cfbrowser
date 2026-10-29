@@ -1,6 +1,6 @@
 import 'package:ai_model_manager/ai_model_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/ai_post_review_service.dart';
+import 'package:cfbrowser/services/ai_post_review_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 

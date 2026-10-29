@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fluxdo/services/network/rhttp/rhttp_settings_service.dart';
-import 'package:fluxdo/services/network/doh/network_settings_service.dart';
-import 'package:fluxdo/services/network/proxy/proxy_settings_service.dart';
+import 'package:cfbrowser/services/network/rhttp/rhttp_settings_service.dart';
+import 'package:cfbrowser/services/network/doh/network_settings_service.dart';
+import 'package:cfbrowser/services/network/proxy/proxy_settings_service.dart';
 
 /// RhttpSettingsService 单例的单元测试
 ///

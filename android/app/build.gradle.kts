@@ -65,7 +65,7 @@ android {
 
     defaultConfig {
         // cfluxdo 使用独立包名,可与官方 FluxDO 共存安装
-        applicationId = "com.github.molchuan.cfluxdo"
+        applicationId = "com.github.molchuan.cfbrowser"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
