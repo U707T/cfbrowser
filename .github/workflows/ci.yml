@@ -40,6 +40,10 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      # project_prep 会用 cargo 现编译一个工具来生成代理证书，所以先装 Rust
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Generate l10n
         run: dart run tool/project_prep.dart app
 
@@ -76,11 +80,13 @@ jobs:
           distribution: zulu
           java-version: 21
 
-      # flutter.ndkVersion 在 3.47 是 28.2.13676358，runner 自带的不一定对得上
-      - name: Set up Android NDK
-        run: |
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "ndk;28.2.13676358" > /dev/null
+      # flutter.ndkVersion 在 3.47 是 28.2.13676358，runner 自带的不一定对得上。
+      # setup-android 会把 sdkmanager 放进 PATH 并接受许可
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: sdkmanager --install "ndk;28.2.13676358" | tail -3
 
       # core/doh_proxy 由 Rust 实现，Android 侧经 cargo-ndk 产出 .so
       - name: Set up Rust
