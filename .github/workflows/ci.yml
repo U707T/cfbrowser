@@ -81,12 +81,14 @@ jobs:
           java-version: 21
 
       # flutter.ndkVersion 在 3.47 是 28.2.13676358，runner 自带的不一定对得上。
-      # setup-android 会把 sdkmanager 放进 PATH 并接受许可
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
+      # 不用 android-actions/setup-android：它默认还要装已下架的 `tools` 包，会直接失败
       - name: Install NDK
-        run: sdkmanager --install "ndk;28.2.13676358" | tail -3
+        run: |
+          SDKM=$(ls -d "$ANDROID_SDK_ROOT"/cmdline-tools/*/bin/sdkmanager | head -1)
+          echo "sdkmanager = $SDKM"
+          yes | "$SDKM" --licenses > /dev/null 2>&1 || true
+          "$SDKM" --install "ndk;28.2.13676358" | tail -3
+          ls "$ANDROID_SDK_ROOT/ndk"
 
       # core/doh_proxy 由 Rust 实现，Android 侧经 cargo-ndk 产出 .so
       - name: Set up Rust
