@@ -10,10 +10,10 @@ import 'theme_provider.dart';
 
 /// 应用图标风格（用户只选择风格，深浅色由系统自适应处理）
 enum AppIconStyle {
-  /// 经典 FluxDO 图标
+  /// 经典：纸色底 + 地球窗口
   classic,
 
-  /// 现代图标
+  /// 现代：墨色底 + 闪电窗口
   modern,
 }
 

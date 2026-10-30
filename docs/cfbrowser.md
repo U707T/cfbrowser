@@ -87,7 +87,15 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
 - 服务端忽略 Range、返回 200、分段异常、文件过小时回退原来的 Dio 单连接下载；
 - 临时文件仍由 `DownloadReservation` 独占创建/清理，成功后原子 rename。
 
-### 2.6 包体
+### 2.6 启动器图标
+
+- 设计：浏览器窗口 + 地球（经典）/ 闪电（现代）；纸色 `#F0F0F3`、墨色 `#1C1C1E`、琥珀 `#FFB003`
+- Android：自适应前景（日/夜）、单色（Android 13 主题图标）、旧版 48–192 px mipmap
+- 桌面：Windows `.ico`（16–256 px）、Linux/Flatpak 复用 256 px 预览图
+- 源文件与生成脚本：`tool/launcher_icon/*.svg`、`tool/generate_launcher_icons.py`；
+  改设计后重新运行脚本即可同步所有产物
+
+### 2.7 包体
 
 - **原生库压缩**：`android/app/build.gradle.kts` 设 `packaging.jniLibs.useLegacyPackaging = true`，
   `.so` 以 deflate 压进 APK，安装时由系统解压。仅这一步 arm64 包 105 MB → 约 61 MB；

@@ -2,6 +2,14 @@
 
 所有版本的变更记录。beta / rc 版本提交在 stable 发版时会折叠并入对应 stable 版本。
 
+## [1.1.1] - 2026-10-30
+
+### 🎨 图标
+
+- 重新设计启动器图标：浏览器窗口 + 地球（经典）/ 闪电（现代），替换原来的 FluxDO 色带与 LINUX DO 气泡
+- 同步更新 Android 自适应图标（日/夜/单色）、旧版 mipmap、Windows `.ico`、Linux/Flatpak 预览图和设置页预览
+- 图标源文件与生成脚本：`tool/launcher_icon/`、`tool/generate_launcher_icons.py`
+
 ## [1.1.0] - 2026-10-30
 
 浏览器能力补齐 + 包体瘦身。
