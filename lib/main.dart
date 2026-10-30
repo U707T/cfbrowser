@@ -109,8 +109,6 @@ import 'providers/preferences_provider.dart';
 import 'providers/theme_provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'widgets/common/app_glass_settings.dart';
-import 'widgets/preheat_gate.dart';
-import 'widgets/onboarding_gate.dart';
 import 'widgets/layout/adaptive_scaffold.dart';
 import 'widgets/layout/adaptive_navigation.dart';
 import 'widgets/layout/mojian_brand.dart';
@@ -406,12 +404,9 @@ Future<void> main(List<String> args) async {
   }
   StartupTimeline.mark('network');
 
-  // 启动序列阶段 3→6：priming → 预加载（与 runApp 并行，PreheatGate 复用这个
-  // 进行中的预加载）→ 会话判定 → 登录后启动项，全部在后台进行。
-  // 必须等 DoH / 系统代理 / VPN 自动切换全部落定后再预热 Cookie。
-  // Windows 设置本地代理会销毁并重建 WebView2 Environment；若提前预热，
-  // 任务会继续操作已销毁的旧环境并反复重试，显著拉长开屏时间。
-  AppStartup.instance.launch(reason: 'startup');
+  // cfbrowser 是浏览器优先：冷启动不预载 linux.do/不弹登录页，代理保持
+  // 待命。只有用户进入论坛（MainPage）或真正打开站内页面时才需要 priming
+  // 与预加载；MainPage.initState 会调用 AppStartup.launch()。
 
   // 初始化下载服务（依赖网络栈已就绪）
   DownloadService().initialize();
@@ -939,15 +934,12 @@ class MainApp extends ConsumerWidget {
 
                 return AppGlassSettings(child: result);
               },
-              home: OnboardingGate(
-                child: PreheatGate(
-                  // cfbrowser：首页换成浏览器，论坛入口从标题栏进入
-                  child: Builder(
-                    builder: (context) => BrowserHomePage(
-                      onOpenForum: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const MainPage()),
-                      ),
-                    ),
+              // cfbrowser：打开即浏览器首页，不再用 linux.do 登录/预载页挡在前面。
+              // 论坛入口收在右上角菜单里，进入后再启动 AppStartup 的预加载。
+              home: Builder(
+                builder: (context) => BrowserHomePage(
+                  onOpenForum: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const MainPage()),
                   ),
                 ),
               ),
@@ -1058,13 +1050,16 @@ class _MainPageState extends ConsumerState<MainPage>
   @override
   void initState() {
     super.initState();
+    // 论坛是 linux.do 的入口：只有走到这里才唤醒代理并启动
+    // priming/预加载/会话判定。冷启动的浏览器首页不再等待这些网络步骤。
+    unawaited(_startForumStartup());
     WidgetsBinding.instance.addObserver(this);
     UserPresenceService().setForeground(true, countAsActivity: true);
     HardwareKeyboard.instance.addHandler(_handlePresenceKeyEvent);
 
     // 设置导航 context（用于 CF 验证弹窗）
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // 标记应用已就绪（MainPage 在 PreheatGate 之后才挂载）
+      // 标记应用已就绪
       ref.read(appReadyProvider.notifier).state = true;
       BrowserTrustCoordinator.instance.setNavigatorContext(context);
 
@@ -1127,6 +1122,11 @@ class _MainPageState extends ConsumerState<MainPage>
     final prefs = ref.read(sharedPreferencesProvider);
     final updateService = UpdateService(prefs: prefs);
     await UpdateCheckerHelper.checkUpdateOnStartup(context, updateService);
+  }
+
+  Future<void> _startForumStartup() async {
+    await NetworkSettingsService.instance.leaveStandby();
+    AppStartup.instance.launch(reason: 'main_page');
   }
 
   Future<void> _runStartupUiTasks() async {

@@ -1,26 +1,30 @@
+import 'dart:async';
+
 import 'package:app_icons/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/browser_tab.dart';
+import '../providers/read_later_provider.dart' show appReadyProvider;
 import '../providers/web_history_provider.dart';
-import '../services/browser/browser_scope_service.dart';
 import '../services/browser/browser_tabs_service.dart';
 import '../services/browser/browser_url.dart';
+import '../services/browser_trust_coordinator.dart';
+import '../services/connectivity_service.dart';
+import '../services/deep_link_service.dart';
 import '../services/network/doh/network_settings_service.dart';
 import '../widgets/browser/browser_tabs_sheet.dart';
 import 'browser_scope_page.dart';
 import 'download_list_page.dart';
 import 'my_browser_page.dart';
+import 'settings_page.dart';
 import 'webview_page.dart';
 
-/// cfbrowser 首页：地址栏 + 快捷入口 + 标签页 + 最近访问。
+/// cfbrowser 首页：原生浏览器体验 + 右上角收敛的原生论坛入口。
 ///
-/// 上游 fluxdo 的首页是论坛话题列表；cfbrowser 把入口换成浏览器，
-/// 论坛页仍然保留，通过 [onOpenForum] 由 main.dart 注入（避免反向 import main.dart）。
-///
-/// 所有页面都经 `WebViewPage` 打开，复用同一套 WebView 适配器与本地网关，
-/// 因此「加速范围」（[BrowserScopeService.mitmHosts]）对它自动生效。
+/// 打开 App 直接到这里，不再经过 linux.do 登录/预载页；论坛、书签、下载、
+/// 加速范围都收进右上角菜单。linux.do 的代理保持待命，只有站内请求会走
+/// MITM/ECH 范围。
 class BrowserHomePage extends ConsumerStatefulWidget {
   /// 打开论坛列表的回调；为 null 时不显示入口
   final VoidCallback? onOpenForum;
@@ -34,6 +38,20 @@ class BrowserHomePage extends ConsumerStatefulWidget {
 class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
   final _urlController = TextEditingController();
   final _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // 浏览器首页现在是启动页：这些原本由 MainPage/OnboardingGate 做的
+      // 全局初始化要在这里补上，否则深链、CF 验证弹窗和“应用就绪”都没有上下文。
+      ref.read(appReadyProvider.notifier).state = true;
+      BrowserTrustCoordinator.instance.setNavigatorContext(context);
+      DeepLinkService.instance.initialize(context);
+      ConnectivityService().init();
+    });
+  }
 
   @override
   void dispose() {
@@ -61,7 +79,6 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
       MaterialPageRoute(builder: (_) => const BrowserScopePage()),
     );
     if (!mounted) return;
-    // 范围可能被改过，刷新快捷入口
     setState(() {});
   }
 
@@ -87,10 +104,42 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
     );
   }
 
+  void _openSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SettingsPage()),
+    );
+  }
+
+  Future<void> _openForum() async {
+    // 进论坛前先唤醒 linux.do 代理，避免首页 API 直连撞 DNS 污染。
+    await NetworkSettingsService.instance.leaveStandby();
+    if (mounted) widget.onOpenForum?.call();
+  }
+
+  void _handleMenuAction(String action) {
+    switch (action) {
+      case 'forum':
+        unawaited(_openForum());
+        break;
+      case 'library':
+        _openLibrary();
+        break;
+      case 'downloads':
+        _openDownloads();
+        break;
+      case 'scope':
+        _openScopeSettings();
+        break;
+      case 'settings':
+        _openSettings();
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scope = BrowserScopeService.instance.mitmHosts;
     final serverIp = NetworkSettingsService.instance.current.serverIp;
     final history = ref.watch(webHistoryProvider);
     final tabsService = BrowserTabsService.instance;
@@ -113,16 +162,64 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
               );
             },
           ),
-          if (widget.onOpenForum != null)
-            IconButton(
-              tooltip: '论坛',
-              icon: const Icon(Symbols.forum_rounded),
-              onPressed: widget.onOpenForum,
-            ),
-          IconButton(
-            tooltip: '加速范围',
-            icon: const Icon(Icons.tune),
-            onPressed: _openScopeSettings,
+          PopupMenuButton<String>(
+            tooltip: '更多',
+            icon: const Icon(Symbols.more_vert_rounded),
+            onSelected: _handleMenuAction,
+            itemBuilder: (context) => [
+              if (widget.onOpenForum != null)
+                const PopupMenuItem(
+                  value: 'forum',
+                  child: Row(
+                    children: [
+                      Icon(Symbols.forum_rounded),
+                      SizedBox(width: 10),
+                      Text('Linux.do 论坛'),
+                    ],
+                  ),
+                ),
+              const PopupMenuItem(
+                value: 'library',
+                child: Row(
+                  children: [
+                    Icon(Symbols.collections_bookmark_rounded),
+                    SizedBox(width: 10),
+                    Text('书签与历史'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'downloads',
+                child: Row(
+                  children: [
+                    Icon(Symbols.download_rounded),
+                    SizedBox(width: 10),
+                    Text('下载'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'scope',
+                child: Row(
+                  children: [
+                    Icon(Symbols.tune_rounded),
+                    SizedBox(width: 10),
+                    Text('加速范围'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Symbols.settings_rounded),
+                    SizedBox(width: 10),
+                    Text('设置'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -151,37 +248,19 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Icon(Symbols.bolt_rounded, size: 16, color: theme.colorScheme.primary),
+              Icon(
+                Symbols.bolt_rounded,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   serverIp == null || serverIp.isEmpty
-                      ? '出口：本地优选（自动竞速）'
-                      : '出口：固定 $serverIp',
+                      ? 'Linux.do 加速：按需启用（仅站内）'
+                      : 'Linux.do 固定出口：$serverIp',
                   style: theme.textTheme.bodySmall,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              ActionChip(
-                avatar: const Icon(Symbols.collections_bookmark_rounded, size: 16),
-                label: const Text('书签与历史'),
-                onPressed: _openLibrary,
-              ),
-              ActionChip(
-                avatar: const Icon(Symbols.download_rounded, size: 16),
-                label: const Text('下载'),
-                onPressed: _openDownloads,
-              ),
-              ActionChip(
-                avatar: const Icon(Symbols.visibility_off_rounded, size: 16),
-                label: const Text('无痕标签页'),
-                onPressed: () => WebViewPage.openNewTab(context, private: true),
               ),
             ],
           ),
@@ -195,13 +274,12 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
                   const SizedBox(height: 24),
                   Row(
                     children: [
-                      Text('标签页（${tabs.length}）',
-                          style: theme.textTheme.titleSmall),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: _showTabs,
-                        child: const Text('管理'),
+                      Text(
+                        '标签页（${tabs.length}）',
+                        style: theme.textTheme.titleSmall,
                       ),
+                      const Spacer(),
+                      TextButton(onPressed: _showTabs, child: const Text('管理')),
                     ],
                   ),
                   for (final tab in tabs.take(4))
@@ -212,7 +290,9 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
                         tab.isPrivate
                             ? Symbols.visibility_off_rounded
                             : Symbols.public_rounded,
-                        color: tab.isPrivate ? theme.colorScheme.tertiary : null,
+                        color: tab.isPrivate
+                            ? theme.colorScheme.tertiary
+                            : null,
                       ),
                       title: Text(
                         tab.displayTitle,
@@ -242,20 +322,6 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
                 ],
               );
             },
-          ),
-          const SizedBox(height: 24),
-          Text('加速范围', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 4),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final host in scope)
-                ActionChip(
-                  label: Text(host),
-                  onPressed: () => _go('https://$host'),
-                ),
-            ],
           ),
           const SizedBox(height: 24),
           Text('最近访问', style: theme.textTheme.titleSmall),

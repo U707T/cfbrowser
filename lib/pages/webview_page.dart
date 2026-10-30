@@ -14,6 +14,7 @@ import '../models/browser_tab.dart';
 import '../services/browser/browser_scope_service.dart';
 import '../services/browser/browser_tabs_service.dart';
 import '../services/browser/browser_url.dart';
+import '../services/network/doh/network_settings_service.dart';
 import '../utils/frame_jank_monitor.dart';
 import '../utils/link_launcher.dart';
 import '../services/deep_link_service.dart';
@@ -173,9 +174,8 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
       },
     );
 
-    // 只有站内页面才需要 WebViewUse 的 cookie 重灌/_t 对账；cfbrowser 是
-    // 通用浏览器，访问站外站点时不应该把这些逻辑铺到每个域名上。
-    if (_currentUrl.isNotEmpty) _ensureWebViewUse(_currentUrl);
+    // 站内使用期在 onWebViewCreated 里启动：那里可以先等代理结束待命，
+    // 避免 priming 走直连撞 DNS 污染。
 
     // 可见 WebView(hybrid composition)在位期间会参与每帧合成,
     // 打点让诊断时间轴能对齐"WebView 页在前台"与掉帧段
@@ -238,6 +238,14 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
     if (host == null || host.isEmpty) return false;
     final siteHost = Uri.parse(AppConstants.baseUrl).host.toLowerCase();
     return host == siteHost || host.endsWith('.$siteHost');
+  }
+
+  /// 是否落在用户配置的加速范围（MITM/ECH）内。用来决定是否需要把
+  /// 本地代理由待命唤醒；与站内 cookie 逻辑（[_isSiteUrl]）解耦。
+  static bool _isAcceleratedUrl(String url) {
+    final host = Uri.tryParse(url)?.host.toLowerCase();
+    if (host == null || host.isEmpty) return false;
+    return BrowserScopeService.instance.covers(host);
   }
 
   /// 站内 URL 首次出现时启动 WebViewUse（无痕标签永远不启动）。
@@ -553,6 +561,12 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
                           // 老 WKWebView 的 JS 运行时错误回传到 LogWriter。
                           WebViewSettings.registerJsErrorReporter(controller);
                           if (_currentUrl.isNotEmpty) {
+                            // 站内页面先把本地代理从待命唤醒，再做 cookie
+                            // 重灌/加载；站外页面完全不动代理。
+                            if (_isAcceleratedUrl(_currentUrl)) {
+                              await NetworkSettingsService.instance
+                                  .leaveStandby();
+                            }
                             // 等使用期的准备（重灌）完成再加载；准备失败
                             // 也照常加载（取代 RawSetCookieQueue.flush）
                             _ensureWebViewUse(_currentUrl);
@@ -578,6 +592,11 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
                           // 会被一个空白页盖掉。
                           if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
                             return;
+                          }
+                          if (_isAcceleratedUrl(urlString)) {
+                            unawaited(
+                              NetworkSettingsService.instance.leaveStandby(),
+                            );
                           }
                           _ensureWebViewUse(urlString);
                           setState(() {
@@ -1079,7 +1098,11 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
     // HTTP(S) 和内部 scheme 正常加载
     if (_allowedSchemes.contains(scheme)) {
       if (scheme == 'http' || scheme == 'https') {
-        _ensureWebViewUse(url.toString());
+        final urlString = url.toString();
+        if (_isAcceleratedUrl(urlString)) {
+          await NetworkSettingsService.instance.leaveStandby();
+        }
+        _ensureWebViewUse(urlString);
       }
       return NavigationActionPolicy.ALLOW;
     }
@@ -1183,13 +1206,21 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
     }
   }
 
-  void _navigateToUrl(String input) {
+  Future<void> _navigateToUrl(String input) async {
     final url = BrowserUrl.normalize(input);
     if (url.isEmpty) return;
     final controller = _controller;
     if (controller == null) return;
-    _ensureWebViewUse(url);
-    controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+    try {
+      if (_isAcceleratedUrl(url)) {
+        await NetworkSettingsService.instance.leaveStandby();
+      }
+      _ensureWebViewUse(url);
+      await controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+    } catch (e) {
+      debugPrint('[WebViewPage] 地址栏加载失败: $e');
+      if (mounted) ToastService.showError('打开失败：$e');
+    }
   }
 
   void _toggleBookmark() {

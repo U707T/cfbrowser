@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -5,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'download/segmented_download.dart';
 import 'network/discourse_dio.dart';
@@ -30,6 +32,34 @@ class DownloadService {
 
   late final Dio _dio;
 
+  /// 分段下载连续失败后短暂退回单连接，避免同一个坏服务器/坏代理把每次
+  /// 下载都拖进「分段卡住 → 闪退」的循环。
+  static DateTime? _segmentedCooldownUntil;
+  static const Duration _segmentedCooldown = Duration(minutes: 10);
+  static const String _cooldownUntilKey = 'download_segmented_cooldown_until';
+  static const String _inflightKey = 'download_segmented_inflight';
+  static SharedPreferences? _prefs;
+  static Future<void>? _cooldownInit;
+
+  bool get _segmentedAllowed {
+    final until = _segmentedCooldownUntil;
+    return until == null || !until.isAfter(DateTime.now());
+  }
+
+  void _disableSegmented(String reason) {
+    _segmentedCooldownUntil = DateTime.now().add(_segmentedCooldown);
+    final prefs = _prefs;
+    if (prefs != null) {
+      unawaited(
+        prefs.setInt(
+          _cooldownUntilKey,
+          _segmentedCooldownUntil!.millisecondsSinceEpoch,
+        ),
+      );
+    }
+    debugPrint('[DownloadService] 分段下载冷却 10 分钟: $reason');
+  }
+
   /// 初始化下载专用 Dio 实例
   void initialize() {
     _dio = DiscourseDio.create(
@@ -37,7 +67,45 @@ class DownloadService {
       kind: DiscourseDioKind.download,
       receiveTimeout: const Duration(minutes: 30),
     );
+    _cooldownInit = _initSegmentedCooldown();
     debugPrint('[DownloadService] 初始化完成');
+  }
+
+  Future<void> _initSegmentedCooldown() async {
+    try {
+      final prefs = _prefs ??= await SharedPreferences.getInstance();
+      final untilMs = prefs.getInt(_cooldownUntilKey);
+      if (untilMs != null) {
+        final until = DateTime.fromMillisecondsSinceEpoch(untilMs);
+        if (until.isAfter(DateTime.now())) _segmentedCooldownUntil = until;
+      }
+      if (prefs.getBool(_inflightKey) == true) {
+        // 上次进程在分段下载中途退出（很可能是原生崩溃/被系统杀死）。
+        // 本次启动先冷却，别让用户再撞一次同样的文件。
+        _segmentedCooldownUntil = DateTime.now().add(_segmentedCooldown);
+        await prefs.setInt(
+          _cooldownUntilKey,
+          _segmentedCooldownUntil!.millisecondsSinceEpoch,
+        );
+        await prefs.remove(_inflightKey);
+        debugPrint('[DownloadService] 检测到上次分段下载未正常结束，冷却 10 分钟');
+      }
+    } catch (e) {
+      debugPrint('[DownloadService] 读取分段下载冷却状态失败: $e');
+    }
+  }
+
+  Future<void> _setInflight(bool value) async {
+    try {
+      final prefs = _prefs ??= await SharedPreferences.getInstance();
+      if (value) {
+        await prefs.setBool(_inflightKey, true);
+      } else {
+        await prefs.remove(_inflightKey);
+      }
+    } catch (e) {
+      debugPrint('[DownloadService] 写入分段下载状态失败: $e');
+    }
   }
 
   /// 下载到同目录的随机临时文件，成功后再原子替换已预留的目标文件。
@@ -89,10 +157,22 @@ class DownloadService {
     CancelToken? cancelToken,
     int? expectedSize,
   }) async {
+    final cooldownInit = _cooldownInit;
+    if (cooldownInit != null) await cooldownInit;
     // WebView 已经知道 Content-Length 且文件很小时，连 1 字节探测都省掉。
     if (expectedSize != null &&
         expectedSize > 0 &&
         expectedSize < SegmentedDownloadPlan.minTotalBytes) {
+      await _downloadSingle(
+        url: url,
+        temporaryPath: reservation.temporaryPath,
+        onProgress: onProgress,
+        cancelToken: cancelToken,
+      );
+      return;
+    }
+    if (!_segmentedAllowed) {
+      debugPrint('[DownloadService] 分段下载冷却中，使用单连接');
       await _downloadSingle(
         url: url,
         temporaryPath: reservation.temporaryPath,
@@ -108,20 +188,27 @@ class DownloadService {
       onProgress: onProgress,
       cancelToken: cancelToken,
     );
+    await _setInflight(true);
     try {
       await segmented.download();
+      _segmentedCooldownUntil = null;
       return;
     } on SegmentedDownloadUnsupported catch (error) {
       // 小文件 / 服务端不支持 Range / 返回 200：静默回退，属于预期路径。
       debugPrint('[DownloadService] 回退单连接: ${error.reason}');
+      _disableSegmented(error.reason);
     } on DioException catch (error) {
       if (error.type == DioExceptionType.cancel) rethrow;
       debugPrint('[DownloadService] 分段下载失败，回退单连接: $error');
+      _disableSegmented('dio: ${error.type.name}');
     } on FileSystemException {
       // 磁盘错误回退单连接没有意义，交给外层清理并上报。
       rethrow;
     } catch (error) {
       debugPrint('[DownloadService] 分段下载异常，回退单连接: $error');
+      _disableSegmented('error: $error');
+    } finally {
+      await _setInflight(false);
     }
 
     // 分段可能已经写了半截，单连接下载前先截断临时文件，并把进度归零，
@@ -147,7 +234,11 @@ class DownloadService {
       temporaryPath,
       onReceiveProgress: onProgress,
       cancelToken: cancelToken,
-      options: Options(extra: {'skipCsrf': true, 'skipAuthCheck': true}),
+      options: Options(
+        extra: {'skipCsrf': true, 'skipAuthCheck': true},
+        // 单连接也不要在 30 分钟的全局 receiveTimeout 上无声卡住。
+        receiveTimeout: const Duration(minutes: 3),
+      ),
     );
   }
 

@@ -452,8 +452,16 @@ class NetworkSettingsService {
 
   // Rust 代理始终为 WebView 提供 DOH/代理支持，不受 rhttp 影响
   // rhttp 只改变 Dio 用哪个适配器，不改变代理生命周期
+  /// 浏览器优先模式：新安装默认不启动本地代理，等真正访问加速范围
+  /// （默认 linux.do）或进入论坛时再 [leaveStandby]。用户显式改过 DoH
+  /// 开关则沿用原行为。
+  bool _standby = true;
+  Future<void>? _standbyExit;
+
+  bool get isStandby => _standby;
+
   bool get shouldRunLocalProxy =>
-      current.dohEnabled || _proxyService.current.isValid;
+      (!_standby && current.dohEnabled) || _proxyService.current.isValid;
 
   List<DohServer> get servers => [
     ..._builtInServers,
@@ -494,6 +502,9 @@ class NetworkSettingsService {
     );
     // 探针令牌要在起代理前读回来，start() 才能带上
     CfhubProbeAuthService.instance.initialize(prefs);
+    // 没有显式写过 DoH 偏好的新安装：代理先待命，避免浏览器冷启动被
+    // linux.do 的代理/预载拖慢。用户手动开过 DoH 的则保持原行为。
+    _standby = !prefs.containsKey(_dohEnabledKey);
     final dohEnabled = prefs.getBool(_dohEnabledKey) ?? true;
     final selectMode = CfSelectMode.fromWire(prefs.getString(_selectModeKey));
     final shareMeasurements = prefs.getBool(_selectShareKey) ?? false;
@@ -545,6 +556,7 @@ class NetworkSettingsService {
   Future<void> setDohEnabled(bool enabled) async {
     final prefs = _prefs;
     if (prefs == null) return;
+    if (enabled) _standby = false;
     _beginApply(enabled: enabled || _proxyService.current.isValid);
     notifier.value = notifier.value.copyWith(dohEnabled: enabled);
     if (!enabled) {
@@ -1061,7 +1073,34 @@ class NetworkSettingsService {
     _touch();
   }
 
+  /// 访问站内/进入论坛前调用：结束待命并确保本地代理已启动。
+  /// 并发调用共享同一个 Future，避免 WebView 先于代理就绪开始加载。
+  Future<void> leaveStandby() {
+    final existing = _standbyExit;
+    if (existing != null) return existing;
+    if (!_standby) return Future<void>.value();
+    _standby = false;
+    final future = _doLeaveStandby();
+    _standbyExit = future;
+    return future;
+  }
+
+  Future<void> _doLeaveStandby() async {
+    try {
+      // startup: true 跳过 400ms 的 UI 等待，打开站内页/论坛时不用先顿一下。
+      await _applyProxyState(startup: true);
+    } catch (e) {
+      // 启动失败就把待命标志放回去，下次访问站内时再试，而不是永久放弃。
+      _standby = true;
+      debugPrint('[DOH] 结束待命启动代理失败: $e');
+    } finally {
+      _standbyExit = null;
+    }
+  }
+
   Future<void> restartProxy() async {
+    // 设置页/网络卡主动重启视为用户要求启用加速，不再保持待命。
+    _standby = false;
     _beginApply(enabled: shouldRunLocalProxy);
     await _applyProxyState();
     _touch();

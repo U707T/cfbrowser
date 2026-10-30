@@ -75,9 +75,11 @@ class SegmentedDownloadPlan {
   final int total;
   final List<SegmentRange> segments;
 
-  int get initialWorkers => min(4, segments.length);
-  int get minWorkers => min(2, segments.length);
-  int get maxWorkers => min(6, segments.length);
+  // cfbrowser 的下载经常走本地网关/移动网络，并发太高会放大代理和内存
+  // 压力；2 路起步、最多 3 路，既保留多线程收益又给失败留出降级空间。
+  int get initialWorkers => min(2, segments.length);
+  int get minWorkers => min(1, segments.length);
+  int get maxWorkers => min(3, segments.length);
 
   factory SegmentedDownloadPlan.forTotal(int total) {
     if (total < minTotalBytes) {
@@ -149,12 +151,16 @@ class SegmentedDownloader {
     required void Function(int received, int total) onProgress,
     CancelToken? cancelToken,
     int maxRetries = 2,
+    Duration stallTimeout = const Duration(seconds: 45),
+    Duration watchdogInterval = const Duration(seconds: 5),
   }) : _dio = dio,
        _url = url,
        _temporaryPath = temporaryPath,
        _onProgress = onProgress,
        _callerCancelToken = cancelToken,
-       _maxRetries = maxRetries;
+       _maxRetries = maxRetries,
+       _stallTimeout = stallTimeout,
+       _watchdogInterval = watchdogInterval;
 
   final Dio _dio;
   final String _url;
@@ -162,10 +168,16 @@ class SegmentedDownloader {
   final void Function(int received, int total) _onProgress;
   final CancelToken? _callerCancelToken;
   final int _maxRetries;
+  final Duration _stallTimeout;
+  final Duration _watchdogInterval;
 
   final CancelToken _cancelToken = CancelToken();
   final Lock _writeLock = Lock();
   final Completer<void> _completion = Completer<void>();
+  Timer? _watchdog;
+  DateTime _lastActivityAt = DateTime.now();
+  int _lastNotifyMicros = 0;
+  int _lastNotifiedReceived = -1;
 
   RandomAccessFile? _file;
   late List<SegmentRange> _segments;
@@ -208,7 +220,9 @@ class SegmentedDownloader {
       // 关闭，否则 Windows 上上层删临时文件会失败。
       _file = await File(_temporaryPath).open(mode: FileMode.write);
       await _file!.truncate(_total);
-      _notifyProgress();
+      _notifyProgress(force: true);
+      _touchActivity();
+      _watchdog = Timer.periodic(_watchdogInterval, (_) => _checkStall());
 
       _ensureWorkers();
       unawaited(_adaptiveLoop());
@@ -217,6 +231,8 @@ class SegmentedDownloader {
       error = e;
       stackTrace = s;
     } finally {
+      _watchdog?.cancel();
+      _watchdog = null;
       _cancelled = true;
       if (error != null && !_cancelToken.isCancelled) {
         // 提前失败时让已启动的 worker 尽快退出。
@@ -243,7 +259,7 @@ class SegmentedDownloader {
     if (actualLength != _total) {
       throw StateError('分段下载文件长度不一致：$actualLength != $_total');
     }
-    _notifyProgress();
+    _notifyProgress(force: true);
   }
 
   DioException _callerCancelException() {
@@ -341,6 +357,7 @@ class SegmentedDownloader {
 
   Future<void> _downloadSegment(int index) async {
     final segment = _segments[index];
+    _touchActivity();
     for (var attempt = 0; attempt <= _maxRetries; attempt++) {
       if (_cancelled) throw const _Aborted();
       var received = 0;
@@ -364,6 +381,7 @@ class SegmentedDownloader {
           ),
           cancelToken: _cancelToken,
         );
+        _touchActivity();
 
         final body = response.data;
         if (response.statusCode != 206) {
@@ -420,6 +438,7 @@ class SegmentedDownloader {
           await _writeAt(segment.start + received, chunk);
           received += chunk.length;
           _received += chunk.length;
+          _touchActivity();
           _notifyProgress();
         }
 
@@ -430,6 +449,8 @@ class SegmentedDownloader {
           );
         }
         _completedSegments++;
+        _touchActivity();
+        _notifyProgress(force: true);
         return;
       } on _Aborted {
         _received -= received;
@@ -497,6 +518,7 @@ class SegmentedDownloader {
         final index = _nextSegment;
         if (index >= _segments.length) break;
         _nextSegment++;
+        _touchActivity();
         await _downloadSegment(index);
       }
     } catch (error, stackTrace) {
@@ -568,8 +590,28 @@ class SegmentedDownloader {
     }
   }
 
-  void _notifyProgress() {
+  void _touchActivity() {
+    _lastActivityAt = DateTime.now();
+  }
+
+  void _checkStall() {
+    if (_finished || _cancelled) return;
+    if (DateTime.now().difference(_lastActivityAt) > _stallTimeout) {
+      // 不在这里直接抛异常：cancel 让所有 worker 退出，download() 统一收尾，
+      // 上层把 Unsupported 当成「分段不可用」回退单连接。
+      _fail(const SegmentedDownloadUnsupported('分段下载停滞'), StackTrace.current);
+    }
+  }
+
+  void _notifyProgress({bool force = false}) {
     if (_total <= 0) return;
+    final now = DateTime.now().microsecondsSinceEpoch;
+    if (!force && now - _lastNotifyMicros < 100000 && _received != _total) {
+      return;
+    }
+    if (!force && _received == _lastNotifiedReceived) return;
+    _lastNotifyMicros = now;
+    _lastNotifiedReceived = _received;
     try {
       _onProgress(_received.clamp(0, _total).toInt(), _total);
     } catch (error) {

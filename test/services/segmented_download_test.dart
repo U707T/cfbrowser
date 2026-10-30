@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -30,9 +31,9 @@ void main() {
       final plan = SegmentedDownloadPlan.forTotal(total);
       expect(plan.segments.length, 4);
       expect(plan.segments.first.length, 512 * 1024);
-      expect(plan.initialWorkers, 4);
-      expect(plan.minWorkers, 2);
-      expect(plan.maxWorkers, 4);
+      expect(plan.initialWorkers, 2);
+      expect(plan.minWorkers, 1);
+      expect(plan.maxWorkers, 3);
     });
 
     test('小于 2 MB 时抛 Unsupported', () {
@@ -327,5 +328,64 @@ void main() {
     await downloader.download();
     expect(failedOnce, isTrue);
     expect(await target.readAsBytes(), content);
+  });
+
+  test('分段长时间无进展时 watchdog 抛 Unsupported，交给上层回退单连接', () async {
+    final content = Uint8List.fromList(
+      List<int>.generate(3 * 1024 * 1024, (index) => index % 233),
+    );
+    final stall = Completer<void>();
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(() async {
+      if (!stall.isCompleted) stall.complete();
+      await server.close(force: true);
+    });
+    server.listen((request) async {
+      final range = request.headers.value(HttpHeaders.rangeHeader);
+      if (range == null) {
+        request.response.statusCode = HttpStatus.ok;
+        request.response.headers.contentLength = content.length;
+        request.response.add(content);
+        await request.response.close();
+        return;
+      }
+      final match = RegExp(r'^bytes=(\d+)-(\d+)$').firstMatch(range)!;
+      final start = int.parse(match.group(1)!);
+      final end = int.parse(match.group(2)!);
+      final isProbe = start == 0 && end == 0;
+      final slice = content.sublist(start, end + 1);
+      request.response.statusCode = HttpStatus.partialContent;
+      request.response.headers.set(
+        HttpHeaders.contentRangeHeader,
+        'bytes $start-$end/${content.length}',
+      );
+      request.response.headers.contentLength = isProbe ? 1 : slice.length;
+      if (isProbe) {
+        request.response.add(slice.sublist(0, 1));
+      } else {
+        // 先给一小段证明连接活着，然后永远不再发数据。
+        request.response.add(slice.sublist(0, 1024));
+        await request.response.flush();
+        await stall.future;
+      }
+      await request.response.close();
+    });
+
+    final directory = await Directory.systemTemp.createTemp('segmented_stall_');
+    addTearDown(() => directory.delete(recursive: true));
+    final target = File('${directory.path}/download.part');
+    final downloader = SegmentedDownloader(
+      dio: Dio(),
+      url: 'http://${server.address.address}:${server.port}/file',
+      temporaryPath: target.path,
+      onProgress: (_, _) {},
+      stallTimeout: const Duration(milliseconds: 300),
+      watchdogInterval: const Duration(milliseconds: 80),
+    );
+
+    await expectLater(
+      downloader.download,
+      throwsA(isA<SegmentedDownloadUnsupported>()),
+    );
   });
 }
