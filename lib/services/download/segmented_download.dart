@@ -301,7 +301,7 @@ class SegmentedDownloader {
       final body = response.data;
       if (body == null) return null;
       // 无论 200 还是 206，都只需要响应头；立即取消，避免服务端把整包发完。
-      subscription = body.stream.listen(null);
+      subscription = body.stream.listen(null, onError: (_) {});
       await subscription.cancel();
 
       if (response.statusCode != 206) return null;
@@ -474,7 +474,7 @@ class SegmentedDownloader {
     if (body == null) return;
     StreamSubscription<Uint8List>? subscription;
     try {
-      subscription = body.stream.listen(null);
+      subscription = body.stream.listen(null, onError: (_) {});
       await subscription.cancel();
     } catch (_) {
       // 关闭探测/回退响应时流已结束或已取消，忽略。
