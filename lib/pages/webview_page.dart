@@ -593,8 +593,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
                         onLoadStop: (controller, url) async {
                           final revision = _navigationRevision;
                           setState(() => _isLoading = false);
-                          // 无痕标签不把 WebView cookie 带回 jar
-                          if (!_isPrivate) {
+                          // 无痕标签不把 WebView cookie 带回 jar；站外页面也
+                          // 没有需要 sweep 的站点 cookie。
+                          if (!_isPrivate && _isSiteUrl(_currentUrl)) {
                             CookieStoreObserver.instance
                                 .notifyExternalChange();
                           }

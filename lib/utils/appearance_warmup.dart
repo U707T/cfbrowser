@@ -14,7 +14,7 @@ import 'seed_color_scheme.dart';
 ///    family → asset 映射（`AssetManagerFontProvider::RegisterAsset`），真正
 ///    读取并解析 asset 字体发生在首次匹配该 family 时。字体分组里那行
 ///    `TextStyle(fontFamily: 'MiSans')` 是用户未选 MiSans 时全 App 唯一的
-///    MiSans 用点，于是 19MB 可变字体的读取与 typeface 创建全落在这一帧，
+///    MiSans 用点，于是 4MB 可变字体子集的读取与 typeface 创建全落在这一帧，
 ///    实测约 35ms。
 /// 2. **色卡网格的种子配色计算** — 原因见 [SeedColorScheme]。
 ///
