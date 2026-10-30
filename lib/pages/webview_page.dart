@@ -159,6 +159,8 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
         (widget.title != null && widget.title!.isNotEmpty)
             ? widget.title!
             : tab.title;
+    // 新标签页没有要加载的地址，不要一进来就挂一条进度条。
+    _isLoading = _currentUrl.isNotEmpty;
 
     _findController = FindInteractionController(
       onFindResultReceived: (_, activeMatch, numberOfMatches, isDoneCounting) {

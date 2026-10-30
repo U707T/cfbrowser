@@ -19,9 +19,9 @@
 
 ### ⚡ 包体
 
-- 原生 `.so` 改为压缩打包（`useLegacyPackaging`）：arm64 APK 约 100 MB → 58 MB
-- MiSans 由全量 19 MB 裁成 GB2312 + UI 字符子集（约 4 MB），生僻字回落系统字体
-- 预计 arm64 APK 最终约 47 MB（字体再省约 11 MB）
+- 原生 `.so` 改为压缩打包（`useLegacyPackaging`）：仅这一步 arm64 APK 105 MB → 约 61 MB
+- MiSans 由全量 20.1 MB 裁成 GB2312 + UI 字符子集（4.6 MB），生僻字回落系统字体
+- 实测 arm64 APK **50.0 MB**（v1.0.0 为 105 MB，-52%）；armv7 48.9 MB（原 97.4 MB）
 
 ### 🔧 变更
 

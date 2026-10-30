@@ -79,12 +79,12 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
 ### 2.5 包体
 
 - **原生库压缩**：`android/app/build.gradle.kts` 设 `packaging.jniLibs.useLegacyPackaging = true`，
-  `.so` 以 deflate 压进 APK，安装时由系统解压。arm64 包 100 MB → 约 58 MB；
+  `.so` 以 deflate 压进 APK，安装时由系统解压。仅这一步 arm64 包 105 MB → 约 61 MB；
   代价是安装后占用增加约 30 MB、首次启动多一次解压。
-- **字体子集**：`tool/subset_fonts.py` 把 MiSans 从 19 MB 裁到约 4 MB（GB2312 + 仓库内出现过的字符）；
+- **字体子集**：`tool/subset_fonts.py` 把 MiSans 从 20.1 MB 裁到 4.6 MB（GB2312 + 仓库内出现过的字符）；
   生僻字回落到系统字体。`MojianSerif` 已是 GB2312 子集，保持原样。
-- 两项叠加后 arm64 APK 预计约 **47 MB**（原 100 MB）。后续若改走 AAB / Play，
-  可去掉 `useLegacyPackaging` 让商店按设备下发原生库。
+- 两项叠加后实测 arm64 APK **50.0 MB**（v1.0.0 为 105 MB，-52%），armv7 48.9 MB（原 97.4 MB）。
+  后续若改走 AAB / Play，可去掉 `useLegacyPackaging` 让商店按设备下发原生库。
 
 ## 3. 构建
 

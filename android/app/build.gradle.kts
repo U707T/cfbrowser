@@ -76,7 +76,7 @@ android {
 
     // APK 通过 GitHub Releases 直接分发，下载体积比安装后占用更重要：
     // useLegacyPackaging=true 会把 .so 以 deflate 压进 APK，安装时由系统解压。
-    // 实测 arm64 包 100 MB -> 约 58 MB（Native 库从 74 MB 压到约 33 MB）。
+    // 实测仅压缩 .so 时 arm64 包 105 MB -> 约 61 MB；叠加字体子集后 50 MB。
     // 代价：安装后磁盘占用约等于「压缩 APK + 解压后的 so」，首次启动略慢。
     // 如果以后改走 AAB / Play，可去掉这一行让 Play 自己按设备下发。
     packaging {
