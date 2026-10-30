@@ -76,7 +76,18 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
 | 桌面版网站 | 按标签覆盖桌面 UA，并打开 `useWideViewPort` / `loadWithOverviewMode`；`setSettings` 后 reload |
 | 工具栏 | 底部后退/前进/停止/刷新/主页/分享；菜单含新建标签、无痕标签、查找、桌面版、书签与历史 |
 
-### 2.5 包体
+### 2.5 下载加速
+
+`DownloadService` 优先调用 `lib/services/download/segmented_download.dart`：
+
+- 先用 1 字节 Range 探测服务端的 `206 / Content-Range` 支持与文件总长；
+- ≥ 2 MB 才分段，分段大小按 512 KB–4 MB 自适应，最多 4096 段；
+- 初始 4 连接，每 2 秒按吞吐（>768 KB/s 扩容、<192 KB/s 缩容）和重试错误在 2–6 之间调整；
+- 每段独立重试 2 次，带 `If-Range` 防止文件在下载中被替换；
+- 服务端忽略 Range、返回 200、分段异常、文件过小时回退原来的 Dio 单连接下载；
+- 临时文件仍由 `DownloadReservation` 独占创建/清理，成功后原子 rename。
+
+### 2.6 包体
 
 - **原生库压缩**：`android/app/build.gradle.kts` 设 `packaging.jniLibs.useLegacyPackaging = true`，
   `.so` 以 deflate 压进 APK，安装时由系统解压。仅这一步 arm64 包 105 MB → 约 61 MB；

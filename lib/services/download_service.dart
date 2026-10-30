@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'download/segmented_download.dart';
 import 'network/discourse_dio.dart';
 import '../utils/app_data_dir.dart';
 
@@ -13,6 +14,9 @@ import '../utils/app_data_dir.dart';
 ///
 /// 使用 DiscourseDio.create() 创建 Dio 实例，
 /// 自动继承代理/DOH/rhttp/Cookie 等所有网络设置。
+///
+/// 下载优先走 Range 分段 + 自适应并发（见 [SegmentedDownloader]）；
+/// 服务端不支持 Range、文件太小或分段失败时回退到原来的 Dio 单连接下载。
 class DownloadService {
   DownloadService._();
   static final DownloadService instance = DownloadService._();
@@ -41,20 +45,32 @@ class DownloadService {
   /// 最终路径由 [reserveAvailableDownload] 以 exclusive 方式预留，避免并发
   /// 下载选中同一个名称。网络数据不会直接按远端可影响的最终路径打开，避免
   /// 预留后目标被替换为符号链接时跟随链接写入目录外。
+  ///
+  /// [expectedSize] 是调用方（WebView 下载回调）已知的 Content-Length；
+  /// 小于分段阈值时直接走单连接，省掉一次 Range 探测。
   Future<void> download({
     required String url,
     required DownloadReservation reservation,
     required void Function(int received, int total) onProgress,
     CancelToken? cancelToken,
+    int? expectedSize,
   }) async {
     try {
-      await _dio.download(
-        url,
-        reservation.temporaryPath,
-        onReceiveProgress: onProgress,
+      await _downloadWithFallback(
+        url: url,
+        reservation: reservation,
+        onProgress: onProgress,
         cancelToken: cancelToken,
-        options: Options(extra: {'skipCsrf': true, 'skipAuthCheck': true}),
+        expectedSize: expectedSize,
       );
+      // 下载尾段与「取消」按钮可能同时到达；以取消为准，不要留下已完成文件。
+      if (cancelToken?.isCancelled == true) {
+        throw DioException(
+          requestOptions: RequestOptions(path: url),
+          type: DioExceptionType.cancel,
+          error: 'caller_cancelled',
+        );
+      }
       await reservation.commit();
     } catch (error, stackTrace) {
       try {
@@ -63,6 +79,82 @@ class DownloadService {
         debugPrint('[DownloadService] 清理失败: $cleanupError');
       }
       Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
+
+  Future<void> _downloadWithFallback({
+    required String url,
+    required DownloadReservation reservation,
+    required void Function(int received, int total) onProgress,
+    CancelToken? cancelToken,
+    int? expectedSize,
+  }) async {
+    // WebView 已经知道 Content-Length 且文件很小时，连 1 字节探测都省掉。
+    if (expectedSize != null &&
+        expectedSize > 0 &&
+        expectedSize < SegmentedDownloadPlan.minTotalBytes) {
+      await _downloadSingle(
+        url: url,
+        temporaryPath: reservation.temporaryPath,
+        onProgress: onProgress,
+        cancelToken: cancelToken,
+      );
+      return;
+    }
+    final segmented = SegmentedDownloader(
+      dio: _dio,
+      url: url,
+      temporaryPath: reservation.temporaryPath,
+      onProgress: onProgress,
+      cancelToken: cancelToken,
+    );
+    try {
+      await segmented.download();
+      return;
+    } on SegmentedDownloadUnsupported catch (error) {
+      // 小文件 / 服务端不支持 Range / 返回 200：静默回退，属于预期路径。
+      debugPrint('[DownloadService] 回退单连接: ${error.reason}');
+    } on DioException catch (error) {
+      if (error.type == DioExceptionType.cancel) rethrow;
+      debugPrint('[DownloadService] 分段下载失败，回退单连接: $error');
+    } on FileSystemException {
+      // 磁盘错误回退单连接没有意义，交给外层清理并上报。
+      rethrow;
+    } catch (error) {
+      debugPrint('[DownloadService] 分段下载异常，回退单连接: $error');
+    }
+
+    // 分段可能已经写了半截，单连接下载前先截断临时文件，并把进度归零，
+    // 避免 UI 从分段进度直接跳回 0 时看起来像回退。
+    onProgress(0, 0);
+    await _resetTemporaryFile(reservation.temporaryPath);
+    await _downloadSingle(
+      url: url,
+      temporaryPath: reservation.temporaryPath,
+      onProgress: onProgress,
+      cancelToken: cancelToken,
+    );
+  }
+
+  Future<void> _downloadSingle({
+    required String url,
+    required String temporaryPath,
+    required void Function(int received, int total) onProgress,
+    CancelToken? cancelToken,
+  }) {
+    return _dio.download(
+      url,
+      temporaryPath,
+      onReceiveProgress: onProgress,
+      cancelToken: cancelToken,
+      options: Options(extra: {'skipCsrf': true, 'skipAuthCheck': true}),
+    );
+  }
+
+  static Future<void> _resetTemporaryFile(String path) async {
+    final file = File(path);
+    if (await file.exists()) {
+      await file.writeAsBytes(const <int>[], flush: true);
     }
   }
 

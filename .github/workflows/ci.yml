@@ -57,6 +57,7 @@ jobs:
           flutter test --no-pub \
             test/services/browser_scope_service_test.dart \
             test/services/browser_tabs_service_test.dart \
+            test/services/segmented_download_test.dart \
             test/services/proxy_leaf_trust_test.dart
 
   build-android:

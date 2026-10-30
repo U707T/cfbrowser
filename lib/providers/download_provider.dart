@@ -122,6 +122,7 @@ class DownloadNotifier extends StateNotifier<List<DownloadItem>> {
         url: url,
         reservation: reservation,
         cancelToken: cancelToken,
+        expectedSize: contentLength,
         onProgress: (received, total) {
           final progress = total > 0 ? received / total : -1.0;
           final now = DateTime.now().microsecondsSinceEpoch;
