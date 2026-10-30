@@ -14,6 +14,7 @@ import '../services/connectivity_service.dart';
 import '../services/deep_link_service.dart';
 import '../services/network/doh/network_settings_service.dart';
 import '../widgets/browser/browser_tabs_sheet.dart';
+import '../widgets/browser/quick_access_grid.dart';
 import 'browser_scope_page.dart';
 import 'download_list_page.dart';
 import 'my_browser_page.dart';
@@ -264,6 +265,8 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
               ),
             ],
           ),
+          const SizedBox(height: 20),
+          QuickAccessGrid(onOpen: _go),
           ValueListenableBuilder<List<BrowserTab>>(
             valueListenable: tabsService.tabs,
             builder: (context, tabs, _) {

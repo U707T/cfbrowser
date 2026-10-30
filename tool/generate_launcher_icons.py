@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""生成 cfbrowser 的启动器图标。
+"""生成 cfbrowser 的启动器图标（Claude 美学 · Warm Orb）。
 
-设计：浏览器窗口 + 地球（经典）/ 闪电（现代）。
-- 经典：纸色底、墨色窗口、琥珀色顶栏；
-- 现代：墨色底、纸色窗口、琥珀色闪电。
+设计：
+- 经典：暖纸/深墨底 + 陶土色球体 + 墨色/奶油色轨道；
+- 现代：同几何，球体换成墨色（浅色底）/奶油色（深色底），轨道改为陶土色。
 
 输出：
 - Android 旧版 mipmap PNG（日/夜、两套风格、5 个密度）
-- Android 自适应图标 vector drawable（前景 / 夜间前景 / 单色）
+- Android 自适应图标：渐变背景、前景（日/夜）、单色
 - 设置页预览 PNG（4 张 256px）
 - Windows .ico
 - tool/launcher_icon/*.svg 设计源文件
@@ -26,22 +26,26 @@ ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "android/app/src/main/res"
 SVG_DIR = ROOT / "tool/launcher_icon"
 
-PAPER = "#F0F0F3"
-INK = "#1C1C1E"
-AMBER = "#FFB003"
+PAPER_HI = "#FCF8F0"
+PAPER_LO = "#E7DED0"
+DARK_HI = "#2B2521"
+DARK_LO = "#191614"
+INK = "#262320"
+CREAM = "#F4EFE5"
+TERRA = "#D97757"
+TERRA_DEEP = "#B8553B"
 
-WINDOW_BODY = (
-    "M304 224 H720 A96 96 0 0 1 816 320 V704 A96 96 0 0 1 720 800 "
-    "H304 A96 96 0 0 1 208 704 V320 A96 96 0 0 1 304 224 Z"
-)
-TOPBAR = (
-    "M304 224 H720 A96 96 0 0 1 816 320 V340 H208 V320 A96 96 0 0 1 304 224 Z"
-)
-DOTS = [(286, 282, 13, 0.92), (336, 282, 13, 0.58), (386, 282, 13, 0.30)]
-GLOBE_CIRCLE = "M367 590 a145 145 0 1 0 290 0 a145 145 0 1 0 -290 0 Z"
-GLOBE_ELLIPSE = "M512 445 a62 145 0 1 1 0 290 a62 145 0 1 1 0 -290 Z"
-GLOBE_LINE = "M367 590 L657 590"
-BOLT = "M566 400 L430 606 L508 606 L474 760 L610 548 L532 548 Z"
+SPHERE = "M280 512 a232 232 0 1 0 464 0 a232 232 0 1 0 -464 0 Z"
+HIGHLIGHT = "M358 420 a72 42 0 1 0 144 0 a72 42 0 1 0 -144 0 Z"
+ORBIT = "M120 512 a392 142 0 1 0 784 0 a392 142 0 1 0 -784 0 Z"
+DOT = "M802 340 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0 Z"
+SHADOW = "M292 540 a220 56 0 1 0 440 0 a220 56 0 1 0 -440 0 Z"
+
+ORB_GRADIENTS = {
+    "terra": [("0", "#EF9B78"), ("0.55", TERRA), ("1", TERRA_DEEP)],
+    "ink": [("0", "#4A423B"), ("0.55", "#2A2521"), ("1", "#171412")],
+    "cream": [("0", "#FFFDF8"), ("0.55", "#F1E8D9"), ("1", "#D8CAB6")],
+}
 
 MIPMAP_SIZES = {
     "mdpi": 48,
@@ -52,127 +56,202 @@ MIPMAP_SIZES = {
 }
 
 
-def svg(bg: str, body: str, globe_fill: str, line: str, symbol: str) -> str:
-    dots = "\n  ".join(
-        f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{INK}" opacity="{alpha}"/>'
-        for cx, cy, r, alpha in DOTS
+def _stops(stops: list[tuple[str, str]]) -> str:
+    return "".join(
+        f'<stop offset="{offset}" stop-color="{color}"/>' for offset, color in stops
     )
-    if symbol == "globe":
-        foreground = (
-            f'<circle cx="512" cy="590" r="145" fill="{globe_fill}"/>\n'
-            f'  <ellipse cx="512" cy="590" rx="62" ry="145" fill="none" '
-            f'stroke="{line}" stroke-width="20"/>\n'
-            f'  <path d="{GLOBE_LINE}" stroke="{line}" stroke-width="20"/>'
-        )
-    else:
-        foreground = f'<path d="{BOLT}" fill="{AMBER}"/>'
+
+
+def svg(light: bool, orb: str, orbit: str) -> str:
+    bg_hi, bg_lo = (PAPER_HI, PAPER_LO) if light else (DARK_HI, DARK_LO)
+    glow = "0.75" if light else "0.10"
+    shadow = "0.16" if light else "0.35"
     return f'''<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1024" height="1024" rx="228" fill="{bg}"/>
-  <path d="{WINDOW_BODY}" fill="{body}"/>
-  <path d="{TOPBAR}" fill="{AMBER}"/>
-  {dots}
-  {foreground}
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="{bg_hi}"/><stop offset="1" stop-color="{bg_lo}"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="32%" cy="20%" r="80%">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="{glow}"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb" cx="34%" cy="28%" r="75%">
+      {_stops(ORB_GRADIENTS[orb])}
+    </radialGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000000" flood-opacity="{shadow}"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="228" fill="url(#glow)"/>
+  <circle cx="512" cy="512" r="232" fill="url(#orb)" filter="url(#shadow)"/>
+  <ellipse cx="512" cy="512" rx="392" ry="142" transform="rotate(-22 512 512)" stroke="{orbit}" stroke-width="14" opacity="0.55"/>
+  <circle cx="828" cy="340" r="26" fill="{orbit}"/>
+  <ellipse cx="430" cy="420" rx="72" ry="42" fill="#FFFFFF" opacity="0.18" transform="rotate(-30 430 420)"/>
 </svg>
 '''
 
 
-def dots_xml(color: str = INK) -> str:
-    paths = []
-    for cx, cy, r, alpha in DOTS:
-        paths.append(
-            f'    <path\n'
-            f'        android:fillColor="{color}"\n'
-            f'        android:fillAlpha="{alpha}"\n'
-            f'        android:pathData="M{cx - r} {cy} a{r} {r} 0 1 0 {2 * r} 0 '
-            f'a{r} {r} 0 1 0 {-2 * r} 0 Z" />'
-        )
-    return "\n".join(paths)
+def _gradient_attr(stops: list[tuple[str, str]], cx: int, cy: int, radius: int) -> str:
+    items = "".join(
+        f'          <item android:offset="{offset}" android:color="{color}"/>\n'
+        for offset, color in stops
+    )
+    return f'''      <aapt:attr name="android:fillColor">
+        <gradient
+            android:type="radial"
+            android:centerX="{cx}"
+            android:centerY="{cy}"
+            android:gradientRadius="{radius}">
+{items}        </gradient>
+      </aapt:attr>'''
 
 
-def vector_foreground(window_fill: str, globe_fill: str, line: str, symbol: str) -> str:
-    if symbol == "globe":
-        foreground = f'''    <path
-        android:fillColor="{globe_fill}"
-        android:pathData="{GLOBE_CIRCLE}" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="{line}"
-        android:strokeWidth="20"
-        android:pathData="{GLOBE_ELLIPSE}" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="{line}"
-        android:strokeWidth="20"
-        android:pathData="{GLOBE_LINE}" />'''
-    else:
-        foreground = f'''    <path
-        android:fillColor="{AMBER}"
-        android:pathData="{BOLT}" />'''
-    return f'''<vector xmlns:android="http://schemas.android.com/apk/res/android"
+def foreground(orb: str, orbit: str) -> str:
+    return f'''<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="1024"
     android:viewportHeight="1024">
 
-    <!-- 浏览器窗口：内容控制在自适应图标安全区内 -->
-    <path
-        android:fillColor="{window_fill}"
-        android:pathData="{WINDOW_BODY}" />
-    <path
-        android:fillColor="{AMBER}"
-        android:pathData="{TOPBAR}" />
+    <!-- 自适应安全区：整体缩到 78% -->
+    <group
+        android:scaleX="0.78"
+        android:scaleY="0.78"
+        android:pivotX="512"
+        android:pivotY="512">
 
-{dots_xml()}
+        <!-- 球体下方的柔和阴影 -->
+        <path android:pathData="{SHADOW}">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="radial"
+                    android:centerX="512"
+                    android:centerY="540"
+                    android:gradientRadius="240">
+                    <item android:offset="0" android:color="#33000000"/>
+                    <item android:offset="1" android:color="#00000000"/>
+                </gradient>
+            </aapt:attr>
+        </path>
 
-{foreground}
+        <!-- 球体 -->
+        <path android:pathData="{SPHERE}">
+{_gradient_attr(ORB_GRADIENTS[orb], 420, 400, 370)}
+        </path>
+
+        <!-- 轨道 -->
+        <group
+            android:rotation="-22"
+            android:pivotX="512"
+            android:pivotY="512">
+            <path
+                android:fillColor="#00000000"
+                android:strokeColor="{orbit}"
+                android:strokeWidth="14"
+                android:strokeAlpha="0.55"
+                android:pathData="{ORBIT}" />
+        </group>
+
+        <!-- 轨道上的小点 -->
+        <path
+            android:fillColor="{orbit}"
+            android:pathData="{DOT}" />
+
+        <!-- 球体高光 -->
+        <group
+            android:rotation="-30"
+            android:pivotX="430"
+            android:pivotY="420">
+            <path
+                android:fillColor="#FFFFFF"
+                android:fillAlpha="0.18"
+                android:pathData="{HIGHLIGHT}" />
+        </group>
+    </group>
 </vector>
 '''
 
 
-def vector_monochrome(symbol: str) -> str:
-    if symbol == "globe":
-        foreground = f'''    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.12"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="18"
-        android:pathData="{GLOBE_CIRCLE}" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="14"
-        android:pathData="{GLOBE_ELLIPSE}" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="14"
-        android:pathData="{GLOBE_LINE}" />'''
-    else:
-        foreground = f'''    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="{BOLT}" />'''
-    return f'''<vector xmlns:android="http://schemas.android.com/apk/res/android"
+def monochrome() -> str:
+    return f'''<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="1024"
     android:viewportHeight="1024">
 
-    <!-- 单色图标：用透明度分层，由系统取色 -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.28"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="20"
-        android:pathData="{WINDOW_BODY}" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.72"
-        android:pathData="{TOPBAR}" />
-
-{dots_xml("#FFFFFF")}
-
-{foreground}
+    <group
+        android:scaleX="0.78"
+        android:scaleY="0.78"
+        android:pivotX="512"
+        android:pivotY="512">
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.32"
+            android:pathData="{SPHERE}" />
+        <group
+            android:rotation="-22"
+            android:pivotX="512"
+            android:pivotY="512">
+            <path
+                android:fillColor="#00000000"
+                android:strokeColor="#FFFFFF"
+                android:strokeWidth="14"
+                android:pathData="{ORBIT}" />
+        </group>
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="{DOT}" />
+        <group
+            android:rotation="-30"
+            android:pivotX="430"
+            android:pivotY="420">
+            <path
+                android:fillColor="#FFFFFF"
+                android:fillAlpha="0.15"
+                android:pathData="{HIGHLIGHT}" />
+        </group>
+    </group>
 </vector>
+'''
+
+
+def background(light: bool) -> str:
+    hi, lo = (PAPER_HI, PAPER_LO) if light else (DARK_HI, DARK_LO)
+    return f'''<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <path android:pathData="M0 0 H1024 V1024 H0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="0"
+                android:endX="1024"
+                android:endY="1024">
+                <item android:offset="0" android:color="{hi}"/>
+                <item android:offset="1" android:color="{lo}"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>
+'''
+
+
+def adaptive(foreground_name: str) -> str:
+    return f'''<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@drawable/{foreground_name}" />
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
+</adaptive-icon>
 '''
 
 
@@ -186,14 +265,72 @@ def render(svg_path: Path, out_path: Path, size: int) -> None:
     )
 
 
-def write_backgrounds() -> None:
+def write_assets() -> dict[str, Path]:
+    variants = {
+        "classic_light": svg(True, "terra", INK),
+        "classic_dark": svg(False, "terra", CREAM),
+        "modern_light": svg(True, "ink", TERRA),
+        "modern_dark": svg(False, "cream", TERRA),
+    }
+    SVG_DIR.mkdir(parents=True, exist_ok=True)
+    paths: dict[str, Path] = {}
+    for name, content in variants.items():
+        path = SVG_DIR / f"{name}.svg"
+        path.write_text(content, encoding="utf-8")
+        paths[name] = path
+    return paths
+
+
+def write_drawables() -> None:
+    drawable = RES / "drawable"
+    night = RES / "drawable-night"
+    drawable.mkdir(parents=True, exist_ok=True)
+    night.mkdir(parents=True, exist_ok=True)
+
+    (drawable / "ic_launcher_background.xml").write_text(
+        background(True), encoding="utf-8"
+    )
+    (night / "ic_launcher_background.xml").write_text(
+        background(False), encoding="utf-8"
+    )
+    (drawable / "ic_launcher_foreground.xml").write_text(
+        foreground("terra", INK), encoding="utf-8"
+    )
+    (night / "ic_launcher_foreground.xml").write_text(
+        foreground("terra", CREAM), encoding="utf-8"
+    )
+    (drawable / "ic_launcher_modern_light_foreground.xml").write_text(
+        foreground("ink", TERRA), encoding="utf-8"
+    )
+    (drawable / "ic_launcher_modern_foreground.xml").write_text(
+        foreground("cream", TERRA), encoding="utf-8"
+    )
+    mono = monochrome()
+    (drawable / "ic_launcher_monochrome.xml").write_text(mono, encoding="utf-8")
+    (night / "ic_launcher_monochrome.xml").write_text(mono, encoding="utf-8")
+    (drawable / "ic_launcher_modern_monochrome.xml").write_text(
+        mono, encoding="utf-8"
+    )
+
+    for path, fg in {
+        RES / "mipmap-anydpi-v26/ic_launcher.xml": "ic_launcher_foreground",
+        RES / "mipmap-night-anydpi-v26/ic_launcher.xml": "ic_launcher_foreground",
+        RES / "mipmap-anydpi-v26/ic_launcher_modern.xml":
+            "ic_launcher_modern_light_foreground",
+        RES / "mipmap-night-anydpi-v26/ic_launcher_modern.xml":
+            "ic_launcher_modern_foreground",
+    }.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(adaptive(fg), encoding="utf-8")
+
+    # 保留颜色资源，供旧系统/外部引用回退。
     (RES / "values/ic_launcher_background.xml").write_text(
         f'''<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">{PAPER}</color>
-    <color name="ic_launcher_dark_background">{INK}</color>
-    <color name="ic_launcher_modern_background">{INK}</color>
-    <color name="ic_launcher_modern_light_background">{PAPER}</color>
+    <color name="ic_launcher_background">{PAPER_LO}</color>
+    <color name="ic_launcher_dark_background">{DARK_LO}</color>
+    <color name="ic_launcher_modern_background">{DARK_LO}</color>
+    <color name="ic_launcher_modern_light_background">{PAPER_LO}</color>
 </resources>
 ''',
         encoding="utf-8",
@@ -201,52 +338,11 @@ def write_backgrounds() -> None:
     (RES / "values-night/ic_launcher_background.xml").write_text(
         f'''<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">{INK}</color>
+    <color name="ic_launcher_background">{DARK_LO}</color>
 </resources>
 ''',
         encoding="utf-8",
     )
-
-
-def write_drawables() -> None:
-    (RES / "drawable/ic_launcher_foreground.xml").write_text(
-        vector_foreground(INK, PAPER, INK, "globe"), encoding="utf-8"
-    )
-    (RES / "drawable-night/ic_launcher_foreground.xml").write_text(
-        vector_foreground(PAPER, INK, PAPER, "globe"), encoding="utf-8"
-    )
-    (RES / "drawable/ic_launcher_modern_light_foreground.xml").write_text(
-        vector_foreground(INK, INK, INK, "bolt"), encoding="utf-8"
-    )
-    (RES / "drawable/ic_launcher_modern_foreground.xml").write_text(
-        vector_foreground(PAPER, PAPER, PAPER, "bolt"), encoding="utf-8"
-    )
-    (RES / "drawable/ic_launcher_monochrome.xml").write_text(
-        vector_monochrome("globe"), encoding="utf-8"
-    )
-    # 夜间单色与日间一致；保留文件避免旧资源残留。
-    (RES / "drawable-night/ic_launcher_monochrome.xml").write_text(
-        vector_monochrome("globe"), encoding="utf-8"
-    )
-    (RES / "drawable/ic_launcher_modern_monochrome.xml").write_text(
-        vector_monochrome("bolt"), encoding="utf-8"
-    )
-
-
-def write_svgs() -> dict[str, Path]:
-    variants = {
-        "classic_light": svg(PAPER, INK, PAPER, INK, "globe"),
-        "classic_dark": svg(INK, PAPER, INK, PAPER, "globe"),
-        "modern_light": svg(PAPER, INK, INK, INK, "bolt"),
-        "modern_dark": svg(INK, PAPER, PAPER, PAPER, "bolt"),
-    }
-    paths: dict[str, Path] = {}
-    SVG_DIR.mkdir(parents=True, exist_ok=True)
-    for name, content in variants.items():
-        path = SVG_DIR / f"{name}.svg"
-        path.write_text(content, encoding="utf-8")
-        paths[name] = path
-    return paths
 
 
 def write_pngs(svgs: dict[str, Path]) -> None:
@@ -273,7 +369,7 @@ def write_pngs(svgs: dict[str, Path]) -> None:
         render(svgs[variant], ROOT / "assets/images" / name, 256)
 
     ico_source = ROOT / "build" / "launcher_icon_256.png"
-    render(svgs["modern_light"], ico_source, 256)
+    render(svgs["classic_light"], ico_source, 256)
     image = Image.open(ico_source).convert("RGBA")
     image.save(
         ROOT / "windows/runner/resources/app_icon.ico",
@@ -284,8 +380,7 @@ def write_pngs(svgs: dict[str, Path]) -> None:
 
 
 def main() -> int:
-    svgs = write_svgs()
-    write_backgrounds()
+    svgs = write_assets()
     write_drawables()
     write_pngs(svgs)
     print("launcher icons generated")

@@ -1,11 +1,23 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1024" height="1024" rx="228" fill="#1C1C1E"/>
-  <path d="M304 224 H720 A96 96 0 0 1 816 320 V704 A96 96 0 0 1 720 800 H304 A96 96 0 0 1 208 704 V320 A96 96 0 0 1 304 224 Z" fill="#F0F0F3"/>
-  <path d="M304 224 H720 A96 96 0 0 1 816 320 V340 H208 V320 A96 96 0 0 1 304 224 Z" fill="#FFB003"/>
-  <circle cx="286" cy="282" r="13" fill="#1C1C1E" opacity="0.92"/>
-  <circle cx="336" cy="282" r="13" fill="#1C1C1E" opacity="0.58"/>
-  <circle cx="386" cy="282" r="13" fill="#1C1C1E" opacity="0.3"/>
-  <circle cx="512" cy="590" r="145" fill="#1C1C1E"/>
-  <ellipse cx="512" cy="590" rx="62" ry="145" fill="none" stroke="#F0F0F3" stroke-width="20"/>
-  <path d="M367 590 L657 590" stroke="#F0F0F3" stroke-width="20"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2B2521"/><stop offset="1" stop-color="#191614"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="32%" cy="20%" r="80%">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb" cx="34%" cy="28%" r="75%">
+      <stop offset="0" stop-color="#EF9B78"/><stop offset="0.55" stop-color="#D97757"/><stop offset="1" stop-color="#B8553B"/>
+    </radialGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="228" fill="url(#glow)"/>
+  <circle cx="512" cy="512" r="232" fill="url(#orb)" filter="url(#shadow)"/>
+  <ellipse cx="512" cy="512" rx="392" ry="142" transform="rotate(-22 512 512)" stroke="#F4EFE5" stroke-width="14" opacity="0.55"/>
+  <circle cx="828" cy="340" r="26" fill="#F4EFE5"/>
+  <ellipse cx="430" cy="420" rx="72" ry="42" fill="#FFFFFF" opacity="0.18" transform="rotate(-30 430 420)"/>
 </svg>

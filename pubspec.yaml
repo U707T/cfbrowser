@@ -1,7 +1,7 @@
 name: cfbrowser
 description: "cfbrowser：Cloudflare 边缘直连浏览器（基于 fluxdo 移植）"
 publish_to: 'none'
-version: 1.1.1+2026103003
+version: 1.1.2+2026103004
 
 environment:
   sdk: ^3.13.0
