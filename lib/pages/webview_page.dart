@@ -1009,9 +1009,10 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
         );
       },
     );
+    textController.dispose();
+    if (!mounted) return;
     await _findController.clearMatches();
     _findStatus.value = '';
-    textController.dispose();
   }
 
   Future<void> _toggleDesktopMode() async {
