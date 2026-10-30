@@ -50,6 +50,7 @@ import 'pages/network_settings_page/widgets/cf_select_privacy_dialog.dart';
 import 'services/network/doh/cf_select_notice.dart';
 import 'services/network/doh/cfhub_probe_auth_service.dart';
 import 'services/browser/browser_scope_service.dart';
+import 'services/browser/browser_tabs_service.dart';
 import 'services/network/doh/network_settings_service.dart';
 import 'services/network/proxy/proxy_settings_service.dart';
 import 'services/network/rhttp/rhttp_settings_service.dart';
@@ -389,6 +390,8 @@ Future<void> main(List<String> args) async {
   await NetworkSettingsService.instance.initialize(prefs);
   // cfbrowser：读取「加速范围」（MITM/ECH 域名），必须在网关启动前完成
   await BrowserScopeService.instance.initialize(prefs);
+  // cfbrowser：恢复上次打开的标签页（只恢复非无痕标签）
+  await BrowserTabsService.instance.initialize(prefs);
   StartupTimeline.mark('proxy');
   // WindowsWebViewEnvironmentService 必须等 NetworkSettingsService 把本次
   // 会话真正要用的代理端口定下来之后再创建 Environment。之前放在最早那批

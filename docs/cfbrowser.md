@@ -66,6 +66,26 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
 - `mitm_hosts` 为空时 Rust 视为「除 `challenges.cloudflare.com` 外全部 MITM」，
   所以本移植始终下发非空范围，避免退化成「全站解密」。
 
+### 2.4 浏览器能力（1.1.0）
+
+| 能力 | 实现 |
+|---|---|
+| 多标签页 | `BrowserTabsService` 全局保存标签与 URL 级历史；`BrowserTabsSheet` 管理切换/关闭；切标签重建 WebView，后退/前进优先走 WebView 历史，走不通时回落到标签历史 |
+| 无痕标签 | `WebViewSettings` 开 `incognito`，跳过 `WebViewUse` cookie 重灌与 `CookieStoreObserver` 回写；不写 `webHistoryProvider`，不参与标签持久化 |
+| 页内查找 | `FindInteractionController.findAll/findNext/clearMatches`，Android 走 `WebView.findAllAsync`，桌面映射到 WebKitGTK / WebView2 |
+| 桌面版网站 | 按标签覆盖桌面 UA，并打开 `useWideViewPort` / `loadWithOverviewMode`；`setSettings` 后 reload |
+| 工具栏 | 底部后退/前进/停止/刷新/主页/分享；菜单含新建标签、无痕标签、查找、桌面版、书签与历史 |
+
+### 2.5 包体
+
+- **原生库压缩**：`android/app/build.gradle.kts` 设 `packaging.jniLibs.useLegacyPackaging = true`，
+  `.so` 以 deflate 压进 APK，安装时由系统解压。arm64 包 100 MB → 约 58 MB；
+  代价是安装后占用增加约 30 MB、首次启动多一次解压。
+- **字体子集**：`tool/subset_fonts.py` 把 MiSans 从 19 MB 裁到约 4 MB（GB2312 + 仓库内出现过的字符）；
+  生僻字回落到系统字体。`MojianSerif` 已是 GB2312 子集，保持原样。
+- 两项叠加后 arm64 APK 预计约 **47 MB**（原 100 MB）。后续若改走 AAB / Play，
+  可去掉 `useLegacyPackaging` 让商店按设备下发原生库。
+
 ## 3. 构建
 
 与上游一致，前置要求：Flutter 3.47 / Dart ^3.13、Android SDK、NDK 27.3、

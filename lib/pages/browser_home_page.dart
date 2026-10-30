@@ -1,13 +1,20 @@
+import 'package:app_icons/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/browser_tab.dart';
 import '../providers/web_history_provider.dart';
 import '../services/browser/browser_scope_service.dart';
+import '../services/browser/browser_tabs_service.dart';
+import '../services/browser/browser_url.dart';
 import '../services/network/doh/network_settings_service.dart';
+import '../widgets/browser/browser_tabs_sheet.dart';
 import 'browser_scope_page.dart';
+import 'download_list_page.dart';
+import 'my_browser_page.dart';
 import 'webview_page.dart';
 
-/// cfbrowser 首页：地址栏 + 加速范围快捷入口 + 最近访问。
+/// cfbrowser 首页：地址栏 + 快捷入口 + 标签页 + 最近访问。
 ///
 /// 上游 fluxdo 的首页是论坛话题列表；cfbrowser 把入口换成浏览器，
 /// 论坛页仍然保留，通过 [onOpenForum] 由 main.dart 注入（避免反向 import main.dart）。
@@ -36,21 +43,16 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
   }
 
   void _go(String raw) {
-    final url = _normalizeInput(raw);
+    final url = BrowserUrl.normalize(raw);
     if (url.isEmpty) return;
     _focusNode.unfocus();
-    WebViewPage.open(context, url);
-  }
-
-  /// 用户可能只输入 `example.com`，补成 https
-  static String _normalizeInput(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty) return '';
-    if (value.contains('://')) return value;
-    if (RegExp(r'^[a-zA-Z0-9.-]+(:\d+)?(/.*)?$').hasMatch(value)) {
-      return 'https://$value';
+    // 当前标签还是空白页时直接复用它，避免地址栏每输一次就多一个空标签。
+    final active = BrowserTabsService.instance.active;
+    if (active != null && active.url.isEmpty) {
+      WebViewPage.openTab(context, active, url: url);
+    } else {
+      WebViewPage.open(context, url);
     }
-    return value;
   }
 
   Future<void> _openScopeSettings() async {
@@ -63,21 +65,58 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
     setState(() {});
   }
 
+  void _openTab(BrowserTab tab) {
+    WebViewPage.openTab(context, tab);
+  }
+
+  Future<void> _showTabs() async {
+    await showBrowserTabsSheet(context, onSelect: _openTab);
+  }
+
+  void _openLibrary() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MyBrowserPage()),
+    );
+  }
+
+  void _openDownloads() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const DownloadListPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scope = BrowserScopeService.instance.mitmHosts;
     final serverIp = NetworkSettingsService.instance.current.serverIp;
     final history = ref.watch(webHistoryProvider);
+    final tabsService = BrowserTabsService.instance;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('cfbrowser'),
         actions: [
+          ValueListenableBuilder<List<BrowserTab>>(
+            valueListenable: tabsService.tabs,
+            builder: (context, tabs, _) {
+              return IconButton(
+                tooltip: '标签页',
+                onPressed: _showTabs,
+                icon: Badge.count(
+                  count: tabs.length,
+                  isLabelVisible: tabs.length > 1,
+                  child: const Icon(Symbols.tab_rounded),
+                ),
+              );
+            },
+          ),
           if (widget.onOpenForum != null)
             IconButton(
               tooltip: '论坛',
-              icon: const Icon(Icons.forum_outlined),
+              icon: const Icon(Symbols.forum_rounded),
               onPressed: widget.onOpenForum,
             ),
           IconButton(
@@ -98,10 +137,10 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
             autocorrect: false,
             onSubmitted: _go,
             decoration: InputDecoration(
-              hintText: 'https://',
-              prefixIcon: const Icon(Icons.search),
+              hintText: '输入网址或搜索词',
+              prefixIcon: const Icon(Symbols.search_rounded),
               suffixIcon: IconButton(
-                icon: const Icon(Icons.arrow_forward),
+                icon: const Icon(Symbols.arrow_forward_rounded),
                 onPressed: () => _go(_urlController.text),
               ),
               border: OutlineInputBorder(
@@ -112,7 +151,7 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Icon(Icons.bolt, size: 16, color: theme.colorScheme.primary),
+              Icon(Symbols.bolt_rounded, size: 16, color: theme.colorScheme.primary),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -125,6 +164,88 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
             ],
           ),
           const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              ActionChip(
+                avatar: const Icon(Symbols.collections_bookmark_rounded, size: 16),
+                label: const Text('书签与历史'),
+                onPressed: _openLibrary,
+              ),
+              ActionChip(
+                avatar: const Icon(Symbols.download_rounded, size: 16),
+                label: const Text('下载'),
+                onPressed: _openDownloads,
+              ),
+              ActionChip(
+                avatar: const Icon(Symbols.visibility_off_rounded, size: 16),
+                label: const Text('无痕标签页'),
+                onPressed: () => WebViewPage.openNewTab(context, private: true),
+              ),
+            ],
+          ),
+          ValueListenableBuilder<List<BrowserTab>>(
+            valueListenable: tabsService.tabs,
+            builder: (context, tabs, _) {
+              if (tabs.isEmpty) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Text('标签页（${tabs.length}）',
+                          style: theme.textTheme.titleSmall),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _showTabs,
+                        child: const Text('管理'),
+                      ),
+                    ],
+                  ),
+                  for (final tab in tabs.take(4))
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      leading: Icon(
+                        tab.isPrivate
+                            ? Symbols.visibility_off_rounded
+                            : Symbols.public_rounded,
+                        color: tab.isPrivate ? theme.colorScheme.tertiary : null,
+                      ),
+                      title: Text(
+                        tab.displayTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        tab.url.isEmpty ? '新标签页' : tab.url,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        tooltip: '关闭',
+                        icon: const Icon(Symbols.close_rounded, size: 18),
+                        onPressed: () => tabsService.close(tab.id),
+                      ),
+                      onTap: () => _openTab(tab),
+                    ),
+                  if (tabs.length > 4)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: _showTabs,
+                        child: Text('还有 ${tabs.length - 4} 个标签页'),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          Text('加速范围', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 4),
           Wrap(
             spacing: 8,
             runSpacing: 4,
@@ -149,7 +270,7 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 dense: true,
-                leading: const Icon(Icons.public),
+                leading: const Icon(Symbols.public_rounded),
                 title: Text(
                   item.title.isEmpty ? item.url : item.title,
                   maxLines: 1,

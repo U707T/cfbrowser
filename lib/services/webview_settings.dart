@@ -18,6 +18,12 @@ import 'network/doh_proxy/proxy_leaf_trust.dart';
 class WebViewSettings {
   WebViewSettings._();
 
+  /// 「桌面版网站」使用的 UA。移动端 WebView 覆写 UA 后，站点会按桌面
+  /// 视口排版；配合 useWideViewPort/loadWithOverviewMode 才能完整生效。
+  static const String desktopUserAgent =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+
   /// Windows 触摸板/滚轮 workaround（flutter_inappwebview_windows #2783）
   ///
   /// C++ 层 sendScroll 把 delta 乘以 6 后通过 SendMouseInput(WHEEL) 发给 WebView2，

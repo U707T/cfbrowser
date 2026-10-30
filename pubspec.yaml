@@ -1,7 +1,7 @@
 name: cfbrowser
 description: "cfbrowser：Cloudflare 边缘直连浏览器（基于 fluxdo 移植）"
 publish_to: 'none'
-version: 1.0.0+2026102901
+version: 1.1.0+2026103001
 
 environment:
   sdk: ^3.13.0
@@ -202,9 +202,11 @@ flutter:
   fonts:
     - family: MiSans
       fonts:
-        # MiSans Variable Font，单文件覆盖 100-900 全部 weight。
+        # MiSans Variable Font 的 GB2312 子集（约 4 MB，全量 19 MB），
+        # 单文件覆盖 100-900 全部 weight。裁剪脚本：tool/subset_fonts.py。
         # Flutter 3.41+ FontWeight 会映射到 wght variation axis，因此即使
         # 不显式声明 weight，TextStyle(fontWeight: FontWeight.wXXX) 也能精准命中。
+        # 子集外的生僻字由 fontFamilyFallback / 系统字体兜底。
         - asset: assets/fonts/MiSansVF.ttf
     # 墨笺风格的宋体：Noto Serif SC 按 GB2312 常用字裁剪（OFL，见 MojianSerif-OFL.txt），
     # 400 给引用块正文，600/700 给标题；缺的字回落到正文字体
