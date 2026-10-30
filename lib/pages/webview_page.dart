@@ -173,17 +173,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
       },
     );
 
-    if (!_isPrivate) {
-      _webViewUse = WebViewUses.instance.start(
-        WebViewUsePurpose.browsing,
-        url: _currentUrl.isEmpty ? AppConstants.baseUrl : _currentUrl,
-        reason: 'in_app_browser',
-      );
-      _sessionTokenReconcileTimer = Timer.periodic(
-        _sessionTokenReconcileInterval,
-        (_) => _reconcileSessionToken('in_app_browser_tick'),
-      );
-    }
+    // 只有站内页面才需要 WebViewUse 的 cookie 重灌/_t 对账；cfbrowser 是
+    // 通用浏览器，访问站外站点时不应该把这些逻辑铺到每个域名上。
+    if (_currentUrl.isNotEmpty) _ensureWebViewUse(_currentUrl);
 
     // 可见 WebView(hybrid composition)在位期间会参与每帧合成,
     // 打点让诊断时间轴能对齐"WebView 页在前台"与掉帧段
@@ -241,16 +233,30 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
     );
   }
 
-  String? _siteUrlCandidate() {
+  static bool _isSiteUrl(String url) {
+    final host = Uri.tryParse(url)?.host.toLowerCase();
+    if (host == null || host.isEmpty) return false;
     final siteHost = Uri.parse(AppConstants.baseUrl).host.toLowerCase();
-    bool isSite(String url) {
-      final host = Uri.tryParse(url)?.host.toLowerCase();
-      if (host == null || host.isEmpty) return false;
-      return host == siteHost || host.endsWith('.$siteHost');
-    }
+    return host == siteHost || host.endsWith('.$siteHost');
+  }
 
-    if (isSite(_currentUrl)) return _currentUrl;
-    if (isSite(widget.url)) return widget.url;
+  /// 站内 URL 首次出现时启动 WebViewUse（无痕标签永远不启动）。
+  void _ensureWebViewUse(String url) {
+    if (_isPrivate || _webViewUse != null || !_isSiteUrl(url)) return;
+    _webViewUse = WebViewUses.instance.start(
+      WebViewUsePurpose.browsing,
+      url: url,
+      reason: 'in_app_browser',
+    );
+    _sessionTokenReconcileTimer ??= Timer.periodic(
+      _sessionTokenReconcileInterval,
+      (_) => _reconcileSessionToken('in_app_browser_tick'),
+    );
+  }
+
+  String? _siteUrlCandidate() {
+    if (_isSiteUrl(_currentUrl)) return _currentUrl;
+    if (_isSiteUrl(widget.url)) return widget.url;
     return null;
   }
 
@@ -549,6 +555,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
                           if (_currentUrl.isNotEmpty) {
                             // 等使用期的准备（重灌）完成再加载；准备失败
                             // 也照常加载（取代 RawSetCookieQueue.flush）
+                            _ensureWebViewUse(_currentUrl);
                             final use = _webViewUse;
                             if (use != null) await use.ready;
                             await controller.loadUrl(
@@ -572,6 +579,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
                           if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
                             return;
                           }
+                          _ensureWebViewUse(urlString);
                           setState(() {
                             _navigationRevision += 1;
                             _historyStateSettled = false;
@@ -1068,6 +1076,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
 
     // HTTP(S) 和内部 scheme 正常加载
     if (_allowedSchemes.contains(scheme)) {
+      if (scheme == 'http' || scheme == 'https') {
+        _ensureWebViewUse(url.toString());
+      }
       return NavigationActionPolicy.ALLOW;
     }
 
@@ -1175,6 +1186,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
     if (url.isEmpty) return;
     final controller = _controller;
     if (controller == null) return;
+    _ensureWebViewUse(url);
     controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
   }
 
