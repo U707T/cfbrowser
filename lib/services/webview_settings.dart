@@ -146,6 +146,8 @@ class WebViewSettings {
     useShouldInterceptRequest: false,
     useOnLoadResource: false,
     useOnDownloadStart: false,
+    // 渲染进程没了由我们认领，否则 Android 连 App 一起杀（见 WebViewRenderGone）
+    useOnRenderProcessGone: true,
 
     // 其他优化
     transparentBackground: true,
@@ -174,6 +176,7 @@ class WebViewSettings {
     useShouldInterceptRequest: false,
     useOnLoadResource: false,
     useOnDownloadStart: false,
+    useOnRenderProcessGone: true,
 
     transparentBackground: true,
     disableContextMenu: true,
@@ -382,6 +385,7 @@ class WebViewSettings {
 
     // 启用下载拦截
     useOnDownloadStart: true,
+    useOnRenderProcessGone: true,
 
     // 安全相关
     thirdPartyCookiesEnabled: true,

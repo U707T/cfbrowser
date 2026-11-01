@@ -22,6 +22,7 @@ import '../services/toast_service.dart';
 import '../services/app_link_service.dart';
 import '../services/network/cookie/cookie_store_observer.dart';
 import '../services/session/webview_use.dart';
+import '../services/webview_render_gone.dart';
 import '../services/webview_settings.dart';
 import '../services/windows_webview_environment_service.dart';
 import '../widgets/browser/browser_tabs_sheet.dart';
@@ -102,7 +103,8 @@ class WebViewPage extends ConsumerStatefulWidget {
   ConsumerState<WebViewPage> createState() => _WebViewPageState();
 }
 
-class _WebViewPageState extends ConsumerState<WebViewPage> {
+class _WebViewPageState extends ConsumerState<WebViewPage>
+    with WebViewRenderGoneState<WebViewPage> {
   InAppWebViewController? _controller;
   bool _isLoading = true;
   String _currentUrl = '';
@@ -216,6 +218,16 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
   void _onTabsChanged() {
     if (!mounted) return;
     setState(() {});
+  }
+
+  @override
+  void onWebViewDiscarded() {
+    _controller = null;
+    _isLoading = false;
+    _canGoBack = false;
+    _canGoForward = false;
+    _historyStateSettled = true;
+    _webViewSnapshot = null;
   }
 
   void _reconcileSessionToken(String reason) {
@@ -546,42 +558,58 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Offstage(
-                    offstage: _webViewSnapshot != null,
-                    child: WebViewSettings.wrapWithScrollFix(
-                      InAppWebView(
-                        webViewEnvironment: windowsWebViewEnvironment,
-                        initialSettings: _buildSettings(),
-                        initialUserScripts:
-                            WebViewSettings.compatPolyfillScripts,
-                        findInteractionController: _findController,
-                        shouldOverrideUrlLoading: _shouldOverrideUrlLoading,
-                        onReceivedServerTrustAuthRequest: (_, challenge) =>
-                            WebViewSettings.handleServerTrustAuthRequest(
-                              challenge,
-                            ),
-                        onWebViewCreated: (controller) async {
-                          _controller = controller;
-                          // 老 WKWebView 的 JS 运行时错误回传到 LogWriter。
-                          WebViewSettings.registerJsErrorReporter(controller);
-                          if (_currentUrl.isNotEmpty) {
-                            // 站内页面先把本地代理从待命唤醒，再做 cookie
-                            // 重灌/加载；站外页面完全不动代理。
-                            if (_isAcceleratedUrl(_currentUrl)) {
-                              await NetworkSettingsService.instance
-                                  .leaveStandby();
-                            }
-                            // 等使用期的准备（重灌）完成再加载；准备失败
-                            // 也照常加载（取代 RawSetCookieQueue.flush）
-                            _ensureWebViewUse(_currentUrl);
-                            final use = _webViewUse;
-                            if (use != null) await use.ready;
-                            await controller.loadUrl(
-                              urlRequest: URLRequest(
-                                url: WebUri(_currentUrl),
+                  if (webViewRenderGone)
+                    // 渲染进程没了：摘掉 WebView 换成占位，重新加载时靠
+                    // ValueKey(webViewGeneration) 建新实例。
+                    WebViewRenderGoneView(onReload: reloadAfterRenderGone)
+                  else
+                    Offstage(
+                      offstage: _webViewSnapshot != null,
+                      child: WebViewSettings.wrapWithScrollFix(
+                        InAppWebView(
+                          key: ValueKey(webViewGeneration),
+                          webViewEnvironment: windowsWebViewEnvironment,
+                          initialSettings: _buildSettings(),
+                          initialUserScripts:
+                              WebViewSettings.compatPolyfillScripts,
+                          findInteractionController: _findController,
+                          shouldOverrideUrlLoading: _shouldOverrideUrlLoading,
+                          onReceivedServerTrustAuthRequest: (_, challenge) =>
+                              WebViewSettings.handleServerTrustAuthRequest(
+                                challenge,
                               ),
-                            );
-                          }
+                          onRenderProcessGone: (_, detail) =>
+                              handleWebViewRenderGone(
+                                'in_app_browser',
+                                detail,
+                              ),
+                          onWebViewCreated: (controller) async {
+                            _controller = controller;
+                            // 老 WKWebView 的 JS 运行时错误回传到 LogWriter。
+                            WebViewSettings.registerJsErrorReporter(controller);
+                            // 渲染进程退出后重建：接着打开刚才的页面。
+                            final initialUrl =
+                                webViewGeneration > 0 && _currentUrl.isNotEmpty
+                                ? _currentUrl
+                                : widget.url;
+                            if (initialUrl.isNotEmpty) {
+                              // 站内页面先把本地代理从待命唤醒，再做 cookie
+                              // 重灌/加载；站外页面完全不动代理。
+                              if (_isAcceleratedUrl(initialUrl)) {
+                                await NetworkSettingsService.instance
+                                    .leaveStandby();
+                              }
+                              // 等使用期的准备（重灌）完成再加载；准备失败
+                              // 也照常加载（取代 RawSetCookieQueue.flush）
+                              _ensureWebViewUse(initialUrl);
+                              final use = _webViewUse;
+                              if (use != null) await use.ready;
+                              await controller.loadUrl(
+                                urlRequest: URLRequest(
+                                  url: WebUri(initialUrl),
+                                ),
+                              );
+                            }
                           // Android: 启用 WebAuthn/PassKey 支持
                           if (io.Platform.isAndroid) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
