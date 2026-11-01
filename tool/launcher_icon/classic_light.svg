@@ -16,8 +16,10 @@
   </defs>
   <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
   <rect width="1024" height="1024" rx="228" fill="url(#glow)"/>
+  <g transform="translate(512 512) scale(0.551) translate(-512 -512)">
   <circle cx="512" cy="512" r="232" fill="url(#orb)" filter="url(#shadow)"/>
   <ellipse cx="512" cy="512" rx="392" ry="142" transform="rotate(-22 512 512)" stroke="#262320" stroke-width="14" opacity="0.55"/>
   <circle cx="828" cy="340" r="26" fill="#262320"/>
   <ellipse cx="430" cy="420" rx="72" ry="42" fill="#FFFFFF" opacity="0.18" transform="rotate(-30 430 420)"/>
+  </g>
 </svg>

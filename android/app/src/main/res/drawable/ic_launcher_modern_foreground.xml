@@ -8,8 +8,8 @@
 
     <!-- 自适应安全区：整体缩到 78% -->
     <group
-        android:scaleX="0.78"
-        android:scaleY="0.78"
+        android:scaleX="0.373"
+        android:scaleY="0.373"
         android:pivotX="512"
         android:pivotY="512">
 

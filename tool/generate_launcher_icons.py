@@ -47,6 +47,13 @@ ORB_GRADIENTS = {
     "cream": [("0", "#FFFDF8"), ("0.55", "#F1E8D9"), ("1", "#D8CAB6")],
 }
 
+# ── 标记占比（2026-11-01 统一口径，见 README「缩放」）────────────────────────
+# 标记 = 球 + 轨道 + 轨道点 + 高光，不含底板。
+# 口径：标记 bbox 宽度 ÷ 传统图标边长 = ~41%；自适应层 ÷ 可见区(72dp) 也是 ~41%。
+# 注意 svg() 里还有一层 translate/scale：bbox 不是简单乘 2R，改完必须实测。
+LEGACY_SCALE = 0.551
+FG_SCALE = 0.373           # 前景 vector 的 group scale（1024 viewport，可见区 = 72/108）
+
 MIPMAP_SIZES = {
     "mdpi": 48,
     "hdpi": 72,
@@ -62,7 +69,22 @@ def _stops(stops: list[tuple[str, str]]) -> str:
     )
 
 
-def svg(light: bool, orb: str, orbit: str) -> str:
+def mark_svg(orb: str, orbit: str, mark_scale: float) -> str:
+    """只画标记（球 + 轨道 + 轨道点 + 高光），留白透明 —— 用于实测 bbox。"""
+    return f'''<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="orb" cx="34%" cy="28%" r="75%">{_stops(ORB_GRADIENTS[orb])}</radialGradient>
+  </defs>
+  <g transform="translate(512 512) scale({mark_scale}) translate(-512 -512)">
+    <circle cx="512" cy="512" r="232" fill="url(#orb)"/>
+    <ellipse cx="512" cy="512" rx="392" ry="142" transform="rotate(-22 512 512)" stroke="{orbit}" stroke-width="14" opacity="0.55"/>
+    <circle cx="828" cy="340" r="26" fill="{orbit}"/>
+    <ellipse cx="430" cy="420" rx="72" ry="42" fill="#FFFFFF" opacity="0.18" transform="rotate(-30 430 420)"/>
+  </g>
+</svg>'''
+
+
+def svg(light: bool, orb: str, orbit: str, mark_scale: float = LEGACY_SCALE) -> str:
     bg_hi, bg_lo = (PAPER_HI, PAPER_LO) if light else (DARK_HI, DARK_LO)
     glow = "0.75" if light else "0.10"
     shadow = "0.16" if light else "0.35"
@@ -84,10 +106,12 @@ def svg(light: bool, orb: str, orbit: str) -> str:
   </defs>
   <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
   <rect width="1024" height="1024" rx="228" fill="url(#glow)"/>
+  <g transform="translate(512 512) scale({mark_scale}) translate(-512 -512)">
   <circle cx="512" cy="512" r="232" fill="url(#orb)" filter="url(#shadow)"/>
   <ellipse cx="512" cy="512" rx="392" ry="142" transform="rotate(-22 512 512)" stroke="{orbit}" stroke-width="14" opacity="0.55"/>
   <circle cx="828" cy="340" r="26" fill="{orbit}"/>
   <ellipse cx="430" cy="420" rx="72" ry="42" fill="#FFFFFF" opacity="0.18" transform="rotate(-30 430 420)"/>
+  </g>
 </svg>
 '''
 
@@ -118,8 +142,8 @@ def foreground(orb: str, orbit: str) -> str:
 
     <!-- 自适应安全区：整体缩到 78% -->
     <group
-        android:scaleX="0.78"
-        android:scaleY="0.78"
+        android:scaleX="{FG_SCALE}"
+        android:scaleY="{FG_SCALE}"
         android:pivotX="512"
         android:pivotY="512">
 
@@ -184,8 +208,8 @@ def monochrome() -> str:
     android:viewportHeight="1024">
 
     <group
-        android:scaleX="0.78"
-        android:scaleY="0.78"
+        android:scaleX="{FG_SCALE}"
+        android:scaleY="{FG_SCALE}"
         android:pivotX="512"
         android:pivotY="512">
         <path
