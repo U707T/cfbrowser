@@ -162,7 +162,9 @@ class _WebViewLoginPageState extends ConsumerState<WebViewLoginPage>
             ),
           IconButton(
             icon: const Icon(Symbols.refresh_rounded),
-            onPressed: () => _controller?.reload(),
+            onPressed: () => webViewRenderGone
+                ? reloadAfterRenderGone()
+                : _controller?.reload(),
             tooltip: context.l10n.common_refresh,
           ),
         ],
