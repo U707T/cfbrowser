@@ -2,6 +2,24 @@
 
 所有版本的变更记录。beta / rc 版本提交在 stable 发版时会折叠并入对应 stable 版本。
 
+## [1.1.4] - 2026-11-02
+
+### 🐛 修复
+
+- 标签页 URL 历史：再次打开历史里出现过的地址（例如从 B 点链接回到 A）时，
+  不再把指针直接跳回旧项、让前进按钮指向 WebView 已经截断掉的页面。
+  `recordNavigation` 新增 `historyTraversal`，只有后退/前进才移动指针；
+  标记与相邻项对不上时退化成普通导航。
+- WebView 回调：页面关闭 / 控制器已销毁的窗口期内，`onLoadStop` 与
+  `onUpdateVisitedHistory` 读取标题、历史状态会抛平台异常，现在改为记录日志后丢弃，
+  不再冒未处理异常；`injectCSSCode` 同样不再阻塞导航回调。
+
+### 📝 文档
+
+- 新增 [`docs/bfcache-design.md`](docs/bfcache-design.md)：往返缓存（BFCache）规划。
+  现状取证 → 三层设计（标签保活池 / Android 原生 BFCache / 冷恢复）→ 文件级改动清单 →
+  P0–P3 分阶段落地与真机复核步骤。
+
 ## [1.1.3] - 2026-11-02
 
 ### 🎨 图标：球体标记收进 41%

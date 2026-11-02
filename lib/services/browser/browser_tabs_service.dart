@@ -171,7 +171,20 @@ class BrowserTabsService {
   }
 
   /// 记录一次页面导航，同时同步标签的 URL 级历史。
-  void recordNavigation(String id, String url, {String? title}) {
+  ///
+  /// [historyTraversal] 表示这次导航来自 WebView 自己的后退/前进，而不是
+  /// 一次新的页面跳转。回调里两者长得一模一样（都是「URL 变成了历史里的
+  /// 某一项」），只有调用方知道区别，所以必须由调用方标记：
+  /// - `true`：只把指针移到相邻项；对不上相邻项时退化成普通导航；
+  /// - `false`：截断前进历史后追加。**不能**因为 URL 在历史里出现过就跳回
+  ///   旧项 —— 那样从 B 点链接回到 A 时，前进按钮会指向一个 WebView 已经
+  ///   截断掉的页面。
+  void recordNavigation(
+    String id,
+    String url, {
+    String? title,
+    bool historyTraversal = false,
+  }) {
     final index = _indexOf(id);
     if (index < 0) return;
     final tab = tabs.value[index];
@@ -197,17 +210,21 @@ class BrowserTabsService {
       historyIndex = 0;
     } else if (history[historyIndex] == cleanUrl) {
       // 同一页面：标题可能后到，历史不动。
+    } else if (historyTraversal &&
+        historyIndex > 0 &&
+        history[historyIndex - 1] == cleanUrl) {
+      // WebView 后退。
+      historyIndex -= 1;
+    } else if (historyTraversal &&
+        historyIndex + 1 < history.length &&
+        history[historyIndex + 1] == cleanUrl) {
+      // WebView 前进。
+      historyIndex += 1;
     } else {
-      final existing = history.lastIndexOf(cleanUrl);
-      if (existing >= 0) {
-        // WebView 自身的后退/前进，或页面跳回历史项。
-        historyIndex = existing;
-      } else {
-        // 从当前项之后截断，再追加新页面。
-        history.removeRange(historyIndex + 1, history.length);
-        history.add(cleanUrl);
-        historyIndex = history.length - 1;
-      }
+      // 从当前项之后截断，再追加新页面。
+      history.removeRange(historyIndex + 1, history.length);
+      history.add(cleanUrl);
+      historyIndex = history.length - 1;
     }
 
     if (history.length > maxHistoryPerTab) {

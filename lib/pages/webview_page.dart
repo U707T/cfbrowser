@@ -113,6 +113,10 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
   bool _historyStateSettled = false;
   int _navigationRevision = 0;
 
+  /// 刚发起后退/前进时记下的目标 URL；只有落地的导航等于它才算历史遍历。
+  /// 没消费掉就说明这次遍历没成功，后续导航仍按新导航处理。
+  String? _pendingTraversalTarget;
+
   late final BrowserTabsService _tabs;
   late final String _tabId;
   late final bool _isPrivate;
@@ -611,17 +615,28 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
                         },
                         onLoadStop: (controller, url) async {
                           final revision = _navigationRevision;
-                          setState(() => _isLoading = false);
+                          if (mounted) setState(() => _isLoading = false);
                           // 无痕标签不把 WebView cookie 带回 jar；站外页面也
                           // 没有需要 sweep 的站点 cookie。
                           if (!_isPrivate && _isSiteUrl(_currentUrl)) {
                             CookieStoreObserver.instance
                                 .notifyExternalChange();
                           }
-                          await WebViewSettings.injectScrollFix(controller);
-                          final title = await controller.getTitle();
-                          final canGoBack = await controller.canGoBack();
-                          final canGoForward = await controller.canGoForward();
+                          final String? title;
+                          final bool canGoBack;
+                          final bool canGoForward;
+                          try {
+                            await WebViewSettings.injectScrollFix(controller);
+                            title = await controller.getTitle();
+                            canGoBack = await controller.canGoBack();
+                            canGoForward = await controller.canGoForward();
+                          } catch (e) {
+                            // 页面在回调途中被关闭 / 控制器已销毁时，
+                            // 这些查询会抛平台异常；这一帧的信息已经没用，
+                            // 直接丢掉，别把未处理异常打到日志里。
+                            debugPrint('[WebViewPage] onLoadStop 查询失败: $e');
+                            return;
+                          }
                           if (!mounted || revision != _navigationRevision) {
                             return;
                           }
@@ -639,8 +654,14 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
                             }
                           });
                           if (widget.injectCss != null) {
-                            await controller.injectCSSCode(
-                              source: widget.injectCss!,
+                            unawaited(
+                              controller
+                                  .injectCSSCode(source: widget.injectCss!)
+                                  .catchError((Object e) {
+                                    debugPrint(
+                                      '[WebViewPage] 注入 CSS 失败: $e',
+                                    );
+                                  }),
                             );
                           }
                           // 记录浏览历史（无痕标签只维护内存里的标签历史）
@@ -650,19 +671,23 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
                                   .read(webHistoryProvider.notifier)
                                   .record(urlString, _currentTitle);
                             }
-                            _tabs.recordNavigation(
-                              _tabId,
-                              urlString,
-                              title: _currentTitle,
-                            );
+                            _recordNavigation(urlString, title: _currentTitle);
                           }
                         },
                         onUpdateVisitedHistory:
                             (controller, url, isReload) async {
                               final revision = _navigationRevision;
-                              final canGoBack = await controller.canGoBack();
-                              final canGoForward =
-                                  await controller.canGoForward();
+                              final bool canGoBack;
+                              final bool canGoForward;
+                              try {
+                                canGoBack = await controller.canGoBack();
+                                canGoForward = await controller.canGoForward();
+                              } catch (e) {
+                                debugPrint(
+                                  '[WebViewPage] 读取历史状态失败: $e',
+                                );
+                                return;
+                              }
                               if (!mounted ||
                                   revision != _navigationRevision) {
                                 return;
@@ -678,8 +703,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
                                 _historyStateSettled = true;
                               });
                               if (urlString != null && urlString.isNotEmpty) {
-                                _tabs.recordNavigation(
-                                  _tabId,
+                                _recordNavigation(
                                   urlString,
                                   title: _currentTitle,
                                 );
@@ -862,11 +886,14 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
     final controller = _controller;
     if (controller == null) return;
     if (await controller.canGoBack()) {
+      // 告诉 recordNavigation 这一次是遍历而不是新导航。
+      _pendingTraversalTarget = _tabs.byId(_tabId)?.backUrl;
       await controller.goBack();
       return;
     }
     final url = _tabs.stepBack(_tabId);
     if (url != null) {
+      _pendingTraversalTarget = null;
       await controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
     }
   }
@@ -875,13 +902,30 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
     final controller = _controller;
     if (controller == null) return;
     if (await controller.canGoForward()) {
+      _pendingTraversalTarget = _tabs.byId(_tabId)?.forwardUrl;
       await controller.goForward();
       return;
     }
     final url = _tabs.stepForward(_tabId);
     if (url != null) {
+      _pendingTraversalTarget = null;
       await controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
     }
+  }
+
+  /// 把一次已完成的导航写进标签历史。
+  ///
+  /// 只有「刚点过后退/前进，且落地的 URL 正好是那一步的目标」才标记成
+  /// 历史遍历；其余一律按新导航处理（截断前进历史后追加）。
+  void _recordNavigation(String url, {String? title}) {
+    final traversal = url == _pendingTraversalTarget;
+    if (traversal) _pendingTraversalTarget = null;
+    _tabs.recordNavigation(
+      _tabId,
+      url,
+      title: title,
+      historyTraversal: traversal,
+    );
   }
 
   void _goHome() {
@@ -1216,6 +1260,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage> {
         await NetworkSettingsService.instance.leaveStandby();
       }
       _ensureWebViewUse(url);
+      _pendingTraversalTarget = null;
       await controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
     } catch (e) {
       debugPrint('[WebViewPage] 地址栏加载失败: $e');

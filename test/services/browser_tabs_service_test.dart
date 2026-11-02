@@ -63,6 +63,66 @@ void main() {
     expect(current.canGoForward, isFalse);
   });
 
+  test('再次导航到历史里出现过的 URL 会追加，而不是把指针跳回旧项', () {
+    final tab = service.create(url: 'https://example.com/a');
+    service.recordNavigation(tab.id, 'https://example.com/b');
+    // 从 B 点站内链接回到 A：这是新的一次导航，WebView 会截断前进历史。
+    service.recordNavigation(tab.id, 'https://example.com/a');
+
+    final current = service.byId(tab.id)!;
+    expect(current.history, <String>[
+      'https://example.com/a',
+      'https://example.com/b',
+      'https://example.com/a',
+    ]);
+    expect(current.historyIndex, 2);
+    expect(current.canGoForward, isFalse);
+  });
+
+  test('标记为历史遍历时只移动指针，不追加', () {
+    final tab = service.create(url: 'https://example.com/a');
+    service.recordNavigation(tab.id, 'https://example.com/b');
+
+    // WebView 后退：回调里看到的还是 A，但这是遍历，不是新导航。
+    service.recordNavigation(
+      tab.id,
+      'https://example.com/a',
+      historyTraversal: true,
+    );
+    var current = service.byId(tab.id)!;
+    expect(current.history.length, 2);
+    expect(current.historyIndex, 0);
+    expect(current.canGoForward, isTrue);
+
+    service.recordNavigation(
+      tab.id,
+      'https://example.com/b',
+      historyTraversal: true,
+    );
+    current = service.byId(tab.id)!;
+    expect(current.history.length, 2);
+    expect(current.historyIndex, 1);
+  });
+
+  test('历史遍历标记与相邻项对不上时退化成普通导航', () {
+    final tab = service.create(url: 'https://example.com/a');
+    service.recordNavigation(tab.id, 'https://example.com/b');
+
+    // 指针在 B，标记成遍历但目标既不是前一项也不是后一项。
+    service.recordNavigation(
+      tab.id,
+      'https://example.com/c',
+      historyTraversal: true,
+    );
+    final current = service.byId(tab.id)!;
+    expect(current.history, <String>[
+      'https://example.com/a',
+      'https://example.com/b',
+      'https://example.com/c',
+    ]);
+    expect(current.historyIndex, 2);
+  });
+
   test('关闭标签页会选中相邻标签', () {
     final first = service.create(url: 'https://example.com/1');
     final second = service.create(url: 'https://example.com/2');

@@ -82,6 +82,9 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
 | 桌面版网站 | 按标签覆盖桌面 UA，并打开 `useWideViewPort` / `loadWithOverviewMode`；`setSettings` 后 reload |
 | 工具栏 | 底部后退/前进/停止/刷新/主页/分享；菜单含新建标签、无痕标签、查找、桌面版、书签与历史 |
 
+> 往返缓存（BFCache）的现状、三层设计与分阶段实施方案见
+> [`docs/bfcache-design.md`](bfcache-design.md)。
+
 ### 2.5 下载加速
 
 `DownloadService` 优先调用 `lib/services/download/segmented_download.dart`：
