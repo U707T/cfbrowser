@@ -47,12 +47,13 @@ ORB_GRADIENTS = {
     "cream": [("0", "#FFFDF8"), ("0.55", "#F1E8D9"), ("1", "#D8CAB6")],
 }
 
-# ── 标记占比（2026-11-01 统一口径，见 README「缩放」）────────────────────────
-# 标记 = 球 + 轨道 + 轨道点 + 高光，不含底板。
-# 口径：标记 bbox 宽度 ÷ 传统图标边长 = ~41%；自适应层 ÷ 可见区(72dp) 也是 ~41%。
-# 注意 svg() 里还有一层 translate/scale：bbox 不是简单乘 2R，改完必须实测。
-LEGACY_SCALE = 0.551
-FG_SCALE = 0.373           # 前景 vector 的 group scale（1024 viewport，可见区 = 72/108）
+# ── 标记占比（2026-11-02 调档，见 README「缩放」）────────────────────────
+# 标记 = 球 + 轨道 + 轨道点 + 高光，不含底板、不含阴影。
+# 口径：标记 bbox 宽度 ÷ 传统图标边长 = 50%；自适应层 ÷ 可见区(72dp) 也是 50%。
+# 上一版是 41%，真机上看明显偏小（球体是实心块，视觉重心集中，41% 只适合线框图形）。
+# 注意 svg()/foreground() 里还有一层 translate/scale：bbox 不是简单乘 2R，改完必须实测。
+LEGACY_SCALE = 0.681
+FG_SCALE = 0.455           # 前景 vector 的 group scale（1024 viewport，可见区 = 72/108）
 
 MIPMAP_SIZES = {
     "mdpi": 48,
@@ -140,7 +141,7 @@ def foreground(orb: str, orbit: str) -> str:
     android:viewportWidth="1024"
     android:viewportHeight="1024">
 
-    <!-- 自适应安全区：整体缩到 78% -->
+    <!-- 自适应前景：标记占可见区 50%（1024 视口 → 108dp 画布） -->
     <group
         android:scaleX="{FG_SCALE}"
         android:scaleY="{FG_SCALE}"

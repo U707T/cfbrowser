@@ -6,10 +6,10 @@
     android:viewportWidth="1024"
     android:viewportHeight="1024">
 
-    <!-- 自适应安全区：整体缩到 78% -->
+    <!-- 自适应前景：标记占可见区 50%（1024 视口 → 108dp 画布） -->
     <group
-        android:scaleX="0.373"
-        android:scaleY="0.373"
+        android:scaleX="0.455"
+        android:scaleY="0.455"
         android:pivotX="512"
         android:pivotY="512">
 
