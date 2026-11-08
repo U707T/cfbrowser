@@ -237,5 +237,8 @@
   "dohDetail_domainHelper": "只輸入網域，不含協定、路徑或萬用字元；儲存後同時匹配子網域。",
   "dohDetail_invalidDomain": "請輸入有效網域，不含協定、連接埠、路徑或萬用字元",
   "dohDetail_domainAlreadyCovered": "此網域已由現有規則涵蓋",
-  "@dohDetail_echDomainsCount": {"placeholders": {"builtinCount": {"type": "int"}, "customCount": {"type": "int"}}}
+  "@dohDetail_echDomainsCount": {"placeholders": {"builtinCount": {"type": "int"}, "customCount": {"type": "int"}}},
+  "dohDetail_browserTls": "瀏覽器指紋（實驗）",
+  "dohDetail_browserTlsEnabledDesc": "已開啟：經網關的連線照本機 WebView 的握手（TLS 與 HTTP/2）和請求頭發出",
+  "dohDetail_browserTlsDisabledDesc": "已關閉：經網關的連線用通用的 TLS 握手"
 }

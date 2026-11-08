@@ -230,5 +230,8 @@
   "dohDetail_domainHelper": "Enter a domain without a scheme, path, or wildcard. Subdomains are included.",
   "dohDetail_invalidDomain": "Enter a valid domain without a scheme, port, path, or wildcard",
   "dohDetail_domainAlreadyCovered": "This domain is already covered by an existing rule",
-  "@dohDetail_echDomainsCount": {"placeholders": {"builtinCount": {"type": "int"}, "customCount": {"type": "int"}}}
+  "@dohDetail_echDomainsCount": {"placeholders": {"builtinCount": {"type": "int"}, "customCount": {"type": "int"}}},
+  "dohDetail_browserTls": "Browser fingerprint (experimental)",
+  "dohDetail_browserTlsEnabledDesc": "On: connections through the gateway copy this device's WebView handshake (TLS and HTTP/2) and request headers",
+  "dohDetail_browserTlsDisabledDesc": "Off: connections through the gateway use a generic TLS handshake"
 }

@@ -237,5 +237,8 @@
   "dohDetail_domainHelper": "仅输入域名，不含协议、路径或通配符；保存后同时匹配子域名。",
   "dohDetail_invalidDomain": "请输入有效域名，不含协议、端口、路径或通配符",
   "dohDetail_domainAlreadyCovered": "该域名已被现有规则覆盖",
-  "@dohDetail_echDomainsCount": {"placeholders": {"builtinCount": {"type": "int"}, "customCount": {"type": "int"}}}
+  "@dohDetail_echDomainsCount": {"placeholders": {"builtinCount": {"type": "int"}, "customCount": {"type": "int"}}},
+  "dohDetail_browserTls": "浏览器指纹（实验）",
+  "dohDetail_browserTlsEnabledDesc": "已开启：经网关的连接照本机 WebView 的握手（TLS 与 HTTP/2）和请求头发出",
+  "dohDetail_browserTlsDisabledDesc": "已关闭：经网关的连接用通用的 TLS 握手"
 }
