@@ -73,8 +73,9 @@ void main() {
       expect(service.servers.first.name, accelDohServerName);
       expect(service.servers.first.url, current.selectedServerUrl);
 
-      // 本机没编过 core/doh_proxy 时没有代理可执行文件，启动失败：端口要被清掉，HTTP 走直连
-      if (service.lastStartFailed) {
+      // 本机没编过 core/doh_proxy 时没有代理可执行文件，启动失败：端口要被清掉，HTTP 走直连。
+      // 浏览器优先：没写过 DoH 偏好的新安装代理保持待命（不启动），此时同样没有端口。
+      if (service.isStandby || service.lastStartFailed) {
         expect(current.proxyPort, isNull);
         expect(prefs.getInt('doh_proxy_port'), isNull);
       } else {

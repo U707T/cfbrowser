@@ -68,6 +68,9 @@ class ProxyLeafTrust {
     return hosts.toList(growable: false);
   }
 
+  @visibleForTesting
+  static List<String> get preallowHosts => _preallowHosts;
+
   /// 证书出错时按「是否代理签发的那张叶子」裁定（Linux / Windows）
   static bool get isApplicable => Platform.isLinux || Platform.isWindows;
 

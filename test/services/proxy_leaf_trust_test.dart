@@ -25,7 +25,21 @@ void main() {
     });
   });
 
-  test('MITM 范围默认只含必须走 ECH 的 linux.do（cfbrowser 改为可配置）', () {
-    expect(ProxyLeafTrust.mitmHosts, ['linux.do']);
+  test('MITM 范围默认是 linux.do + 静态资源域 ldstatic.com（可在设置里改）', () {
+    expect(
+      ProxyLeafTrust.mitmHosts,
+      containsAll(['linux.do', 'ldstatic.com']),
+      reason: '站内图片/表情/通知/直传都在 ldstatic.com 下（上游 23e0c32b）',
+    );
+    expect(
+      ProxyLeafTrust.preallowHosts,
+      containsAll([
+        'cdn.ldstatic.com',
+        'cdn3.ldstatic.com',
+        'ping.ldstatic.com',
+        'linuxdo-uploads.s3.ldstatic.com',
+      ]),
+      reason: 'WPE 不会为子资源回调证书错误，只能预先放行',
+    );
   });
 }
