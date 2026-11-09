@@ -5,6 +5,18 @@
 - 经典：暖纸/深墨底 + 陶土色球体 + 墨色/奶油色轨道；
 - 现代：同几何，球体换成墨色（浅色底）/奶油色（深色底），轨道改为陶土色。
 
+几何基准（2026-11-09，按用户给的定稿参照图 1:1 量出来的，1024 视口 = 图标边长）：
+- 球 R=223（直径占图标 43.5%），球心居中；
+- 轨道中心线 374×136、线宽 16、倾角 -22°，外沿包围盒宽 716.6 = 图标的 70%；
+- 轨道点 r=19，圆心落在轨道中心线上（参数角 -18°）；
+- 投影是球底下方一颗独立的椭圆柔影（rx 214 / ry 56 / 球心下 268）。
+参照图里点的圆心偏在轨道线内侧约 10 单位（看着像浮在环内圈上），这里改成正好压线。
+
+层次：
+- 轨道分前后两半：后半圈先画在球体之下（被球体挡住），前半圈补在球体之上。
+  整圈压在球上会失去前后关系；后半圈整段藏起来又会让环读成一道斜杠 —— 只有在
+  环足够松（外沿 1.71×球半径）时，这种「挡一半」的做法才成立，所以环/球比例不能随便收紧。
+
 输出：
 - Android 旧版 mipmap PNG（日/夜、两套风格、5 个密度）
 - Android 自适应图标：渐变背景、前景（日/夜）、单色
@@ -17,6 +29,7 @@
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import cairosvg
@@ -35,11 +48,57 @@ CREAM = "#F4EFE5"
 TERRA = "#D97757"
 TERRA_DEEP = "#B8553B"
 
-SPHERE = "M280 512 a232 232 0 1 0 464 0 a232 232 0 1 0 -464 0 Z"
-HIGHLIGHT = "M358 420 a72 42 0 1 0 144 0 a72 42 0 1 0 -144 0 Z"
-ORBIT = "M120 512 a392 142 0 1 0 784 0 a392 142 0 1 0 -784 0 Z"
-DOT = "M802 340 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0 Z"
-SHADOW = "M292 540 a220 56 0 1 0 440 0 a220 56 0 1 0 -440 0 Z"
+# ── 几何（1024 视口；自适应层可见区 = 中央 72/108 = 682.7 单位）──────────
+SPHERE_R = 223.0
+ORBIT_RX = 374.0          # 中心线半长轴
+ORBIT_RY = 136.0          # 中心线半短轴
+ORBIT_W = 16.0            # 线宽
+ORBIT_TILT = 22.0         # 实际旋转 -ORBIT_TILT
+RING_ALPHA = 0.80         # 参照图里环压在暖纸底上实测 ≈ (79,76,72)
+DOT_R = 20.0
+DOT_ANGLE = -18.0         # 轨道参数角（局部系），圆心压在轨道中心线上
+DOT_ALPHA = 0.95
+
+# 投影：球底下方一颗独立椭圆柔影（用「圆 + 径向渐变 + 纵向压扁」实现，
+# 矢量图没有模糊，直接画椭圆渐变会在上下边缘留硬边）
+SHADOW_ALPHA_LIGHT = 0.14
+SHADOW_ALPHA_DARK = 0.22
+SHADOW_RX = 248.0
+SHADOW_RY = 76.0
+SHADOW_CY = 815.0
+
+# 球体径向渐变与高光：全部按球半径取比例，换半径时两者不会脱节
+ORB_GRAD_CX = 512 - 0.40 * SPHERE_R
+ORB_GRAD_CY = 512 - 0.48 * SPHERE_R
+ORB_GRAD_R = 1.60 * SPHERE_R
+HL_CX = 512 - 0.353 * SPHERE_R
+HL_CY = 512 - 0.397 * SPHERE_R
+HL_RX = 0.310 * SPHERE_R
+HL_RY = 0.181 * SPHERE_R
+HL_TILT = 30.0
+
+
+def _circle(cx: float, cy: float, r: float) -> str:
+    return f"M{cx - r:g} {cy:g} a{r:g} {r:g} 0 1 0 {2 * r:g} 0 a{r:g} {r:g} 0 1 0 {-2 * r:g} 0 Z"
+
+
+def _ellipse(cx: float, cy: float, rx: float, ry: float) -> str:
+    return f"M{cx - rx:g} {cy:g} a{rx:g} {ry:g} 0 1 0 {2 * rx:g} 0 a{rx:g} {ry:g} 0 1 0 {-2 * rx:g} 0 Z"
+
+
+SPHERE = _circle(512, 512, SPHERE_R)
+RING = _ellipse(512, 512, ORBIT_RX, ORBIT_RY)
+SHADOW = _circle(512, SHADOW_CY, SHADOW_RX)
+HIGHLIGHT = _ellipse(HL_CX, HL_CY, HL_RX, HL_RY)
+# 轨道点的局部坐标：椭圆参数角，圆心正好落在轨道中心线上
+DOT_CX = 512 + ORBIT_RX * math.cos(math.radians(DOT_ANGLE))
+DOT_CY = 512 + ORBIT_RY * math.sin(math.radians(DOT_ANGLE))
+DOT = _circle(DOT_CX, DOT_CY, DOT_R)
+
+# 轨道前后半圈：局部坐标系里以长轴（y = 512）对半分
+HALF_BACK = "M0 0 H1024 V512 H0 Z"
+HALF_FRONT = "M0 512 H1024 V1024 H0 Z"
+SHADOW_SQUASH = SHADOW_RY / SHADOW_RX
 
 ORB_GRADIENTS = {
     "terra": [("0", "#EF9B78"), ("0.55", TERRA), ("1", TERRA_DEEP)],
@@ -47,13 +106,29 @@ ORB_GRADIENTS = {
     "cream": [("0", "#FFFDF8"), ("0.55", "#F1E8D9"), ("1", "#D8CAB6")],
 }
 
-# ── 标记占比（2026-11-02 调档，见 README「缩放」）────────────────────────
-# 标记 = 球 + 轨道 + 轨道点 + 高光，不含底板、不含阴影。
-# 口径：标记 bbox 宽度 ÷ 传统图标边长 = 50%；自适应层 ÷ 可见区(72dp) 也是 50%。
-# 上一版是 41%，真机上看明显偏小（球体是实心块，视觉重心集中，41% 只适合线框图形）。
-# 注意 svg()/foreground() 里还有一层 translate/scale：bbox 不是简单乘 2R，改完必须实测。
-LEGACY_SCALE = 0.681
-FG_SCALE = 0.455           # 前景 vector 的 group scale（1024 viewport，可见区 = 72/108）
+
+# ── 标记占比 ────────────────────────────────────────────────────────────
+# 标记 = 球 + 轨道（含线宽）+ 轨道点，不含底板、不含投影。
+# 口径：标记 bbox 宽度 ÷ 可见区宽度。
+#   传统图标：整张 1024 就是可见区；
+#   自适应图标：可见区是中央 72/108，即 1024 × 72/108 = 682.7 单位。
+# 0.70 是定稿参照图实测值（轨道外沿 716.6 / 1024），到这个数 LEGACY_SCALE 正好 = 1.0。
+MARK_RATIO = 0.70
+
+
+def _mark_bbox_w() -> float:
+    """旋转后轨道外沿（含线宽）的包围盒宽度。"""
+    t = math.radians(ORBIT_TILT)
+    hw = math.hypot(
+        (ORBIT_RX + ORBIT_W / 2) * math.cos(t),
+        (ORBIT_RY + ORBIT_W / 2) * math.sin(t),
+    )
+    return 2 * hw
+
+
+MARK_BBOX_W = _mark_bbox_w()
+LEGACY_SCALE = round(MARK_RATIO * 1024 / MARK_BBOX_W, 4)
+FG_SCALE = round(MARK_RATIO * (1024 * 72 / 108) / MARK_BBOX_W, 4)
 
 MIPMAP_SIZES = {
     "mdpi": 48,
@@ -70,25 +145,35 @@ def _stops(stops: list[tuple[str, str]]) -> str:
     )
 
 
-def mark_svg(orb: str, orbit: str, mark_scale: float) -> str:
-    """只画标记（球 + 轨道 + 轨道点 + 高光），留白透明 —— 用于实测 bbox。"""
-    return f'''<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="orb" cx="34%" cy="28%" r="75%">{_stops(ORB_GRADIENTS[orb])}</radialGradient>
-  </defs>
-  <g transform="translate(512 512) scale({mark_scale}) translate(-512 -512)">
-    <circle cx="512" cy="512" r="232" fill="url(#orb)"/>
-    <ellipse cx="512" cy="512" rx="392" ry="142" transform="rotate(-22 512 512)" stroke="{orbit}" stroke-width="14" opacity="0.55"/>
-    <circle cx="828" cy="340" r="26" fill="{orbit}"/>
-    <ellipse cx="430" cy="420" rx="72" ry="42" fill="#FFFFFF" opacity="0.18" transform="rotate(-30 430 420)"/>
-  </g>
-</svg>'''
+def _halves_clip_svg(prefix: str) -> str:
+    return (
+        f'    <clipPath id="{prefix}back"><path d="{HALF_BACK}"/></clipPath>\n'
+        f'    <clipPath id="{prefix}front"><path d="{HALF_FRONT}"/></clipPath>\n'
+    )
+
+
+def _orbit_svg(orbit: str) -> str:
+    half = (
+        f'<ellipse cx="512" cy="512" rx="{ORBIT_RX:g}" ry="{ORBIT_RY:g}" fill="none" '
+        f'stroke="{orbit}" stroke-width="{ORBIT_W:g}" opacity="{RING_ALPHA}"/>'
+    )
+    return (
+        f'    <g transform="rotate(-{ORBIT_TILT:g} 512 512)">'
+        f'<g clip-path="url(#lc-back)">{half}</g></g>\n'
+        f'    <circle cx="512" cy="512" r="{SPHERE_R:g}" fill="url(#orb)"/>\n'
+        f'    <g transform="rotate(-{ORBIT_TILT:g} 512 512)">'
+        f'<g clip-path="url(#lc-front)">{half}</g></g>\n'
+        f'    <g transform="rotate(-{ORBIT_TILT:g} 512 512)">'
+        f'<circle cx="{DOT_CX:g}" cy="{DOT_CY:g}" r="{DOT_R:g}" fill="{orbit}" '
+        f'opacity="{DOT_ALPHA}"/></g>\n'
+    )
 
 
 def svg(light: bool, orb: str, orbit: str, mark_scale: float = LEGACY_SCALE) -> str:
+    """旧版/桌面用整张图标（含底板）。"""
     bg_hi, bg_lo = (PAPER_HI, PAPER_LO) if light else (DARK_HI, DARK_LO)
     glow = "0.75" if light else "0.10"
-    shadow = "0.16" if light else "0.35"
+    shadow = SHADOW_ALPHA_LIGHT if light else SHADOW_ALPHA_DARK
     return f'''<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -98,41 +183,112 @@ def svg(light: bool, orb: str, orbit: str, mark_scale: float = LEGACY_SCALE) -> 
       <stop offset="0" stop-color="#FFFFFF" stop-opacity="{glow}"/>
       <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="orb" cx="34%" cy="28%" r="75%">
+    <radialGradient id="orb" gradientUnits="userSpaceOnUse"
+        cx="{ORB_GRAD_CX:g}" cy="{ORB_GRAD_CY:g}" r="{ORB_GRAD_R:g}">
       {_stops(ORB_GRADIENTS[orb])}
     </radialGradient>
-    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
-      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000000" flood-opacity="{shadow}"/>
-    </filter>
-  </defs>
+    <radialGradient id="contact" gradientUnits="userSpaceOnUse"
+        cx="512" cy="{SHADOW_CY:g}" r="{SHADOW_RX:g}">
+      <stop offset="0" stop-color="#000000" stop-opacity="{shadow}"/>
+      <stop offset="0.55" stop-color="#000000" stop-opacity="{shadow * 0.8:.3f}"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+{_halves_clip_svg("lc-")}  </defs>
   <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
   <rect width="1024" height="1024" rx="228" fill="url(#glow)"/>
   <g transform="translate(512 512) scale({mark_scale}) translate(-512 -512)">
-  <circle cx="512" cy="512" r="232" fill="url(#orb)" filter="url(#shadow)"/>
-  <ellipse cx="512" cy="512" rx="392" ry="142" transform="rotate(-22 512 512)" stroke="{orbit}" stroke-width="14" opacity="0.55"/>
-  <circle cx="828" cy="340" r="26" fill="{orbit}"/>
-  <ellipse cx="430" cy="420" rx="72" ry="42" fill="#FFFFFF" opacity="0.18" transform="rotate(-30 430 420)"/>
+    <g transform="translate(512 {SHADOW_CY:g}) scale(1 {SHADOW_SQUASH:g}) translate(-512 -{SHADOW_CY:g})">
+      <circle cx="512" cy="{SHADOW_CY:g}" r="{SHADOW_RX:g}" fill="url(#contact)"/>
+    </g>
+{_orbit_svg(orbit)}    <ellipse cx="{HL_CX:g}" cy="{HL_CY:g}" rx="{HL_RX:g}" ry="{HL_RY:g}" fill="#FFFFFF" opacity="0.18" transform="rotate(-{HL_TILT:g} {HL_CX:g} {HL_CY:g})"/>
   </g>
 </svg>
 '''
 
 
-def _gradient_attr(stops: list[tuple[str, str]], cx: int, cy: int, radius: int) -> str:
+def _gradient_attr(stops: list[tuple[str, str]]) -> str:
     items = "".join(
-        f'          <item android:offset="{offset}" android:color="{color}"/>\n'
+        f'                    <item android:offset="{offset}" android:color="{color}"/>\n'
         for offset, color in stops
     )
-    return f'''      <aapt:attr name="android:fillColor">
-        <gradient
-            android:type="radial"
-            android:centerX="{cx}"
-            android:centerY="{cy}"
-            android:gradientRadius="{radius}">
-{items}        </gradient>
-      </aapt:attr>'''
+    return f'''            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="radial"
+                    android:centerX="{ORB_GRAD_CX:g}"
+                    android:centerY="{ORB_GRAD_CY:g}"
+                    android:gradientRadius="{ORB_GRAD_R:g}">
+{items}                </gradient>
+            </aapt:attr>'''
 
 
-def foreground(orb: str, orbit: str) -> str:
+def _ring_path(orbit: str, alpha: float) -> str:
+    return f'''            <path
+                android:fillColor="#00000000"
+                android:strokeColor="{orbit}"
+                android:strokeWidth="{ORBIT_W:g}"
+                android:strokeAlpha="{alpha:g}"
+                android:pathData="{RING}" />'''
+
+
+def _shadow_xml(shadow_alpha: float, indent: str = "        ") -> str:
+    return f'''{indent}<!-- 球体下方的独立柔影：圆 + 径向渐变 + 纵向压扁，避免椭圆渐变的硬边 -->
+{indent}<group
+{indent}    android:pivotX="512"
+{indent}    android:pivotY="{SHADOW_CY:g}"
+{indent}    android:scaleY="{SHADOW_SQUASH:g}">
+{indent}    <path android:pathData="{SHADOW}">
+{indent}        <aapt:attr name="android:fillColor">
+{indent}            <gradient
+{indent}                android:type="radial"
+{indent}                android:centerX="512"
+{indent}                android:centerY="{SHADOW_CY:g}"
+{indent}                android:gradientRadius="{SHADOW_RX:g}">
+{indent}                <item android:offset="0" android:color="#{int(shadow_alpha * 255):02X}000000"/>
+{indent}                <item android:offset="0.55" android:color="#{int(shadow_alpha * 0.8 * 255):02X}000000"/>
+{indent}                <item android:offset="1" android:color="#00000000"/>
+{indent}            </gradient>
+{indent}        </aapt:attr>
+{indent}    </path>
+{indent}</group>'''
+
+
+def _orbit_xml(orbit: str, orb: str, indent: str = "        ") -> str:
+    return f'''{indent}<!-- 轨道后半圈：先画，被球体挡住 -->
+{indent}<group
+{indent}    android:rotation="-{ORBIT_TILT:g}"
+{indent}    android:pivotX="512"
+{indent}    android:pivotY="512">
+{indent}    <clip-path android:pathData="{HALF_BACK}" />
+{_ring_path(orbit, RING_ALPHA)}
+{indent}</group>
+
+{indent}<!-- 球体 -->
+{indent}<path android:pathData="{SPHERE}">
+{_gradient_attr(ORB_GRADIENTS[orb])}
+{indent}</path>
+
+{indent}<!-- 轨道前半圈：补回球体之上 -->
+{indent}<group
+{indent}    android:rotation="-{ORBIT_TILT:g}"
+{indent}    android:pivotX="512"
+{indent}    android:pivotY="512">
+{indent}    <clip-path android:pathData="{HALF_FRONT}" />
+{_ring_path(orbit, RING_ALPHA)}
+{indent}</group>
+
+{indent}<!-- 轨道点：圆心压在轨道中心线上 -->
+{indent}<group
+{indent}    android:rotation="-{ORBIT_TILT:g}"
+{indent}    android:pivotX="512"
+{indent}    android:pivotY="512">
+{indent}    <path
+{indent}        android:fillColor="{orbit}"
+{indent}        android:fillAlpha="{DOT_ALPHA}"
+{indent}        android:pathData="{DOT}" />
+{indent}</group>'''
+
+
+def foreground(orb: str, orbit: str, shadow_alpha: float) -> str:
     return f'''<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
@@ -141,55 +297,22 @@ def foreground(orb: str, orbit: str) -> str:
     android:viewportWidth="1024"
     android:viewportHeight="1024">
 
-    <!-- 自适应前景：标记占可见区 50%（1024 视口 → 108dp 画布） -->
+    <!-- 自适应前景：标记占可见区 {round(MARK_RATIO * 100)}%（1024 视口 → 108dp 画布，可见区 = 中央 72dp） -->
     <group
         android:scaleX="{FG_SCALE}"
         android:scaleY="{FG_SCALE}"
         android:pivotX="512"
         android:pivotY="512">
 
-        <!-- 球体下方的柔和阴影 -->
-        <path android:pathData="{SHADOW}">
-            <aapt:attr name="android:fillColor">
-                <gradient
-                    android:type="radial"
-                    android:centerX="512"
-                    android:centerY="540"
-                    android:gradientRadius="240">
-                    <item android:offset="0" android:color="#33000000"/>
-                    <item android:offset="1" android:color="#00000000"/>
-                </gradient>
-            </aapt:attr>
-        </path>
+{_shadow_xml(shadow_alpha)}
 
-        <!-- 球体 -->
-        <path android:pathData="{SPHERE}">
-{_gradient_attr(ORB_GRADIENTS[orb], 420, 400, 370)}
-        </path>
-
-        <!-- 轨道 -->
-        <group
-            android:rotation="-22"
-            android:pivotX="512"
-            android:pivotY="512">
-            <path
-                android:fillColor="#00000000"
-                android:strokeColor="{orbit}"
-                android:strokeWidth="14"
-                android:strokeAlpha="0.55"
-                android:pathData="{ORBIT}" />
-        </group>
-
-        <!-- 轨道上的小点 -->
-        <path
-            android:fillColor="{orbit}"
-            android:pathData="{DOT}" />
+{_orbit_xml(orbit, orb)}
 
         <!-- 球体高光 -->
         <group
-            android:rotation="-30"
-            android:pivotX="430"
-            android:pivotY="420">
+            android:rotation="-{HL_TILT:g}"
+            android:pivotX="{HL_CX:g}"
+            android:pivotY="{HL_CY:g}">
             <path
                 android:fillColor="#FFFFFF"
                 android:fillAlpha="0.18"
@@ -201,6 +324,7 @@ def foreground(orb: str, orbit: str) -> str:
 
 
 def monochrome() -> str:
+    # 单色不表达前后关系，轨道整圈压在最上层
     return f'''<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -218,22 +342,19 @@ def monochrome() -> str:
             android:fillAlpha="0.32"
             android:pathData="{SPHERE}" />
         <group
-            android:rotation="-22"
+            android:rotation="-{ORBIT_TILT:g}"
             android:pivotX="512"
             android:pivotY="512">
+{_ring_path("#FFFFFF", 1.0)}
             <path
-                android:fillColor="#00000000"
-                android:strokeColor="#FFFFFF"
-                android:strokeWidth="14"
-                android:pathData="{ORBIT}" />
+                android:fillColor="#FFFFFF"
+                android:fillAlpha="{DOT_ALPHA}"
+                android:pathData="{DOT}" />
         </group>
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="{DOT}" />
         <group
-            android:rotation="-30"
-            android:pivotX="430"
-            android:pivotY="420">
+            android:rotation="-{HL_TILT:g}"
+            android:pivotX="{HL_CX:g}"
+            android:pivotY="{HL_CY:g}">
             <path
                 android:fillColor="#FFFFFF"
                 android:fillAlpha="0.15"
@@ -319,16 +440,16 @@ def write_drawables() -> None:
         background(False), encoding="utf-8"
     )
     (drawable / "ic_launcher_foreground.xml").write_text(
-        foreground("terra", INK), encoding="utf-8"
+        foreground("terra", INK, SHADOW_ALPHA_LIGHT), encoding="utf-8"
     )
     (night / "ic_launcher_foreground.xml").write_text(
-        foreground("terra", CREAM), encoding="utf-8"
+        foreground("terra", CREAM, SHADOW_ALPHA_DARK), encoding="utf-8"
     )
     (drawable / "ic_launcher_modern_light_foreground.xml").write_text(
-        foreground("ink", TERRA), encoding="utf-8"
+        foreground("ink", TERRA, SHADOW_ALPHA_LIGHT), encoding="utf-8"
     )
     (drawable / "ic_launcher_modern_foreground.xml").write_text(
-        foreground("cream", TERRA), encoding="utf-8"
+        foreground("cream", TERRA, SHADOW_ALPHA_DARK), encoding="utf-8"
     )
     mono = monochrome()
     (drawable / "ic_launcher_monochrome.xml").write_text(mono, encoding="utf-8")
@@ -405,6 +526,10 @@ def write_pngs(svgs: dict[str, Path]) -> None:
 
 
 def main() -> int:
+    print(
+        f"mark bbox = {MARK_BBOX_W:.1f} units, "
+        f"legacy scale = {LEGACY_SCALE}, fg scale = {FG_SCALE}"
+    )
     svgs = write_assets()
     write_drawables()
     write_pngs(svgs)

@@ -7,19 +7,29 @@
       <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.10"/>
       <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="orb" cx="34%" cy="28%" r="75%">
+    <radialGradient id="orb" gradientUnits="userSpaceOnUse"
+        cx="422.8" cy="404.96" r="356.8">
       <stop offset="0" stop-color="#FFFDF8"/><stop offset="0.55" stop-color="#F1E8D9"/><stop offset="1" stop-color="#D8CAB6"/>
     </radialGradient>
-    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
-      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000000" flood-opacity="0.35"/>
-    </filter>
+    <radialGradient id="contact" gradientUnits="userSpaceOnUse"
+        cx="512" cy="815" r="248">
+      <stop offset="0" stop-color="#000000" stop-opacity="0.22"/>
+      <stop offset="0.55" stop-color="#000000" stop-opacity="0.176"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="lc-back"><path d="M0 0 H1024 V512 H0 Z"/></clipPath>
+    <clipPath id="lc-front"><path d="M0 512 H1024 V1024 H0 Z"/></clipPath>
   </defs>
   <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
   <rect width="1024" height="1024" rx="228" fill="url(#glow)"/>
-  <g transform="translate(512 512) scale(0.681) translate(-512 -512)">
-  <circle cx="512" cy="512" r="232" fill="url(#orb)" filter="url(#shadow)"/>
-  <ellipse cx="512" cy="512" rx="392" ry="142" transform="rotate(-22 512 512)" stroke="#D97757" stroke-width="14" opacity="0.55"/>
-  <circle cx="828" cy="340" r="26" fill="#D97757"/>
-  <ellipse cx="430" cy="420" rx="72" ry="42" fill="#FFFFFF" opacity="0.18" transform="rotate(-30 430 420)"/>
+  <g transform="translate(512 512) scale(1.0004) translate(-512 -512)">
+    <g transform="translate(512 815) scale(1 0.306452) translate(-512 -815)">
+      <circle cx="512" cy="815" r="248" fill="url(#contact)"/>
+    </g>
+    <g transform="rotate(-22 512 512)"><g clip-path="url(#lc-back)"><ellipse cx="512" cy="512" rx="374" ry="136" fill="none" stroke="#D97757" stroke-width="16" opacity="0.8"/></g></g>
+    <circle cx="512" cy="512" r="223" fill="url(#orb)"/>
+    <g transform="rotate(-22 512 512)"><g clip-path="url(#lc-front)"><ellipse cx="512" cy="512" rx="374" ry="136" fill="none" stroke="#D97757" stroke-width="16" opacity="0.8"/></g></g>
+    <g transform="rotate(-22 512 512)"><circle cx="867.695" cy="469.974" r="20" fill="#D97757" opacity="0.95"/></g>
+    <ellipse cx="433.281" cy="423.469" rx="69.13" ry="40.363" fill="#FFFFFF" opacity="0.18" transform="rotate(-30 433.281 423.469)"/>
   </g>
 </svg>

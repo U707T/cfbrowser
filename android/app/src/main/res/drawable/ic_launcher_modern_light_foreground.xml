@@ -6,69 +6,96 @@
     android:viewportWidth="1024"
     android:viewportHeight="1024">
 
-    <!-- 自适应前景：标记占可见区 50%（1024 视口 → 108dp 画布） -->
+    <!-- 自适应前景：标记占可见区 70%（1024 视口 → 108dp 画布，可见区 = 中央 72dp） -->
     <group
-        android:scaleX="0.455"
-        android:scaleY="0.455"
+        android:scaleX="0.6669"
+        android:scaleY="0.6669"
         android:pivotX="512"
         android:pivotY="512">
 
-        <!-- 球体下方的柔和阴影 -->
-        <path android:pathData="M292 540 a220 56 0 1 0 440 0 a220 56 0 1 0 -440 0 Z">
+        <!-- 球体下方的独立柔影：圆 + 径向渐变 + 纵向压扁，避免椭圆渐变的硬边 -->
+        <group
+            android:pivotX="512"
+            android:pivotY="815"
+            android:scaleY="0.306452">
+            <path android:pathData="M264 815 a248 248 0 1 0 496 0 a248 248 0 1 0 -496 0 Z">
+                <aapt:attr name="android:fillColor">
+                    <gradient
+                        android:type="radial"
+                        android:centerX="512"
+                        android:centerY="815"
+                        android:gradientRadius="248">
+                        <item android:offset="0" android:color="#23000000"/>
+                        <item android:offset="0.55" android:color="#1C000000"/>
+                        <item android:offset="1" android:color="#00000000"/>
+                    </gradient>
+                </aapt:attr>
+            </path>
+        </group>
+
+        <!-- 轨道后半圈：先画，被球体挡住 -->
+        <group
+            android:rotation="-22"
+            android:pivotX="512"
+            android:pivotY="512">
+            <clip-path android:pathData="M0 0 H1024 V512 H0 Z" />
+            <path
+                android:fillColor="#00000000"
+                android:strokeColor="#D97757"
+                android:strokeWidth="16"
+                android:strokeAlpha="0.8"
+                android:pathData="M138 512 a374 136 0 1 0 748 0 a374 136 0 1 0 -748 0 Z" />
+        </group>
+
+        <!-- 球体 -->
+        <path android:pathData="M289 512 a223 223 0 1 0 446 0 a223 223 0 1 0 -446 0 Z">
             <aapt:attr name="android:fillColor">
                 <gradient
                     android:type="radial"
-                    android:centerX="512"
-                    android:centerY="540"
-                    android:gradientRadius="240">
-                    <item android:offset="0" android:color="#33000000"/>
-                    <item android:offset="1" android:color="#00000000"/>
+                    android:centerX="422.8"
+                    android:centerY="404.96"
+                    android:gradientRadius="356.8">
+                    <item android:offset="0" android:color="#4A423B"/>
+                    <item android:offset="0.55" android:color="#2A2521"/>
+                    <item android:offset="1" android:color="#171412"/>
                 </gradient>
             </aapt:attr>
         </path>
 
-        <!-- 球体 -->
-        <path android:pathData="M280 512 a232 232 0 1 0 464 0 a232 232 0 1 0 -464 0 Z">
-      <aapt:attr name="android:fillColor">
-        <gradient
-            android:type="radial"
-            android:centerX="420"
-            android:centerY="400"
-            android:gradientRadius="370">
-          <item android:offset="0" android:color="#4A423B"/>
-          <item android:offset="0.55" android:color="#2A2521"/>
-          <item android:offset="1" android:color="#171412"/>
-        </gradient>
-      </aapt:attr>
-        </path>
+        <!-- 轨道前半圈：补回球体之上 -->
+        <group
+            android:rotation="-22"
+            android:pivotX="512"
+            android:pivotY="512">
+            <clip-path android:pathData="M0 512 H1024 V1024 H0 Z" />
+            <path
+                android:fillColor="#00000000"
+                android:strokeColor="#D97757"
+                android:strokeWidth="16"
+                android:strokeAlpha="0.8"
+                android:pathData="M138 512 a374 136 0 1 0 748 0 a374 136 0 1 0 -748 0 Z" />
+        </group>
 
-        <!-- 轨道 -->
+        <!-- 轨道点：圆心压在轨道中心线上 -->
         <group
             android:rotation="-22"
             android:pivotX="512"
             android:pivotY="512">
             <path
-                android:fillColor="#00000000"
-                android:strokeColor="#D97757"
-                android:strokeWidth="14"
-                android:strokeAlpha="0.55"
-                android:pathData="M120 512 a392 142 0 1 0 784 0 a392 142 0 1 0 -784 0 Z" />
+                android:fillColor="#D97757"
+                android:fillAlpha="0.95"
+                android:pathData="M847.695 469.974 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0 Z" />
         </group>
-
-        <!-- 轨道上的小点 -->
-        <path
-            android:fillColor="#D97757"
-            android:pathData="M802 340 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0 Z" />
 
         <!-- 球体高光 -->
         <group
             android:rotation="-30"
-            android:pivotX="430"
-            android:pivotY="420">
+            android:pivotX="433.281"
+            android:pivotY="423.469">
             <path
                 android:fillColor="#FFFFFF"
                 android:fillAlpha="0.18"
-                android:pathData="M358 420 a72 42 0 1 0 144 0 a72 42 0 1 0 -144 0 Z" />
+                android:pathData="M364.151 423.469 a69.13 40.363 0 1 0 138.26 0 a69.13 40.363 0 1 0 -138.26 0 Z" />
         </group>
     </group>
 </vector>
