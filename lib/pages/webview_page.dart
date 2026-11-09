@@ -610,156 +610,156 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                                 ),
                               );
                             }
-                          // Android: 启用 WebAuthn/PassKey 支持
-                          if (io.Platform.isAndroid) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              const MethodChannel('com.fluxdo/webauthn')
-                                  .invokeMethod('enableWebAuthentication');
-                            });
-                          }
-                        },
-                        onLoadStart: (controller, url) {
-                          final urlString = url?.toString() ?? '';
-                          // 新标签页的 about:blank 不算一次导航，否则快捷入口
-                          // 会被一个空白页盖掉。
-                          if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
-                            return;
-                          }
-                          if (_isAcceleratedUrl(urlString)) {
-                            unawaited(
-                              NetworkSettingsService.instance.leaveStandby(),
-                            );
-                          }
-                          _ensureWebViewUse(urlString);
-                          setState(() {
-                            _navigationRevision += 1;
-                            _historyStateSettled = false;
-                            _isLoading = true;
-                            _currentUrl = urlString;
-                          });
-                        },
-                        onProgressChanged: (controller, progress) {
-                          setState(() => _progress = progress / 100);
-                        },
-                        onLoadStop: (controller, url) async {
-                          final revision = _navigationRevision;
-                          if (mounted) setState(() => _isLoading = false);
-                          // 无痕标签不把 WebView cookie 带回 jar；站外页面也
-                          // 没有需要 sweep 的站点 cookie。
-                          if (!_isPrivate && _isSiteUrl(_currentUrl)) {
-                            CookieStoreObserver.instance
-                                .notifyExternalChange();
-                          }
-                          final String? title;
-                          final bool canGoBack;
-                          final bool canGoForward;
-                          try {
-                            await WebViewSettings.injectScrollFix(controller);
-                            title = await controller.getTitle();
-                            canGoBack = await controller.canGoBack();
-                            canGoForward = await controller.canGoForward();
-                          } catch (e) {
-                            // 页面在回调途中被关闭 / 控制器已销毁时，
-                            // 这些查询会抛平台异常；这一帧的信息已经没用，
-                            // 直接丢掉，别把未处理异常打到日志里。
-                            debugPrint('[WebViewPage] onLoadStop 查询失败: $e');
-                            return;
-                          }
-                          if (!mounted || revision != _navigationRevision) {
-                            return;
-                          }
-                          final urlString = url?.toString();
-                          if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
-                            return;
-                          }
-                          setState(() {
-                            _currentUrl = urlString ?? '';
-                            _canGoBack = canGoBack;
-                            _canGoForward = canGoForward;
-                            _historyStateSettled = true;
-                            if (title != null && title.isNotEmpty) {
-                              _currentTitle = title;
-                            }
-                          });
-                          if (widget.injectCss != null) {
-                            unawaited(
-                              controller
-                                  .injectCSSCode(source: widget.injectCss!)
-                                  .catchError((Object e) {
-                                    debugPrint(
-                                      '[WebViewPage] 注入 CSS 失败: $e',
-                                    );
-                                  }),
-                            );
-                          }
-                          // 记录浏览历史（无痕标签只维护内存里的标签历史）
-                          if (urlString != null && urlString.isNotEmpty) {
-                            if (!_isPrivate) {
-                              ref
-                                  .read(webHistoryProvider.notifier)
-                                  .record(urlString, _currentTitle);
-                            }
-                            _recordNavigation(urlString, title: _currentTitle);
-                          }
-                        },
-                        onUpdateVisitedHistory:
-                            (controller, url, isReload) async {
-                              final revision = _navigationRevision;
-                              final bool canGoBack;
-                              final bool canGoForward;
-                              try {
-                                canGoBack = await controller.canGoBack();
-                                canGoForward = await controller.canGoForward();
-                              } catch (e) {
-                                debugPrint(
-                                  '[WebViewPage] 读取历史状态失败: $e',
-                                );
-                                return;
-                              }
-                              if (!mounted ||
-                                  revision != _navigationRevision) {
-                                return;
-                              }
-                              final urlString = url?.toString();
-                              if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
-                                return;
-                              }
-                              setState(() {
-                                _currentUrl = urlString ?? '';
-                                _canGoBack = canGoBack;
-                                _canGoForward = canGoForward;
-                                _historyStateSettled = true;
+                            // Android: 启用 WebAuthn/PassKey 支持
+                            if (io.Platform.isAndroid) {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                const MethodChannel('com.fluxdo/webauthn')
+                                    .invokeMethod('enableWebAuthentication');
                               });
-                              if (urlString != null && urlString.isNotEmpty) {
-                                _recordNavigation(
-                                  urlString,
-                                  title: _currentTitle,
-                                );
-                              }
-                            },
-                        onTitleChanged: (controller, title) {
-                          if (title != null && title.isNotEmpty) {
-                            setState(() => _currentTitle = title);
-                            _tabs.updateTitle(_tabId, title);
-                          }
-                        },
-                        onDownloadStarting: (controller, request) {
-                          final url = request.url.toString();
-                          ref
-                              .read(downloadProvider.notifier)
-                              .startDownload(
-                                url: url,
-                                suggestedFilename:
-                                    request.suggestedFilename,
-                                mimeType: request.mimeType,
-                                contentLength: request.contentLength,
+                            }
+                          },
+                          onLoadStart: (controller, url) {
+                            final urlString = url?.toString() ?? '';
+                            // 新标签页的 about:blank 不算一次导航，否则快捷入口
+                            // 会被一个空白页盖掉。
+                            if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
+                              return;
+                            }
+                            if (_isAcceleratedUrl(urlString)) {
+                              unawaited(
+                                NetworkSettingsService.instance.leaveStandby(),
                               );
-                          return null;
-                        },
+                            }
+                            _ensureWebViewUse(urlString);
+                            setState(() {
+                              _navigationRevision += 1;
+                              _historyStateSettled = false;
+                              _isLoading = true;
+                              _currentUrl = urlString;
+                            });
+                          },
+                          onProgressChanged: (controller, progress) {
+                            setState(() => _progress = progress / 100);
+                          },
+                          onLoadStop: (controller, url) async {
+                            final revision = _navigationRevision;
+                            if (mounted) setState(() => _isLoading = false);
+                            // 无痕标签不把 WebView cookie 带回 jar；站外页面也
+                            // 没有需要 sweep 的站点 cookie。
+                            if (!_isPrivate && _isSiteUrl(_currentUrl)) {
+                              CookieStoreObserver.instance
+                                  .notifyExternalChange();
+                            }
+                            final String? title;
+                            final bool canGoBack;
+                            final bool canGoForward;
+                            try {
+                              await WebViewSettings.injectScrollFix(controller);
+                              title = await controller.getTitle();
+                              canGoBack = await controller.canGoBack();
+                              canGoForward = await controller.canGoForward();
+                            } catch (e) {
+                              // 页面在回调途中被关闭 / 控制器已销毁时，
+                              // 这些查询会抛平台异常；这一帧的信息已经没用，
+                              // 直接丢掉，别把未处理异常打到日志里。
+                              debugPrint('[WebViewPage] onLoadStop 查询失败: $e');
+                              return;
+                            }
+                            if (!mounted || revision != _navigationRevision) {
+                              return;
+                            }
+                            final urlString = url?.toString();
+                            if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
+                              return;
+                            }
+                            setState(() {
+                              _currentUrl = urlString ?? '';
+                              _canGoBack = canGoBack;
+                              _canGoForward = canGoForward;
+                              _historyStateSettled = true;
+                              if (title != null && title.isNotEmpty) {
+                                _currentTitle = title;
+                              }
+                            });
+                            if (widget.injectCss != null) {
+                              unawaited(
+                                controller
+                                    .injectCSSCode(source: widget.injectCss!)
+                                    .catchError((Object e) {
+                                      debugPrint(
+                                        '[WebViewPage] 注入 CSS 失败: $e',
+                                      );
+                                    }),
+                              );
+                            }
+                            // 记录浏览历史（无痕标签只维护内存里的标签历史）
+                            if (urlString != null && urlString.isNotEmpty) {
+                              if (!_isPrivate) {
+                                ref
+                                    .read(webHistoryProvider.notifier)
+                                    .record(urlString, _currentTitle);
+                              }
+                              _recordNavigation(urlString, title: _currentTitle);
+                            }
+                          },
+                          onUpdateVisitedHistory:
+                              (controller, url, isReload) async {
+                                final revision = _navigationRevision;
+                                final bool canGoBack;
+                                final bool canGoForward;
+                                try {
+                                  canGoBack = await controller.canGoBack();
+                                  canGoForward = await controller.canGoForward();
+                                } catch (e) {
+                                  debugPrint(
+                                    '[WebViewPage] 读取历史状态失败: $e',
+                                  );
+                                  return;
+                                }
+                                if (!mounted ||
+                                    revision != _navigationRevision) {
+                                  return;
+                                }
+                                final urlString = url?.toString();
+                                if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
+                                  return;
+                                }
+                                setState(() {
+                                  _currentUrl = urlString ?? '';
+                                  _canGoBack = canGoBack;
+                                  _canGoForward = canGoForward;
+                                  _historyStateSettled = true;
+                                });
+                                if (urlString != null && urlString.isNotEmpty) {
+                                  _recordNavigation(
+                                    urlString,
+                                    title: _currentTitle,
+                                  );
+                                }
+                              },
+                          onTitleChanged: (controller, title) {
+                            if (title != null && title.isNotEmpty) {
+                              setState(() => _currentTitle = title);
+                              _tabs.updateTitle(_tabId, title);
+                            }
+                          },
+                          onDownloadStarting: (controller, request) {
+                            final url = request.url.toString();
+                            ref
+                                .read(downloadProvider.notifier)
+                                .startDownload(
+                                  url: url,
+                                  suggestedFilename:
+                                      request.suggestedFilename,
+                                  mimeType: request.mimeType,
+                                  contentLength: request.contentLength,
+                                );
+                            return null;
+                          },
+                        ),
+                        getController: () => _controller,
                       ),
-                      getController: () => _controller,
                     ),
-                  ),
                   if (_currentUrl.isEmpty && _webViewSnapshot == null)
                     _buildNewTabPage(theme),
                   if (_webViewSnapshot != null)
