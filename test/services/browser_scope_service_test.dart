@@ -1,5 +1,6 @@
 import 'package:cfbrowser/services/browser/browser_scope_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   group('BrowserScopeService.normalizeHost', () {
@@ -33,8 +34,17 @@ void main() {
   });
 
   group('BrowserScopeService 默认范围', () {
-    test('默认仍是 linux.do', () {
-      expect(BrowserScopeService.instance.mitmHosts, contains('linux.do'));
+    test('默认是 linux.do 主站 + 静态资源域 ldstatic.com', () {
+      expect(BrowserScopeService.defaultHosts, contains('linux.do'));
+      expect(
+        BrowserScopeService.defaultHosts,
+        contains('ldstatic.com'),
+        reason: '站内图片/表情/通知/直传都在 ldstatic.com 下（上游 23e0c32b）',
+      );
+      expect(
+        BrowserScopeService.instance.mitmHosts,
+        containsAll(BrowserScopeService.defaultHosts),
+      );
     });
 
     test('子域视为覆盖，相似域名不算', () {
@@ -43,6 +53,45 @@ void main() {
       expect(service.covers('LINUX.DO'), isTrue);
       expect(service.covers('notlinux.do'), isFalse);
       expect(service.covers('linux.do.evil.test'), isFalse);
+    });
+  });
+
+  group('覆盖域名（钉住出口）', () {
+    test('范围域名与 www. 都会下发，且包含 ldstatic 的真实主机', () {
+      final covered = BrowserScopeService.instance.coveredHosts;
+      expect(covered, containsAll(['linux.do', 'www.linux.do']));
+      expect(
+        covered,
+        containsAll([
+          'ldstatic.com',
+          'cdn.ldstatic.com',
+          'cdn3.ldstatic.com',
+          'ping.ldstatic.com',
+          'linuxdo-uploads.s3.ldstatic.com',
+        ]),
+      );
+    });
+
+    test('契约：范围里的每个域名都必须在覆盖域名里，否则只解密不加速', () {
+      for (final host in BrowserScopeService.instance.mitmHosts) {
+        expect(
+          BrowserScopeService.instance.coveredHosts,
+          contains(host),
+          reason: '$host 在加速范围里但没有交给 Rust 当覆盖域名',
+        );
+      }
+    });
+
+    test('去掉 ldstatic.com 后不再下发它的子域主机', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final prefs = await SharedPreferences.getInstance();
+      final service = BrowserScopeService.instance;
+      try {
+        await service.setMitmHosts(['linux.do'], prefs: prefs);
+        expect(service.coveredHosts, isNot(contains('cdn.ldstatic.com')));
+      } finally {
+        await service.setMitmHosts(BrowserScopeService.defaultHosts, prefs: prefs);
+      }
     });
   });
 }

@@ -58,17 +58,25 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
 
 | 文件 | 改动 |
 |---|---|
-| `lib/services/browser/browser_scope_service.dart` | **新增**。持久化 MITM/ECH 域名范围，默认 `['linux.do']`；`normalizeHost` 支持直接粘贴 URL、去掉 `*.` 前缀与端口 |
+| `lib/services/browser/browser_scope_service.dart` | **新增**。持久化 MITM/ECH 域名范围，默认 `['linux.do', 'ldstatic.com']`；`normalizeHost` 支持直接粘贴 URL、去掉 `*.` 前缀与端口；`coveredHosts` 给出交给 Rust 的覆盖域名 |
 | `lib/services/network/doh_proxy/proxy_leaf_trust.dart` | `mitmHosts` 从 `static const ['linux.do']` 改成读 `BrowserScopeService`；`_preallowHosts`（Linux WPE 预放行清单）改为「已知子域 + 配置范围及其 `www.`/`cdn.` 变体」 |
 | `lib/services/network/doh_proxy/doh_proxy_ffi.dart` | 下发 `mitm_hosts` 时去掉平台判断，统一走 `ProxyLeafTrust.mitmHosts`，让移动端和桌面端语义一致 |
-| `lib/services/network/doh/network_settings_service.dart` | `preconnectHosts` 跟随范围；删除写死的 `_linuxDoHost` |
+| `lib/services/network/doh/network_settings_service.dart` | `preconnectHosts` 跟随范围；`extraCoveredHosts` 跟随范围（+ 静态资源主机 + atlas/cfhub）；删除写死的 `_linuxDoHost` |
 | `lib/pages/browser_scope_page.dart` | **新增**。编辑范围 + 固定出口 IP，保存后 `restartProxy()` |
 | `lib/main.dart` | 启动序列里加 `BrowserScopeService.instance.initialize(prefs)` |
 
-范围语义（来自 Rust `proxy.rs` 的 `in_mitm_scope`）：
+范围语义（来自 Rust：`proxy.rs` 的 `in_mitm_scope` + `edge_pin.rs` 的 `is_covered`）：
 
 - **范围内**：本地网关接管 → 设备 CA 现签叶子 → 自己发 ECH 握手 → 钉住/竞速的 CF 边缘 IP。
 - **范围外**：`CONNECT` 隧道直通，端到端 TLS —— **不解密、不加速、不共享出口 IP**。
+- **两套匹配语义要分清**：`mitm_hosts` 按**子域后缀**匹配；`extra_covered_hosts`
+  （决定钉哪个出口）是**精确匹配**。所以范围里只写 `ldstatic.com` 能覆盖它的
+  所有子域的 MITM，但钉出口要另把 `cdn`/`cdn3`/`ping`/`linuxdo-uploads.s3`
+  逐个下发（`BrowserScopeService.staticAssetHosts`）。范围里用户自己加的域名，
+  只连同 `www.` 一起钉住，别的子域要单独列一行。
+- **默认范围不是只有主站**：`ldstatic.com` 是 L 站的静态资源域（图片/表情/
+  消息总线/直传），高墙地区对它同样是明文 SNI RST，漏掉它就表现为「站内图片
+  全 502」（上游 `23e0c32b` 的实测结论）。
 - `mitm_hosts` 为空时 Rust 视为「除 `challenges.cloudflare.com` 外全部 MITM」，
   所以本移植始终下发非空范围，避免退化成「全站解密」。
 
@@ -103,6 +111,9 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
   经典为陶土球体 + 墨/奶油轨道，现代为墨色/奶油球体 + 陶土轨道
 - 色板：暖纸 `#FCF8F0`→`#E7DED0`、深墨 `#2B2521`→`#191614`、陶土 `#D97757`
 - Android：自适应前景（日/夜）、单色（Android 13 主题图标）、旧版 48–192 px mipmap
+- 标记占比：`MARK_RATIO = 0.63`（标记 bbox 宽 ÷ 可见区宽）。自适应层按中央 72/108 换算成
+  `FG_SCALE = 0.575`，旧版 PNG 整张即可见区，用 `LEGACY_SCALE = 0.8625`；63% 仍在 66dp 安全圈内，
+  圆形遮罩不切轨道。改这个数只动 `MARK_RATIO`，脚本会重算两套 scale
 - 桌面：Windows `.ico`（16–256 px）、Linux/Flatpak 复用 256 px 预览图
 - 源文件与生成脚本：`tool/launcher_icon/*.svg`、`tool/generate_launcher_icons.py`；
   改设计后重新运行脚本即可同步所有产物
@@ -146,6 +157,8 @@ dart tool/flutterw.dart build apk --release --target-platform android-arm64 \
 2. **网关起来**：设置 → 网络，状态应显示「代理运行中」并给出端口（默认 41215）。
 3. **范围生效**：把 `example.com` 加进加速范围 → 保存（网关重启）→ 打开 `https://example.com`，
    应在证书列表里看到由设备 CA 现签的叶子；从范围里移除后再开，应回落到真证书。
+   **再验一次钉住**：`for i in 1 2 3 4 5; do curl -s https://example.com/cdn-cgi/trace | grep '^ip='; done`
+   5 次应一致 —— 只看证书只能证明「被解密」，证明不了「被加速」。
 4. **出口钉住**（关键指标，不是延迟）：
    ```bash
    for i in 1 2 3 4 5; do curl -s https://linux.do/cdn-cgi/trace | grep '^ip='; done

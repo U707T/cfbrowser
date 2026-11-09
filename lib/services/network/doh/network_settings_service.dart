@@ -985,7 +985,13 @@ class NetworkSettingsService {
         publicDoh: _publicDohSeeds,
         reportUrl: cfhubReportUrl,
         reportBearer: CfhubProbeAuthService.instance.token,
-        extraCoveredHosts: const [_atlasHost, cfhubHost],
+        // 覆盖域名 = 加速范围 + 静态资源主机（否则范围里的域名只被解密，
+        // 不会钉住出口）；atlas / cfhub 是优选与上报自身的入口。
+        extraCoveredHosts: [
+          ...BrowserScopeService.instance.coveredHosts,
+          _atlasHost,
+          cfhubHost,
+        ],
         appVersion: _appVersion,
         networkSig: ConnectivityService().networkSignature.value,
         // 优选出结果后先预建一条到范围域名的上游连接，首个请求不用再等握手。
