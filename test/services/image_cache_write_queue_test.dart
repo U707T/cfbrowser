@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/image_cache_write_queue.dart';
+import 'package:cfbrowser/services/image_cache_write_queue.dart';
 
 void main() {
   test('大文件等待独占时小文件不能持续插队造成饥饿', () async {

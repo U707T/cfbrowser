@@ -4,8 +4,8 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/blob_image_cache.dart';
-import 'package:fluxdo/services/dio_http_client.dart';
+import 'package:cfbrowser/services/blob_image_cache.dart';
+import 'package:cfbrowser/services/dio_http_client.dart';
 
 class _Images implements HttpClientAdapter {
   int requests = 0;

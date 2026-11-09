@@ -23,6 +23,7 @@ import '../services/app_link_service.dart';
 import '../services/network/cookie/cookie_store_observer.dart';
 import '../services/session/webview_use.dart';
 import '../services/webview_render_gone.dart';
+import '../services/startup/forum_bootstrap.dart';
 import '../services/webview_settings.dart';
 import '../services/windows_webview_environment_service.dart';
 import '../widgets/browser/browser_tabs_sheet.dart';
@@ -266,12 +267,28 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
 
   /// 站内 URL 首次出现时启动 WebViewUse（无痕标签永远不启动）。
   void _ensureWebViewUse(String url) {
-    if (_isPrivate || _webViewUse != null || !_isSiteUrl(url)) return;
+    if (_isPrivate || !_isSiteUrl(url)) return;
+    // 站内页面出现 = 论坛网络栈真正要用的时候：统一从这里启动
+    // priming / 预加载 / 会话判定（幂等，MainPage 也会调）。
+    unawaited(ensureForumNetworkReady(reason: 'in_app_browser'));
+    if (_webViewUse != null) return;
     _webViewUse = WebViewUses.instance.start(
       WebViewUsePurpose.browsing,
       url: url,
       reason: 'in_app_browser',
     );
+    _syncSessionReconcileTimer(url);
+  }
+
+  /// 只在站内页面停留时做周期对账。跳到站外必须停掉：否则页面在第三方站点
+  /// 上，计时器还在读/写 linux.do 的 cookie（与「站外跳过 sweep」相悖）。
+  void _syncSessionReconcileTimer(String url) {
+    if (_isPrivate || _webViewUse == null) return;
+    if (!_isSiteUrl(url)) {
+      _sessionTokenReconcileTimer?.cancel();
+      _sessionTokenReconcileTimer = null;
+      return;
+    }
     _sessionTokenReconcileTimer ??= Timer.periodic(
       _sessionTokenReconcileInterval,
       (_) => _reconcileSessionToken('in_app_browser_tick'),
@@ -280,7 +297,8 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
 
   String? _siteUrlCandidate() {
     if (_isSiteUrl(_currentUrl)) return _currentUrl;
-    if (_isSiteUrl(widget.url)) return widget.url;
+    // 初始地址已由 _currentUrl 承接；只有还没开始导航时才回退。
+    if (_currentUrl.isEmpty && _isSiteUrl(widget.url)) return widget.url;
     return null;
   }
 
@@ -631,6 +649,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                               );
                             }
                             _ensureWebViewUse(urlString);
+                            _syncSessionReconcileTimer(urlString);
                             setState(() {
                               _navigationRevision += 1;
                               _historyStateSettled = false;
@@ -754,8 +773,14 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                                   mimeType: request.mimeType,
                                   contentLength: request.contentLength,
                                 );
-                            return null;
-                          },
+                            // Windows（WebView2）收到 null 会继续走平台默认下载，
+                            // 和我们这里的应用内下载变成两份（一份进系统下载目录）；
+                            // 显式取消平台下载，Android 忽略该返回值。
+                            return DownloadStartResponse(
+                              handled: true,
+                              action: DownloadStartResponseAction.CANCEL,
+                            );
+                        },
                         ),
                         getController: () => _controller,
                       ),
@@ -858,7 +883,10 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
           const SizedBox(height: 4),
           Text(
             _isPrivate
-                ? '不记录浏览历史，也不共享站点登录态'
+                ? (io.Platform.isLinux
+                      // WPE 没有 incognito 实现，无痕只做到不写历史
+                      ? '不记录浏览历史（Linux 预览版：cookie 仍与普通标签共享）'
+                      : '不记录浏览历史，也不共享站点登录态')
                 : '输入网址，或从下面的入口开始',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -1124,6 +1152,12 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
         if (tab != null && mounted) _switchToTab(tab);
         break;
       case 'new_private_tab':
+        // Linux 的 WPE 包没有 incognito 实现，开出来的「无痕」标签其实
+        // 与普通标签共享 cookie，不如直接说清楚。
+        if (io.Platform.isLinux) {
+          ToastService.showError('Linux 预览版暂不支持无痕标签');
+          break;
+        }
         final tab = _tabs.create(isPrivate: true);
         if (mounted) _switchToTab(tab);
         break;

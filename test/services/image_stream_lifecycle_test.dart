@@ -4,8 +4,8 @@ import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/image_stream_lifecycle.dart';
-import 'package:fluxdo/utils/image_decode_gate.dart';
+import 'package:cfbrowser/services/image_stream_lifecycle.dart';
+import 'package:cfbrowser/utils/image_decode_gate.dart';
 
 void main() {
   testWidgets('缓存监听不保活下载，两个真实消费者均离开后才取消', (tester) async {

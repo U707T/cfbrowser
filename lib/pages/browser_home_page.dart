@@ -12,6 +12,7 @@ import '../services/browser/browser_url.dart';
 import '../services/browser_trust_coordinator.dart';
 import '../services/connectivity_service.dart';
 import '../services/deep_link_service.dart';
+import '../services/migration_notice.dart';
 import '../services/network/doh/network_settings_service.dart';
 import '../widgets/browser/browser_tabs_sheet.dart';
 import '../widgets/browser/quick_access_grid.dart';
@@ -51,6 +52,9 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
       BrowserTrustCoordinator.instance.setNavigatorContext(context);
       DeepLinkService.instance.initialize(context);
       ConnectivityService().init();
+      // 迁移导致登录态失效时，原本由 PreheatGate 弹的说明现在挂在这里
+      // （PreheatGate 已不在首页链路上）。
+      unawaited(showReloginRequiredIfNeeded(context));
     });
   }
 

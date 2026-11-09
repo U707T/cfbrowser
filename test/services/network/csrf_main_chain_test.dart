@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:fluxdo/services/network/cookie/app_cookie_manager.dart';
+import 'package:cfbrowser/services/network/cookie/app_cookie_manager.dart';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';

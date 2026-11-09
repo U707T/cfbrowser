@@ -7,11 +7,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/blob_image_cache.dart';
-import 'package:fluxdo/services/dio_http_client.dart';
-import 'package:fluxdo/widgets/common/animated_avatar_overlay.dart';
-import 'package:fluxdo/widgets/common/smart_avatar.dart';
-import 'package:fluxdo/widgets/topic/painted_topic_card.dart';
+import 'package:cfbrowser/services/blob_image_cache.dart';
+import 'package:cfbrowser/services/dio_http_client.dart';
+import 'package:cfbrowser/widgets/common/animated_avatar_overlay.dart';
+import 'package:cfbrowser/widgets/common/smart_avatar.dart';
+import 'package:cfbrowser/widgets/topic/painted_topic_card.dart';
 
 class _Avatars implements HttpClientAdapter {
   _Avatars(this.png);
