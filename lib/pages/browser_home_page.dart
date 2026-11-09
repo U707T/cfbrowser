@@ -13,6 +13,7 @@ import '../services/browser_trust_coordinator.dart';
 import '../services/connectivity_service.dart';
 import '../services/deep_link_service.dart';
 import '../services/migration_notice.dart';
+import 'login_page.dart';
 import '../services/network/doh/network_settings_service.dart';
 import '../widgets/browser/browser_tabs_sheet.dart';
 import '../widgets/browser/quick_access_grid.dart';
@@ -127,6 +128,12 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
       case 'forum':
         unawaited(_openForum());
         break;
+      case 'login':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+        );
+        break;
       case 'library':
         _openLibrary();
         break;
@@ -183,6 +190,16 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
                     ],
                   ),
                 ),
+              const PopupMenuItem(
+                value: 'login',
+                child: Row(
+                  children: [
+                    Icon(Symbols.login_rounded),
+                    SizedBox(width: 10),
+                    Text('登录 linux.do'),
+                  ],
+                ),
+              ),
               const PopupMenuItem(
                 value: 'library',
                 child: Row(

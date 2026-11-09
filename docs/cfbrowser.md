@@ -183,3 +183,25 @@ dart tool/flutterw.dart build apk --release --target-platform android-arm64 \
 `const OnboardingGate(child: PreheatGate(child: MainPage()))`。
 范围相关改动是叠加式的，回滚 `proxy_leaf_trust.dart` 的 `mitmHosts` getter
 即可退回上游行为（`linux.do` 单个域）。
+
+## 7. 已合并的上游修复（1.1.6）
+
+按「本仓确实有同一缺陷」挑选并 `cherry-pick -x`（保留上游作者与提交信息），
+合并时只手工解冲突了 3 处：
+
+| 上游提交 | 解决什么 | 冲突处理 |
+|---|---|---|
+| `865d7244` | 重定向按 RFC：跨源不再带 CSRF/User-Api-Key/Origin，303 与 POST 转 GET，保留取消令牌 | 无 |
+| `ca4e6318` | POST 现取 CSRF 后按新会话重载 Cookie，不再「旧 Cookie + 新令牌」 | 无 |
+| `a4426605` | WebView 渲染进程退出不再连带杀掉 App（本仓另补了浏览器页的占位与重建） | `webview_page.dart` 手工移植；测试文件依赖未移植的访客快照特性，未收 |
+| `94987804` | 聊天里的非图片附件可点击下载 | 无 |
+| `a8087825` | 采纳解决方案不再按对象解析响应（新版插件返回数组） | 无 |
+| `86d0e730` | Linux Flatpak 外链改走 XDG 门户；点击统计失败不再弹错误 | 去掉双站相关分支 |
+| `02f89f8f` / `9028b1c4` | 预测返回手势计数泄漏导致全局点击失效 | 无 |
+| `4f304a9c` | 图片下载调度/缓存：头像不排在正文大图后，取消与非 200 立即放连接 | 去掉 `site_context` 引用 |
+| `7643b512` | 内置 Dio 5.11.1 响应流生命周期补丁（取消真正传到适配器） | 无 |
+| `0e808196` | 链接内图片可点击打开外层链接（`fluxdo_render` 子模块 → `d34e0c06`） | 无 |
+
+未跟：`8ebb340f`（删 rhttp）等大重构、双站/多账号/微应用/主题等与浏览器定位无关的特性；
+`core/doh_proxy` 子模块仍是 `c18d48d`——升级会同时带进浏览器指纹与 h2 MITM，
+需要单独一轮构建 + 连接回归，别和 Dart 侧混在一起。
