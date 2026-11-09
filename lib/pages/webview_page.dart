@@ -52,6 +52,18 @@ class WebViewPage extends ConsumerStatefulWidget {
   /// 新建标签时是否使用无痕模式（仅在 [tabId] 为空时生效）。
   final bool private;
 
+  /// 允许网页用 `window.open` / `target=_blank` 开新窗口：新窗口作为一页
+  /// 浏览器叠在上面，网页 `window.close()` 时关掉（支付/授权弹窗要靠它回传）。
+  /// 只对用户手势触发的 `window.open` 生效（不开
+  /// `javaScriptCanOpenWindowsAutomatically`），避免广告弹窗刷屏。
+  final bool allowPopups;
+
+  /// 由 [allowPopups] 开出的新窗口：WebView 由网页创建，不再自己加载 [url]。
+  final int? windowId;
+
+  /// 打开这个弹窗的标签 id：关窗时把活动标签还回去。
+  final String? openerTabId;
+
   const WebViewPage({
     super.key,
     required this.url,
@@ -59,6 +71,9 @@ class WebViewPage extends ConsumerStatefulWidget {
     this.injectCss,
     this.tabId,
     this.private = false,
+    this.allowPopups = true,
+    this.windowId,
+    this.openerTabId,
   });
 
   /// 打开浏览器，url 为空字符串时显示新标签页。
@@ -67,12 +82,17 @@ class WebViewPage extends ConsumerStatefulWidget {
     String url, {
     String? title,
     String? injectCss,
+    bool allowPopups = true,
   }) {
     return Navigator.push<T>(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            WebViewPage(url: url, title: title, injectCss: injectCss),
+        builder: (_) => WebViewPage(
+          url: url,
+          title: title,
+          injectCss: injectCss,
+          allowPopups: allowPopups,
+        ),
       ),
     );
   }
@@ -138,6 +158,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   /// 交 SessionTokenAuthority（用户浏览不把页面 cookie 带回 jar）。
   /// 无痕标签不参与这套逻辑，避免把站点登录态带进无痕页面。
   WebViewUse? _webViewUse;
+
+  /// 这一页是网页 `window.open` 开出来的弹窗（WebView 由网页创建）。
+  bool get _isPopup => widget.windowId != null;
 
   /// 站内页面长时间停留时 XHR 会让 WebView 自己轮换 _t，而 jar 只在页面
   /// 加载完成时跟一次。定期对账，避免两边分叉超过轮换窗口后 jar 的值被判死。
@@ -209,6 +232,15 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                 url: siteUrl,
               ),
       );
+    }
+    // 弹窗关掉后把它的标签一起收走，并把活动标签还给打开它的那一页；
+    // 否则标签列表里会留下一堆 OAuth/支付弹窗。
+    if (_isPopup) {
+      _tabs.close(_tabId);
+      final opener = widget.openerTabId;
+      if (opener != null && _tabs.byId(opener) != null) {
+        _tabs.setActive(opener);
+      }
     }
     _controller?.dispose();
     _findController.dispose();
@@ -313,6 +345,11 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     // setSettings 会整份替换设置，这里必须把 URL 拦截重新打开，
     // 否则切一次桌面版后应用链接确认框就失效了。
     settings.useShouldOverrideUrlLoading = true;
+    if (widget.allowPopups) {
+      // 只认用户手势触发的 window.open；不开
+      // javaScriptCanOpenWindowsAutomatically，避免广告自动弹窗刷屏。
+      settings.supportMultipleWindows = true;
+    }
     // 移动端也打开双指缩放；桌面版再放宽视口，让站点按桌面宽度排版。
     settings.supportZoom = true;
     settings.builtInZoomControls = true;
@@ -429,7 +466,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
           ),
           leadingWidth: 48,
           actions: [
-            ValueListenableBuilder<List<BrowserTab>>(
+            // 弹窗页只保留关闭：标签按钮/菜单在多窗口里切走会把弹窗顶掉。
+            if (!_isPopup) ...[
+              ValueListenableBuilder<List<BrowserTab>>(
               valueListenable: _tabs.tabs,
               builder: (context, tabs, _) {
                 return IconButton(
@@ -563,6 +602,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                 ),
               ],
             ),
+            ],
           ],
         ),
         body: Column(
@@ -586,12 +626,19 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                       child: WebViewSettings.wrapWithScrollFix(
                         InAppWebView(
                           key: ValueKey(webViewGeneration),
+                          windowId: widget.windowId,
                           webViewEnvironment: windowsWebViewEnvironment,
                           initialSettings: _buildSettings(),
                           initialUserScripts:
                               WebViewSettings.compatPolyfillScripts,
                           findInteractionController: _findController,
                           shouldOverrideUrlLoading: _shouldOverrideUrlLoading,
+                          onCreateWindow: widget.allowPopups
+                              ? _openPopupWindow
+                              : null,
+                          onCloseWindow: _isPopup
+                              ? (_) => _closePopupWindow()
+                              : null,
                           onReceivedServerTrustAuthRequest: (_, challenge) =>
                               WebViewSettings.handleServerTrustAuthRequest(
                                 challenge,
@@ -610,7 +657,8 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                                 webViewGeneration > 0 && _currentUrl.isNotEmpty
                                 ? _currentUrl
                                 : widget.url;
-                            if (initialUrl.isNotEmpty) {
+                            // 弹窗的页面由网页自己往窗口里塞，不能在这里再 load 一次。
+                            if (!_isPopup && initialUrl.isNotEmpty) {
                               // 站内页面先把本地代理从待命唤醒，再做 cookie
                               // 重灌/加载；站外页面完全不动代理。
                               if (_isAcceleratedUrl(initialUrl)) {
@@ -785,7 +833,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                         getController: () => _controller,
                       ),
                     ),
-                  if (_currentUrl.isEmpty && _webViewSnapshot == null)
+                  if (_currentUrl.isEmpty &&
+                      !_isPopup &&
+                      _webViewSnapshot == null)
                     _buildNewTabPage(theme),
                   if (_webViewSnapshot != null)
                     Positioned.fill(
@@ -841,11 +891,18 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
               _isLoading ? Symbols.close_rounded : Symbols.refresh_rounded,
             ),
           ),
-          IconButton(
-            tooltip: '主页',
-            onPressed: _goHome,
-            icon: const Icon(Symbols.home_rounded),
-          ),
+          if (_isPopup)
+            IconButton(
+              tooltip: '关闭',
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Symbols.close_rounded),
+            )
+          else
+            IconButton(
+              tooltip: '主页',
+              onPressed: _goHome,
+              icon: const Icon(Symbols.home_rounded),
+            ),
           IconButton(
             tooltip: '分享',
             onPressed: _currentUrl.isEmpty ? null : _share,
@@ -985,6 +1042,10 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   }
 
   void _goHome() {
+    if (_isPopup) {
+      Navigator.of(context).pop();
+      return;
+    }
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
@@ -1017,6 +1078,15 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   }
 
   void _closeActiveTab() {
+    if (_isPopup) {
+      _tabs.close(_tabId);
+      final opener = widget.openerTabId;
+      if (opener != null && _tabs.byId(opener) != null) {
+        _tabs.setActive(opener);
+      }
+      Navigator.of(context).pop();
+      return;
+    }
     final next = _tabs.close(_tabId);
     if (!mounted) return;
     if (next == null) {
@@ -1185,6 +1255,41 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       case 'home':
         _goHome();
         break;
+    }
+  }
+
+  /// 网页要开新窗口（`window.open` / `target=_blank`）：叠一页浏览器承载它。
+  ///
+  /// 必须同步答应，网页拿到的窗口对象才是这一页（支付弹窗先开空窗口再改地址）。
+  Future<bool?> _openPopupWindow(
+    InAppWebViewController controller,
+    CreateWindowAction action,
+  ) async {
+    if (!mounted) return false;
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => WebViewPage(
+            url: action.request.url?.toString() ?? '',
+            allowPopups: true,
+            windowId: action.windowId,
+            openerTabId: _tabId,
+          ),
+        ),
+      ),
+    );
+    return true;
+  }
+
+  /// 网页 `window.close()`：关掉自己开的那一页。
+  void _closePopupWindow() {
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    if (route == null || !route.isActive) return;
+    if (route.isCurrent) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).removeRoute(route);
     }
   }
 

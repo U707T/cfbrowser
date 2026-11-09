@@ -88,6 +88,7 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
 | 无痕标签 | `WebViewSettings` 开 `incognito`，跳过 `WebViewUse` cookie 重灌与 `CookieStoreObserver` 回写；不写 `webHistoryProvider`，不参与标签持久化 |
 | 页内查找 | `FindInteractionController.findAll/findNext/clearMatches`，Android 走 `WebView.findAllAsync`，桌面映射到 WebKitGTK / WebView2 |
 | 桌面版网站 | 按标签覆盖桌面 UA，并打开 `useWideViewPort` / `loadWithOverviewMode`；`setSettings` 后 reload |
+| 多窗口 | `window.open` / `target=_blank` 叠一页内置浏览器（`WebViewPage.allowPopups`）：只认用户手势触发，不开 `javaScriptCanOpenWindowsAutomatically`；网页 `window.close()` 关掉自己那页，弹窗的标签在关闭时一并回收并把活动标签还给打开它的页面 |
 | 工具栏 | 底部后退/前进/停止/刷新/主页/分享；菜单含新建标签、无痕标签、查找、桌面版、书签与历史 |
 
 > 往返缓存（BFCache）的现状、三层设计与分阶段实施方案见
