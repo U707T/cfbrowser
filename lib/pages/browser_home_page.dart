@@ -18,6 +18,7 @@ import '../services/network/doh/network_settings_service.dart';
 import '../widgets/browser/browser_tabs_sheet.dart';
 import '../widgets/browser/quick_access_grid.dart';
 import 'browser_scope_page.dart';
+import 'network_settings_page/network_settings_page.dart';
 import 'download_list_page.dart';
 import 'my_browser_page.dart';
 import 'settings_page.dart';
@@ -77,6 +78,14 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
     } else {
       WebViewPage.open(context, url);
     }
+  }
+
+  /// DoH / 本地优选设置。放在首页右上角，避免每次都要先绕进「设置」。
+  void _openNetworkSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NetworkSettingsPage()),
+    );
   }
 
   Future<void> _openScopeSettings() async {
@@ -140,6 +149,9 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
       case 'downloads':
         _openDownloads();
         break;
+      case 'network':
+        _openNetworkSettings();
+        break;
       case 'scope':
         _openScopeSettings();
         break;
@@ -160,6 +172,11 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
       appBar: AppBar(
         title: const Text('cfbrowser'),
         actions: [
+          IconButton(
+            tooltip: '网络与优选（DoH）',
+            onPressed: _openNetworkSettings,
+            icon: const Icon(Symbols.bolt_rounded),
+          ),
           ValueListenableBuilder<List<BrowserTab>>(
             valueListenable: tabsService.tabs,
             builder: (context, tabs, _) {
@@ -222,6 +239,16 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
               ),
               const PopupMenuDivider(),
               const PopupMenuItem(
+                value: 'network',
+                child: Row(
+                  children: [
+                    Icon(Symbols.bolt_rounded),
+                    SizedBox(width: 10),
+                    Text('网络与优选（DoH）'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
                 value: 'scope',
                 child: Row(
                   children: [
@@ -268,23 +295,35 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(
-                Symbols.bolt_rounded,
-                size: 16,
-                color: theme.colorScheme.primary,
+          InkWell(
+            onTap: _openNetworkSettings,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    Symbols.bolt_rounded,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      serverIp == null || serverIp.isEmpty
+                          ? 'Linux.do 加速：按需启用（仅站内）'
+                          : 'Linux.do 固定出口：$serverIp',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                  Icon(
+                    Symbols.chevron_right_rounded,
+                    size: 16,
+                    color: theme.colorScheme.outline,
+                  ),
+                ],
               ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  serverIp == null || serverIp.isEmpty
-                      ? 'Linux.do 加速：按需启用（仅站内）'
-                      : 'Linux.do 固定出口：$serverIp',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 20),
           QuickAccessGrid(onOpen: _go),
