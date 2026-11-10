@@ -9,6 +9,7 @@ import '../pages/webview_page.dart';
 import '../constants.dart';
 import '../utils/discourse_url_parser.dart';
 import 'discourse/discourse_service.dart';
+import 'startup/forum_bootstrap.dart';
 import 'user_api_key_login_flow.dart';
 import 'user_api_key_service.dart';
 
@@ -105,6 +106,10 @@ class DeepLinkService {
       debugPrint('DeepLinkService: 未知链接类型 $url');
       return;
     }
+
+    // 深链冷启动会直接 push 话题/资料页，不经过 MainPage；这里补上论坛
+    // 网络栈的启动（幂等），否则 priming / 会话判定一直不会跑。
+    unawaited(ensureForumNetworkReady(reason: 'deep_link'));
 
     // 防重复：1秒内相同链接不重复处理
     final now = DateTime.now();

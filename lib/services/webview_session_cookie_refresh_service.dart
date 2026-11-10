@@ -12,6 +12,7 @@ import 'network/cf/cf_challenge_classifier.dart';
 import 'network/cookie/cookie_jar_service.dart';
 import 'preloaded_data_service.dart';
 import 'session/webview_use.dart';
+import 'webview_render_gone.dart';
 import 'webview_settings.dart';
 import 'windows_webview_environment_service.dart';
 
@@ -324,6 +325,8 @@ class WebViewSessionCookieRefreshService {
     await webViewUse.ready;
 
     final loadCompleter = Completer<void>();
+    // 渲染进程没了：这个 WebView 不能再用，本轮按失败收场、不回写
+    final renderGone = Completer<void>();
     HeadlessInAppWebView? webView;
     InAppWebViewController? controller;
 
@@ -345,6 +348,11 @@ class WebViewSessionCookieRefreshService {
       initialUserScripts: WebViewSettings.compatPolyfillScripts,
       onReceivedServerTrustAuthRequest: (_, challenge) =>
           WebViewSettings.handleServerTrustAuthRequest(challenge),
+      onRenderProcessGone: (_, detail) {
+        WebViewRenderGone.report('session_bootstrap', detail);
+        controller = null;
+        if (!renderGone.isCompleted) renderGone.complete();
+      },
       onWebViewCreated: (createdController) {
         controller = createdController;
         WebViewSettings.applyWindowsHeadlessMemoryTarget(createdController);
@@ -386,9 +394,15 @@ class WebViewSessionCookieRefreshService {
       }
 
       try {
-        await loadCompleter.future.timeout(const Duration(seconds: 8));
+        await Future.any<void>([
+          loadCompleter.future.timeout(const Duration(seconds: 8)),
+          renderGone.future,
+        ]);
       } on TimeoutException {
         debugPrint('[WebViewSessionSync] 轻量 bootstrap 文档加载等待超时，继续尝试');
+      }
+      if (renderGone.isCompleted) {
+        return const SessionBootstrapResult.failure(phase: 'render_gone');
       }
 
       if (io.Platform.isWindows) {
@@ -399,7 +413,12 @@ class WebViewSessionCookieRefreshService {
         c,
         reason: reason,
         pluginCandidates: PreloadedDataService().pluginCandidatesSync,
+        isCancelled: () => renderGone.isCompleted,
+        cancellationSignal: renderGone.future,
       );
+      if (renderGone.isCompleted) {
+        return const SessionBootstrapResult.failure(phase: 'render_gone');
+      }
       if (!bootstrap.ok) {
         await syncCookies();
         await logCookieSummary(reason: reason, bootstrapOk: false);

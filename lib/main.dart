@@ -62,6 +62,7 @@ import 'services/network/doh_proxy/proxy_certificate.dart';
 import 'services/cf_challenge_logger.dart';
 import 'services/browser_trust_coordinator.dart';
 import 'services/startup/app_startup.dart';
+import 'services/startup/forum_bootstrap.dart';
 import 'services/startup/startup_timeline.dart';
 import 'services/update_service.dart';
 import 'services/update_checker_helper.dart';
@@ -1128,8 +1129,8 @@ class _MainPageState extends ConsumerState<MainPage>
   }
 
   Future<void> _startForumStartup() async {
-    await NetworkSettingsService.instance.leaveStandby();
-    AppStartup.instance.launch(reason: 'main_page');
+    // 与站内 WebView / 深链共用同一个入口（幂等）。
+    await ensureForumNetworkReady(reason: 'main_page');
   }
 
   Future<void> _runStartupUiTasks() async {

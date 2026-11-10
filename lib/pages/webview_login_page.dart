@@ -19,6 +19,7 @@ import '../services/network/cookie/cookie_jar_service.dart';
 import '../services/network/cookie/csrf_token_service.dart';
 import '../services/session/webview_use.dart';
 import '../services/toast_service.dart';
+import '../services/webview_render_gone.dart';
 import '../services/webview_settings.dart';
 import '../services/webview_session_cookie_refresh_service.dart';
 import '../services/windows_webview_environment_service.dart';
@@ -40,7 +41,8 @@ class WebViewLoginPage extends ConsumerStatefulWidget {
   ConsumerState<WebViewLoginPage> createState() => _WebViewLoginPageState();
 }
 
-class _WebViewLoginPageState extends ConsumerState<WebViewLoginPage> {
+class _WebViewLoginPageState extends ConsumerState<WebViewLoginPage>
+    with WebViewRenderGoneState<WebViewLoginPage> {
   static const Set<String> _runtimeCookieNames = {'_rt'};
 
   final _service = DiscourseService();
@@ -106,6 +108,13 @@ class _WebViewLoginPageState extends ConsumerState<WebViewLoginPage> {
     unawaited(_webViewUse.end(WebViewUseOutcome.aborted));
     _controller?.dispose();
     super.dispose();
+  }
+
+  @override
+  void onWebViewDiscarded() {
+    _controller = null;
+    _isLoading = false;
+    _webViewSnapshot = null;
   }
 
   @override
@@ -188,10 +197,14 @@ class _WebViewLoginPageState extends ConsumerState<WebViewLoginPage> {
           Expanded(
             child: Stack(
               children: [
+                if (webViewRenderGone)
+                  WebViewRenderGoneView(onReload: reloadAfterRenderGone)
+                else
                 Offstage(
                   offstage: _webViewSnapshot != null,
                   child: WebViewSettings.wrapWithScrollFix(
                     InAppWebView(
+                      key: ValueKey(webViewGeneration),
                       webViewEnvironment: windowsWebViewEnvironment,
                       initialSettings: WebViewSettings.visible,
                       initialUserScripts: UnmodifiableListView([
@@ -219,6 +232,8 @@ class _WebViewLoginPageState extends ConsumerState<WebViewLoginPage> {
                           WebViewSettings.handleServerTrustAuthRequest(
                             challenge,
                           ),
+                      onRenderProcessGone: (_, detail) =>
+                          handleWebViewRenderGone('webview_login_page', detail),
                       onWebViewCreated: (controller) async {
                         _controller = controller;
                         // 老 WKWebView 的 JS 运行时错误回传到 LogWriter，

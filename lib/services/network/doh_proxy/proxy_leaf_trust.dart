@@ -45,6 +45,15 @@ class ProxyLeafTrust {
     'ping.linux.do',
     'auth.linux.do',
     'linuxdo-uploads.s3.linux.do',
+    // ldstatic.com 是 linux.do 的静态资源域（cdn / cdn3 图片与表情、
+    // ping 消息总线、linuxdo-uploads.s3 直传）。WPE 不会为子资源回调证书
+    // 错误，只能预先放行，所以这些主机要写死在这里（上游 23e0c32b）。
+    'ldstatic.com',
+    'www.ldstatic.com',
+    'cdn.ldstatic.com',
+    'cdn3.ldstatic.com',
+    'ping.ldstatic.com',
+    'linuxdo-uploads.s3.ldstatic.com',
   ];
 
   /// 代理启动后预先放行的主机：已知子域 + 用户配置范围内域名及其常见子域
@@ -58,6 +67,9 @@ class ProxyLeafTrust {
     }
     return hosts.toList(growable: false);
   }
+
+  @visibleForTesting
+  static List<String> get preallowHosts => _preallowHosts;
 
   /// 证书出错时按「是否代理签发的那张叶子」裁定（Linux / Windows）
   static bool get isApplicable => Platform.isLinux || Platform.isWindows;

@@ -5,6 +5,7 @@ import '../../services/browser/browser_quick_links_service.dart';
 import '../../services/browser/browser_url.dart';
 import '../../services/toast_service.dart';
 import '../../utils/dialog_utils.dart';
+import '../common/cached_image.dart';
 
 /// Via 风格的快捷访问网格：站点图标 + 名称，末尾一个添加入口。
 class QuickAccessGrid extends StatelessWidget {
@@ -284,15 +285,14 @@ class _SiteIcon extends StatelessWidget {
           if (faviconUrl != null)
             Padding(
               padding: const EdgeInsets.all(9),
-              child: Image.network(
-                faviconUrl,
+              // 走 App 的缓存/网关链路：Image.network 直连会绕过代理与 ECH，
+              // 墙内取 favicon 常常直接失败，而且每次进首页都重新请求。
+              child: CachedImage(
+                url: faviconUrl,
                 fit: BoxFit.contain,
-                cacheWidth: 96,
-                cacheHeight: 96,
-                gaplessPlayback: true,
+                memCacheWidth: 96,
+                memCacheHeight: 96,
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                loadingBuilder: (context, child, progress) =>
-                    progress == null ? child : const SizedBox.shrink(),
               ),
             ),
         ],
