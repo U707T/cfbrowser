@@ -193,7 +193,7 @@ dart tool/flutterw.dart build apk --release --target-platform android-arm64 \
 范围相关改动是叠加式的，回滚 `proxy_leaf_trust.dart` 的 `mitmHosts` getter
 即可退回上游行为（`linux.do` 单个域）。
 
-## 7. 已合并的上游修复（1.1.6）
+## 7. 已合并的上游修复（1.1.7）
 
 按「本仓确实有同一缺陷」挑选并 `cherry-pick -x`（保留上游作者与提交信息），
 合并时只手工解冲突了 3 处：
