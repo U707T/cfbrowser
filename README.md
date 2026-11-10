@@ -113,3 +113,18 @@ cfluxdo 基于 [Lingyan000/fluxdo](https://github.com/Lingyan000/fluxdo)，感�
 本项目为非官方客户端，与 Linux.do 官方无直接关联。
 
 本项目基于 [GPL-3.0](LICENSE) 协议开源。
+
+---
+
+## 本地构建缓存（沙箱）
+
+> 沙箱里 `dl.google.com` / `maven.google.com` 基本不通，**Gradle / pub 依赖重下不回来**；而且本项目本地**出不了 APK**（缺 `cargo-ndk` 与 Android target，见 AI通用说明 §8.3）。删缓存前先看 `/workspace/AI通用说明.md` §2。
+
+| 路径 | 现状（2026-11-04） | 怎么办 |
+|---|---|---|
+| `build/` | 99 MB（`build/test_cache` 46 MB 是大头） | 只留最新一份 `test_cache/build/*.dill`，其余可删 |
+| `.dart_tool/` | 11 MB（melos workspace，比单项目小） | 保留 |
+| `~/.pub-cache/git` | 全局 | **别删**，`cfluxdo` / `fluxdo_render` 的 git 依赖在这，重 clone 极易被 proot 打坏（§8.1） |
+| `~/.gradle/caches/8.14` | 全局 2.4 GB | **别删**，本项目专用 Gradle 版本 |
+
+- 本地只做 `flutter analyze --no-pub` + 指定 test 文件；APK 交 CI。
