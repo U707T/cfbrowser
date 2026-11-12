@@ -199,7 +199,7 @@
   "vpnToggle_suppressedSuffix": "已被自動關閉，VPN 斷開後將自動恢復",
   "vpnToggle_title": "VPN 自動讓路",
   "vpnToggle_upstreamProxy": "上游代理",
-  "vpnToggle_fingerprintKept": "App 的請求仍經本機閘道按瀏覽器指紋送出（只換握手，DNS 和線路都跟著 VPN）",
+  "vpnToggle_fingerprintKept": "App 和內建網頁的請求仍經本機閘道按瀏覽器指紋送出（只換握手，DNS 和線路都跟著 VPN）",
   "vpnToggle_pausedBoth": "連線加速和上游代理已暫停，VPN 中斷後自動恢復",
   "vpnToggle_pausedAccel": "連線加速已暫停，VPN 中斷後自動恢復",
   "vpnToggle_pausedProxy": "上游代理已暫停，VPN 中斷後自動恢復",
