@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/client_hints.dart';
+import 'package:cfbrowser/services/network/client_hints.dart';
 
 void main() {
   group('ClientHints.brandList', () {

@@ -42,6 +42,9 @@ class DohProxyService {
   String? _currentUpstreamSignature;
   String? _currentDohRoutesUrl;
   String? _currentSelectMode;
+
+  /// 启动时带的自定义节点清单（拼成一个串比较）
+  String? _currentCustomNodes;
   String? _lastError;
   bool _processAuthRejected = false;
   // 进程模式下 stdout 打出的 DOH_ACCEL_UPDATE 行，等 App 取走
@@ -92,6 +95,7 @@ class DohProxyService {
     String? dohNodeListJson,
     String selectMode = 'off',
     String? selectStateJson,
+    List<String> customNodes = const [],
     bool shareMeasurements = false,
     String? atlasRoutesUrl,
     List<Map<String, Object>> publicDoh = const [],
@@ -135,9 +139,10 @@ class DohProxyService {
           _currentUpstreamSignature == upstreamSignature &&
           // 路由表 / 节点列表只是启动时的种子，内容变了不重启；只看接口地址
           _currentDohRoutesUrl == dohRoutesUrl &&
-          // 优选模式变了要重启；share / bearer / networkSig / selectState / appVersion
-          // 都是运行态（有专门的 FFI 入口或只在启动时回灌），不触发重启
-          _currentSelectMode == selectMode;
+          // 优选模式、自定义节点变了要重启；share / bearer / networkSig / selectState /
+          // appVersion 都是运行态（有专门的 FFI 入口或只在启动时回灌），不触发重启
+          _currentSelectMode == selectMode &&
+          _currentCustomNodes == customNodes.join('\n');
       if (sameConfig) {
         NetworkLogger.log('[DOH] 代理已在运行，端口: $_port');
         return true;
@@ -177,6 +182,7 @@ class DohProxyService {
         dohNodeListJson,
         selectMode: selectMode,
         selectStateJson: selectStateJson,
+        customNodes: customNodes,
         shareMeasurements: shareMeasurements,
         atlasRoutesUrl: atlasRoutesUrl,
         publicDoh: publicDoh,
@@ -216,6 +222,7 @@ class DohProxyService {
           h2Mitm,
           dohRoutesUrl,
           selectMode: selectMode,
+          customNodes: customNodes,
         );
       }
       return result;
@@ -242,6 +249,7 @@ class DohProxyService {
         h2Mitm,
         dohRoutesUrl,
         selectMode: selectMode,
+        customNodes: customNodes,
       );
     }
   }
@@ -274,6 +282,7 @@ class DohProxyService {
     String? dohNodeListJson, {
     String selectMode = 'off',
     String? selectStateJson,
+    List<String> customNodes = const [],
     bool shareMeasurements = false,
     String? atlasRoutesUrl,
     List<Map<String, Object>> publicDoh = const [],
@@ -325,6 +334,7 @@ class DohProxyService {
           dohNodeListJson: dohNodeListJson,
           selectMode: selectMode,
           selectStateJson: selectStateJson,
+          customNodes: customNodes,
           shareMeasurements: shareMeasurements,
           atlasRoutesUrl: atlasRoutesUrl,
           publicDoh: publicDoh,
@@ -375,6 +385,7 @@ class DohProxyService {
         );
         _currentDohRoutesUrl = dohRoutesUrl;
         _currentSelectMode = selectMode;
+        _currentCustomNodes = customNodes.join('\n');
         NetworkLogger.log('[DOH] FFI 代理已启动，端口: $_port');
         return true;
       });
@@ -407,8 +418,9 @@ class DohProxyService {
     bool mitmConnect,
     bool h2Mitm,
     String? dohRoutesUrl, {
-    // 进程模式不做本地优选，只记下模式让 sameConfig 比较稳定
+    // 进程模式不做本地优选，只记下模式和自定义节点让 sameConfig 比较稳定
     String selectMode = 'off',
+    List<String> customNodes = const [],
   }) async {
     try {
       final executablePath = await _getExecutablePath();
@@ -539,6 +551,7 @@ class DohProxyService {
           );
           _currentDohRoutesUrl = dohRoutesUrl;
           _currentSelectMode = selectMode;
+          _currentCustomNodes = customNodes.join('\n');
           NetworkLogger.log('[DOH] 代理已启动，端口: $_port');
           completed = true;
           completer.complete(true);
@@ -649,6 +662,7 @@ class DohProxyService {
     _currentUpstreamSignature = null;
     _currentDohRoutesUrl = null;
     _currentSelectMode = null;
+    _currentCustomNodes = null;
     // 注意：不清除 _lastError，保留用于 UI 展示
   }
 
@@ -1208,6 +1222,7 @@ class DohProxyService {
     String? dohNodeListJson,
     String selectMode = 'off',
     String? selectStateJson,
+    List<String> customNodes = const [],
     bool shareMeasurements = false,
     String? atlasRoutesUrl,
     List<Map<String, Object>> publicDoh = const [],
@@ -1251,6 +1266,7 @@ class DohProxyService {
       'dohNodeListJson': dohNodeListJson,
       'selectMode': selectMode,
       'selectStateJson': selectStateJson,
+      'customNodes': customNodes,
       'shareMeasurements': shareMeasurements,
       'atlasRoutesUrl': atlasRoutesUrl,
       'publicDoh': publicDoh,
@@ -1618,6 +1634,7 @@ void _ffiIsolateEntry(SendPort mainSendPort) {
           final reportUrl = message['reportUrl'] as String?;
           final reportBearer = message['reportBearer'] as String?;
           final extraCoveredHosts = _stringList(message['extraCoveredHosts']);
+          final customNodes = _stringList(message['customNodes']);
           final appVersion = message['appVersion'] as String?;
           final networkSig = message['networkSig'] as String?;
           final preconnectHosts = _stringList(message['preconnectHosts']);
@@ -1652,6 +1669,7 @@ void _ffiIsolateEntry(SendPort mainSendPort) {
             dohNodeListJson: dohNodeListJson,
             selectMode: selectMode,
             selectStateJson: selectStateJson,
+            customNodes: customNodes,
             shareMeasurements: shareMeasurements,
             atlasRoutesUrl: atlasRoutesUrl,
             publicDoh: publicDoh,
@@ -1693,6 +1711,7 @@ void _ffiIsolateEntry(SendPort mainSendPort) {
               dohNodeListJson: dohNodeListJson,
               selectMode: selectMode,
               selectStateJson: selectStateJson,
+              customNodes: customNodes,
               shareMeasurements: shareMeasurements,
               atlasRoutesUrl: atlasRoutesUrl,
               publicDoh: publicDoh,

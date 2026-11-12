@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluxdo/services/network/doh_proxy/fetch_order_probe_service.dart';
+import 'package:cfbrowser/services/network/doh_proxy/fetch_order_probe_service.dart';
 
 void main() {
   group('FetchOrderProbeService', () {
