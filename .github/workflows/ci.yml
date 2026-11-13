@@ -77,18 +77,29 @@ jobs:
           flutter-version: 3.47.5
           cache: true
 
-      # action 的 cache 只管 Flutter SDK；pub 与 Gradle 依赖另存
-      - name: Cache pub and Gradle
-        id: pubgradle
+      # action 的 cache 只管 Flutter SDK；pub 与 Gradle 依赖另存。
+      # 拆成两份：pub 与 Gradle 的失效频率不同，合在一起任一方变化都会整份重下。
+      # Gradle 只存 modules-2（依赖本体）和 wrapper：caches/<版本> 下的 transforms、
+      # file-hashes 都是可再生的中间态，实测却是整份缓存的大头（runner 上 9 GB）。
+      - name: Cache pub
+        id: pubcache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache/hosted
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      - name: Cache Gradle deps
+        id: gradlecache
         uses: actions/cache@v4
         with:
           path: |
-            ~/.pub-cache/hosted
-            ~/.gradle/caches
+            ~/.gradle/caches/modules-2
             ~/.gradle/wrapper
-          key: pubgradle-${{ runner.os }}-${{ hashFiles('pubspec.lock', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
-            pubgradle-${{ runner.os }}-
+            gradle-${{ runner.os }}-
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -112,8 +123,24 @@ jobs:
         with:
           targets: aarch64-linux-android
 
+      # 下面这份 cache 存的是 cargo-ndk 二进制本身，让下面那步从 20 s 变 1 s
+      - name: Cache cargo-ndk binary
+        id: cargondk
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-ndk
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+          key: cargo-ndk-${{ runner.os }}-v1
+
       - name: Install cargo-ndk
-        run: cargo install cargo-ndk --locked
+        run: |
+          if command -v cargo-ndk >/dev/null 2>&1; then
+            echo "cargo-ndk 已在缓存里：$(cargo ndk --version 2>&1 | head -1)"
+          else
+            cargo install cargo-ndk --locked
+          fi
 
       # core/doh_proxy 的 target/ 是全量重编的大头（rama + BoringSSL + bindgen），
       # 有缓存后增量只有改动的那几个 crate。
@@ -128,6 +155,22 @@ jobs:
           key: rust-${{ runner.os }}-${{ hashFiles('core/doh_proxy/Cargo.lock') }}-${{ hashFiles('core/doh_proxy/build.rs', 'core/doh_proxy/Cargo.toml') }}
           restore-keys: |
             rust-${{ runner.os }}-${{ hashFiles('core/doh_proxy/Cargo.lock') }}-
+
+      # super_clipboard / super_drag_and_drop / rhttp 这几个 pub 包用 cargokit 在
+      # Gradle 里现编 Rust，target 目录落在 build/<插件>/build，谁都缓存不到。
+      # 实测冷编 122.7 s（rhttp 98.7 / super_native_extensions 20.5 / irondash 3.5），
+      # 热编 3.5 s。
+      - name: Cache cargokit Rust targets
+        id: cargokit
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/rhttp/build
+            build/super_native_extensions/build
+            build/irondash_engine_context/build
+          key: cargokit-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            cargokit-${{ runner.os }}-
 
       # 固定签名密钥：缺 secrets 时硬失败，绝不发出 debug 签名的包
       - name: Decode signing keystore
@@ -204,8 +247,11 @@ jobs:
             grep -m1 'model name' /proc/cpuinfo || true
             free -g | head -3
             echo "=== cache ==="
-            echo "pubgradle cache-hit: ${{ steps.pubgradle.outputs.cache-hit }}"
+            echo "pub       cache-hit: ${{ steps.pubcache.outputs.cache-hit }}"
+            echo "gradle    cache-hit: ${{ steps.gradlecache.outputs.cache-hit }}"
+            echo "cargo-ndk cache-hit: ${{ steps.cargondk.outputs.cache-hit }}"
             echo "rust      cache-hit: ${{ steps.rustcache.outputs.cache-hit }}"
+            echo "cargokit  cache-hit: ${{ steps.cargokit.outputs.cache-hit }}"
             du -sh ~/.gradle ~/.cargo 2>/dev/null || true
             echo "=== apk ==="
             ls -l build/app/outputs/flutter-apk/app-release.apk
@@ -268,16 +314,3 @@ jobs:
           files: cfbrowser-arm64-v8a.apk
           generate_release_notes: true
           prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') }}
-
-      # 只在 diag 分支跑：把 useLegacyPackaging 关掉再打一次包，量出「压缩 .so」到底值多少秒。
-      # 增量构建（javac/dex/R8 都 up-to-date），所以耗时差 ≈ packageRelease 里的 deflate 成本。
-      - name: 'DIAG · A/B：useLegacyPackaging=false 再打一次包'
-        if: always()
-        run: |
-          set -uo pipefail
-          echo "DIAG ab begin: $(date -u +%FT%TZ)"
-          dart tool/flutterw.dart build apk --release --target-platform android-arm64 \
-            --android-project-arg=cf.legacyPackaging=false 2>&1 | tee "$RUNNER_TEMP/build-nolegacy.log"
-          echo "DIAG ab end: $(date -u +%FT%TZ)"
-          ls -l build/app/outputs/flutter-apk/app-release.apk
-          cp build/app/outputs/flutter-apk/app-release.apk cfbrowser-arm64-v8a-nolegacy.apk
