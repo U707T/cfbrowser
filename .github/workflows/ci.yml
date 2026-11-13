@@ -77,8 +77,11 @@ jobs:
           flutter-version: 3.47.5
           cache: true
 
-      # action 的 cache 只管 Flutter SDK；pub 与 Gradle 依赖另存
+      # action 的 cache 只管 Flutter SDK；pub 与 Gradle 依赖另存。
+      # 不要只留 modules-2 而砍掉 caches/<版本>：实测这样 transforms 全丢，
+      # 配置阶段从 67 s 涨到 176 s，比省下的还原时间还贵。
       - name: Cache pub and Gradle
+        id: pubgradle
         uses: actions/cache@v4
         with:
           path: |
@@ -111,12 +114,29 @@ jobs:
         with:
           targets: aarch64-linux-android
 
+      # 下面这份 cache 存的是 cargo-ndk 二进制本身，让下面那步从 20 s 变 1 s
+      - name: Cache cargo-ndk binary
+        id: cargondk
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-ndk
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+          key: cargo-ndk-${{ runner.os }}-v1
+
       - name: Install cargo-ndk
-        run: cargo install cargo-ndk --locked
+        run: |
+          if command -v cargo-ndk >/dev/null 2>&1; then
+            echo "cargo-ndk 已在缓存里：$(cargo ndk --version 2>&1 | head -1)"
+          else
+            cargo install cargo-ndk --locked
+          fi
 
       # core/doh_proxy 的 target/ 是全量重编的大头（rama + BoringSSL + bindgen），
       # 有缓存后增量只有改动的那几个 crate。
       - name: Cache Rust build
+        id: rustcache
         uses: actions/cache@v4
         with:
           path: |
@@ -126,6 +146,22 @@ jobs:
           key: rust-${{ runner.os }}-${{ hashFiles('core/doh_proxy/Cargo.lock') }}-${{ hashFiles('core/doh_proxy/build.rs', 'core/doh_proxy/Cargo.toml') }}
           restore-keys: |
             rust-${{ runner.os }}-${{ hashFiles('core/doh_proxy/Cargo.lock') }}-
+
+      # super_clipboard / super_drag_and_drop / rhttp 这几个 pub 包用 cargokit 在
+      # Gradle 里现编 Rust，target 目录落在 build/<插件>/build，谁都缓存不到。
+      # 实测冷编 122.7 s（rhttp 98.7 / super_native_extensions 20.5 / irondash 3.5），
+      # 热编 3.5 s。
+      - name: Cache cargokit Rust targets
+        id: cargokit
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/rhttp/build
+            build/super_native_extensions/build
+            build/irondash_engine_context/build
+          key: cargokit-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            cargokit-${{ runner.os }}-
 
       # 固定签名密钥：缺 secrets 时硬失败，绝不发出 debug 签名的包
       - name: Decode signing keystore
@@ -151,7 +187,6 @@ jobs:
           storeFile=keystore/release.jks
           EOF
           echo "keystore $(stat -c%s android/keystore/release.jks) bytes"
-
 
       # flutterw 会先跑 project_prep（pub get / l10n / 代理证书），再 cargo ndk 编译 Rust
       - name: Build arm64

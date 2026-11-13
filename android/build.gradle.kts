@@ -112,6 +112,45 @@ subprojects {
                 }
             }
         }
+
+        // 6. 只编目标 ABI + 固定 NDK 版本。
+        //    - abiFilters 不会从 :app 传递到插件子项目，quickjs_engine 的 CMake
+        //      因此每次都把 arm64/armeabi-v7a/x86/x86_64 四份全编一遍（实测 49 s，
+        //      其中 3 个 ABI 的产物根本不会进 APK）。
+        //    - 插件子项目不设 ndkVersion 时 AGP 会用它自己的默认值 27.0.12077973，
+        //      于是每次构建都在 Gradle 里现装一个 NDK（实测 15.7 s）；固定成
+        //      flutter.ndkVersion 就不再需要它。
+        val targetAbi = when (project.findProperty("target-platform") as? String) {
+            "android-arm" -> "armeabi-v7a"
+            "android-arm64" -> "arm64-v8a"
+            "android-x64" -> "x86_64"
+            else -> null
+        }
+        if (targetAbi != null) {
+            extensions.findByName("android")?.let { androidExt ->
+                try {
+                    val defaultConfig = androidExt.javaClass
+                        .getMethod("getDefaultConfig")
+                        .invoke(androidExt)
+                    val ndk = defaultConfig.javaClass.getMethod("getNdk").invoke(defaultConfig)
+                    @Suppress("UNCHECKED_CAST")
+                    val abiFilters = ndk.javaClass
+                        .getMethod("getAbiFilters")
+                        .invoke(ndk) as MutableSet<String>
+                    abiFilters.clear()
+                    abiFilters.add(targetAbi)
+                } catch (e: Exception) {
+                    logger.warn("abiFilters patch failed for ${project.name}: $e")
+                }
+                try {
+                    androidExt.javaClass
+                        .getMethod("setNdkVersion", String::class.java)
+                        .invoke(androidExt, "28.2.13676358")
+                } catch (e: Exception) {
+                    logger.warn("ndkVersion patch failed for ${project.name}: $e")
+                }
+            }
+        }
     }
 }
 subprojects {
