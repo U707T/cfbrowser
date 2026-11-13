@@ -2,6 +2,25 @@
 
 所有版本的变更记录。beta / rc 版本提交在 stable 发版时会折叠并入对应 stable 版本。
 
+## [1.2.2] - 2026-11-13
+
+### 🔑 固定签名：以后更新不用再卸载重装
+
+- 以前每次 CI 都用 runner 现生成的 debug keystore 签名，四个版本的证书指纹各不相同
+  （v1.1.6 `90a5cc8c` / v1.1.7 `6537a63b` / v1.2.0 `87a21031` / v1.2.1 `e2fa3beb`），
+  所以只能卸载重装。
+- 现在固定一把发布密钥（RSA 4096，有效期至 2126），写进 GitHub secrets；workflow
+  先解出 `android/key.properties`，再在打包后校验两个 APK 的证书指纹，回落到 debug
+  签名直接失败。
+- ⚠️ 装过 v1.2.1 及更早版本的用户需要**卸载一次**再装本版，之后即可正常覆盖升级。
+
+### ⚡ CI 提速
+
+- Rust 的 `core/doh_proxy/target` 与 cargo registry 加缓存（BoringSSL + rama 全量重编
+  是 arm64 那 17 分钟的大头），两个 ABI 共用同一份 target。
+- pub 缓存与 Gradle 依赖加缓存（`flutter-action` 的 cache 只管 SDK）。
+  冷缓存首次仍会慢，之后应显著下降。
+
 ## [1.2.1] - 2026-11-13
 
 ### 🐛 首次使用：DoH 不再「正在启动」卡住，也不用再拨一次证书开关

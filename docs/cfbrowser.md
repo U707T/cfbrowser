@@ -136,6 +136,25 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
 - 两项叠加后实测 arm64 APK **50.0 MB**（v1.0.0 为 105 MB，-52%），armv7 48.9 MB（原 97.4 MB）。
   后续若改走 AAB / Play，可去掉 `useLegacyPackaging` 让商店按设备下发原生库。
 
+## 2.8 签名（1.2.2 起固定）
+
+以前的 Release 是 **CI runner 每次现生成的 debug keystore** 签的：四张证书指纹各不相同
+（v1.1.6 `90a5cc8c` / v1.1.7 `6537a63b` / v1.2.0 `87a21031` / v1.2.1 `e2fa3beb`），
+所以每次更新都必须卸载重装，连覆盖升级都做不到。
+
+现在固定成一把发布密钥：
+
+- 密钥在**仓库外** `/workspace/cfbrowser-keys/`（jks + 口令，见那里的 README）
+- GitHub secrets：`KEYSTORE_B64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`
+- workflow 里 `Decode signing keystore` 解出 `android/key.properties`，
+  缺 secret 直接硬失败；`Verify APK signing` 再比对两个 APK 的证书指纹，
+  回落到 debug 签名就失败
+- 证书 SHA-256：`33:DF:57:5B:95:F9:4A:2B:A1:06:9C:48:01:28:25:09:E0:E4:92:01:E3:24:5B:80:BA:B6:20:27:D4:3E:35:81`
+
+> ⚠️ v1.2.1 及更早的包用的是随机 debug 证书，**装过那些版本的用户必须先卸载一次**
+> 才能装 1.2.2；此后所有版本可以互相覆盖升级。
+> 密钥丢失 = 永久失去覆盖升级能力，请离线备份两份。
+
 ## 3. 构建
 
 与上游一致，前置要求：Flutter 3.47 / Dart ^3.13、Android SDK、NDK 27.3、

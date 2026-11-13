@@ -77,6 +77,18 @@ jobs:
           flutter-version: 3.47.5
           cache: true
 
+      # action 的 cache 只管 Flutter SDK；pub 与 Gradle 依赖另存
+      - name: Cache pub and Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache/hosted
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: pubgradle-${{ runner.os }}-${{ hashFiles('pubspec.lock', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            pubgradle-${{ runner.os }}-
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -102,16 +114,75 @@ jobs:
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --locked
 
+      # core/doh_proxy 的 target/ 是全量重编的大头（rama + BoringSSL + bindgen）。
+      # 两个 ABI 共用同一份缓存：armv7 那次基本只重编自己的 codegen。
+      - name: Cache Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            core/doh_proxy/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: rust-${{ runner.os }}-${{ hashFiles('core/doh_proxy/Cargo.lock') }}-${{ hashFiles('core/doh_proxy/build.rs', 'core/doh_proxy/Cargo.toml') }}
+          restore-keys: |
+            rust-${{ runner.os }}-${{ hashFiles('core/doh_proxy/Cargo.lock') }}-
+
+      # 固定签名密钥：缺 secrets 时硬失败，绝不发出 debug 签名的包
+      - name: Decode signing keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in KEYSTORE_B64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::缺少 secrets.$name：不能发 debug 签名的包"
+              exit 1
+            fi
+          done
+          mkdir -p android/keystore
+          printf '%s' "$KEYSTORE_B64" | base64 -d > android/keystore/release.jks
+          cat > android/key.properties <<EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=keystore/release.jks
+          EOF
+          echo "keystore $(stat -c%s android/keystore/release.jks) bytes"
+
+
       # flutterw 会先跑 project_prep（pub get / l10n / 代理证书），再 cargo ndk 编译 Rust
       - name: Build arm64
         run: |
           dart tool/flutterw.dart build apk --release --target-platform android-arm64
           cp build/app/outputs/flutter-apk/app-release.apk cfbrowser-arm64-v8a.apk
 
+      # armv7：Rust 侧复用上面那份 target/（只剩 armv7 的 codegen），
+      # Flutter 侧换个 target-platform 重打包即可
       - name: Build armv7
         run: |
           dart tool/flutterw.dart build apk --release --target-platform android-arm
           cp build/app/outputs/flutter-apk/app-release.apk cfbrowser-armeabi-v7a.apk
+
+      # 守住签名：APK 证书指纹必须等于 secrets 里那把，回落 debug 就失败
+      - name: Verify APK signing
+        run: |
+          set -euo pipefail
+          EXPECTED=$(keytool -list -v -keystore android/keystore/release.jks \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" \
+            | sed -n 's/.*SHA256: //p' | tr -d ':' | tr 'A-Z' 'a-z')
+          echo "expected=$EXPECTED"
+          for apk in cfbrowser-arm64-v8a.apk cfbrowser-armeabi-v7a.apk; do
+            GOT=$(apksigner verify --print-certs "$apk" \
+              | sed -n 's/.*SHA-256 digest: //p' | head -1 | tr 'A-Z' 'a-z')
+            echo "$apk -> $GOT"
+            if [ "$GOT" != "$EXPECTED" ]; then
+              echo "::error::$apk 的签名指纹与预期不符（回落成 debug 签名了？）"
+              exit 1
+            fi
+          done
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
