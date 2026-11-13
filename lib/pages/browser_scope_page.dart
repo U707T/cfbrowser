@@ -106,9 +106,10 @@ class _BrowserScopePageState extends State<BrowserScopePage> {
           Text(
             '每行一个。范围内的域名由本地网关接管：设备 CA 现签证书 + ECH 握手；'
             '范围外的域名只做隧道直通，不解密也不加速。\n'
-            'MITM 按子域匹配（填 example.com 会包含它的子域），但「钉住同一个出口 IP」'
-            '是精确匹配：主域与 www. 会自动包含，其它子域要钉住就单独列一行。'
-            '默认的 linux.do / ldstatic.com 已经把站内静态资源主机内置好了。',
+            '解密与「钉住同一个出口 IP」都按子域匹配：填 example.com 会连带它的所有'
+            '子域（含 www.）。默认的 linux.do / ldstatic.com 已包含站内静态资源域。\n'
+            '例外：*.challenges.cloudflare.com（CF 人机验证）始终走隧道；'
+            '它必须是真证书，浏览器才会认。',
             style: theme.textTheme.bodySmall,
           ),
           const SizedBox(height: 8),
