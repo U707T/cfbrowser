@@ -25,13 +25,12 @@ class BrowserScopeService {
   /// 高墙地区对它的明文 SNI 同样 RST。只加速主站会表现为「站内图片全 502」。
   static const List<String> defaultHosts = <String>['linux.do', 'ldstatic.com'];
 
-  /// ldstatic.com 下真实在用的主机。
+  /// ldstatic.com 下真实在用的主机（仅供桌面端 WPE 预放行证书使用）。
   ///
-  /// Rust 侧两套匹配语义不一样，别混：
-  /// - `mitm_hosts` 后缀匹配（core/doh_proxy/src/proxy.rs `in_mitm_scope`），
-  ///   所以范围里写 `ldstatic.com` 就够；
-  /// - `extra_covered_hosts` 精确匹配（core/doh_proxy/src/edge_pin.rs
-  ///   `is_covered`），要钉住同一个出口 IP 就得逐个列出来。
+  /// 钉出口不靠这张表：`extra_covered_hosts` 自 core/doh_proxy f584d0e 起
+  /// 也按子域后缀匹配（edge_pin.rs `is_covered`），范围里写 `ldstatic.com`
+  /// 就覆盖它所有子域。WPE 的子资源证书错误不回调，只能逐主机预放行，
+  /// 所以这里仍要列出来。
   static const List<String> staticAssetHosts = <String>[
     'cdn.ldstatic.com',
     'cdn3.ldstatic.com',
@@ -89,31 +88,17 @@ class BrowserScopeService {
   List<String> get preconnectHosts => mitmHosts;
 
   /// 交给 Rust 的「覆盖域名」（钉住同一个赢家 IP、按地址族亲和、DoH 答案只留
-  /// CF 网段）。范围里的域名原样下发；ldstatic.com 在范围内时再补上它真实的
-  /// 子域主机（精确匹配，见 [staticAssetHosts]）。
+  /// CF 网段）。
+  ///
+  /// `extra_covered_hosts` 自 core/doh_proxy f584d0e 起按子域后缀匹配
+  /// （edge_pin.rs `is_covered`），和 `mitm_hosts` 语义一致，所以范围原样下发
+  /// 即可：用户加的 `example.com` 连带 `www.` / `cdn.` 一起被钉住，不用再手工
+  /// 枚举子域（旧实现按精确匹配，漏一个子域就只解密不加速）。
   ///
   /// 不接这一条时，用户加进范围的域名只会被 MITM（解密），不会被钉出口——
   /// 与设置页「范围内 → ECH → 钉住 CF 边缘 IP」的承诺不符，出口漂移反而更
   /// 容易触发人机验证。
-  List<String> get coveredHosts {
-    final out = <String>[];
-    void add(String host) {
-      if (!out.contains(host)) out.add(host);
-    }
-
-    for (final host in _hosts) {
-      add(host);
-      // www 是最常见的入口，跟主域同一个站点，顺手一起钉住；其它子域按
-      // 精确匹配语义需要单独列一行（或升级子模块拿上游的子域覆盖）。
-      if (!host.startsWith('www.')) add('www.$host');
-    }
-    if (covers('ldstatic.com')) {
-      for (final host in staticAssetHosts) {
-        add(host);
-      }
-    }
-    return List<String>.unmodifiable(out);
-  }
+  List<String> get coveredHosts => List<String>.unmodifiable(_hosts);
 
   /// 归一化：去协议、去端口、去路径、小写、去重、保序
   static List<String> normalizeAll(Iterable<String> raw) {

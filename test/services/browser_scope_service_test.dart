@@ -57,19 +57,11 @@ void main() {
   });
 
   group('覆盖域名（钉住出口）', () {
-    test('范围域名与 www. 都会下发，且包含 ldstatic 的真实主机', () {
+    test('范围原样下发即可（子域由核心按后缀覆盖）', () {
       final covered = BrowserScopeService.instance.coveredHosts;
-      expect(covered, containsAll(['linux.do', 'www.linux.do']));
-      expect(
-        covered,
-        containsAll([
-          'ldstatic.com',
-          'cdn.ldstatic.com',
-          'cdn3.ldstatic.com',
-          'ping.ldstatic.com',
-          'linuxdo-uploads.s3.ldstatic.com',
-        ]),
-      );
+      expect(covered, containsAll(['linux.do', 'ldstatic.com']));
+      // 不再手工枚举子域：核心 f584d0e 起 extra_covered_hosts 按子域后缀匹配
+      expect(covered, isNot(contains('cdn.ldstatic.com')));
     });
 
     test('契约：范围里的每个域名都必须在覆盖域名里，否则只解密不加速', () {
