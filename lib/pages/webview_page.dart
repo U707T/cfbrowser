@@ -1458,7 +1458,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       return;
     }
     if (await controller.canGoBack()) {
-      await controller.goBack();
+      // 走 _goBack：它会记下这次遍历的目标 URL，标签历史才不会把「后退」
+      // 当成一次新导航（那会截断前进栈）
+      await _goBack();
       return;
     }
     final tab = _tabs.byId(_tabId);
