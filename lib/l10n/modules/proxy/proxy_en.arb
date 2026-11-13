@@ -119,5 +119,6 @@
   "vpnToggle_subtitle": "Auto-disable DOH and proxy when VPN detected, restore on disconnect",
   "vpnToggle_suppressedSuffix": " auto-disabled, will restore when VPN disconnects",
   "vpnToggle_title": "VPN Auto Toggle",
-  "vpnToggle_upstreamProxy": "Upstream Proxy"
+  "vpnToggle_upstreamProxy": "Upstream Proxy",
+  "vpnToggle_fingerprintKept": "App requests still go out through the local gateway with the browser fingerprint (only the handshake changes; DNS and routing follow the VPN)"
 }

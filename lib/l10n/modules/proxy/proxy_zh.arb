@@ -198,5 +198,6 @@
   "vpnToggle_subtitle": "检测到 VPN 时自动关闭 DOH 和代理，断开后恢复",
   "vpnToggle_suppressedSuffix": "已被自动关闭，VPN 断开后将自动恢复",
   "vpnToggle_title": "VPN 自动切换",
-  "vpnToggle_upstreamProxy": "上游代理"
+  "vpnToggle_upstreamProxy": "上游代理",
+  "vpnToggle_fingerprintKept": "App 的请求仍经本机网关按浏览器指纹发出（只换握手，DNS 和线路都随 VPN）"
 }

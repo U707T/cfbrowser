@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_icons/app_icons.dart';
 
 import '../../../l10n/s.dart';
+import '../../../services/network/doh/network_settings_service.dart';
 import '../../../services/network/vpn_auto_toggle_service.dart';
 import 'package:common_ui/common_ui.dart';
 import 'package:m3e_ui/m3e_ui.dart';
@@ -180,6 +181,12 @@ class VpnAutoToggleCard extends StatelessWidget {
     final items = <String>[];
     if (dohSuppressed) items.add('DOH');
     if (proxySuppressed) items.add(S.current.vpnToggle_upstreamProxy);
-    return '${items.join(S.current.vpnToggle_and)}${S.current.vpnToggle_suppressedSuffix}';
+    final text =
+        '${items.join(S.current.vpnToggle_and)}${S.current.vpnToggle_suppressedSuffix}';
+    // 加速让路后安卓仍为浏览器指纹起本机网关，说一声，免得以为 App 完全不经网关
+    if (NetworkSettingsService.instance.fingerprintOnlyGateway) {
+      return '$text\n${S.current.vpnToggle_fingerprintKept}';
+    }
+    return text;
   }
 }

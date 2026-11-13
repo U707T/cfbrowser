@@ -183,8 +183,8 @@ EffectiveAdapter _resolveEffective(
     return const EffectiveAdapter(AdapterType.rhttp, AdapterReason.rhttp);
   }
   // Gateway 模式：Dart IO 直连 + 拦截器改写 URL 到 localhost 代理
-  // 比 MITM 少一层 TLS，作为 rhttp 不可用时的次优方案
-  if (settings.isGatewayMode) {
+  // 出站（优选、ECH、浏览器指纹）都在 Rust 网关里；加速关着时安卓的网关只管浏览器指纹
+  if (settings.routesAppThroughGateway) {
     return const EffectiveAdapter(AdapterType.native, AdapterReason.gateway);
   }
   // MITM 代理模式（gateway 不可用时的 fallback）
@@ -279,7 +279,7 @@ class _GatewayAdapterWrapper implements HttpClientAdapter {
         rhttpSettings.shouldUseRhttp(settings.current, proxySettings.current) &&
         requestAllowsRhttpAdapter(options);
 
-    if (!shouldUseRhttp && settings.isGatewayMode) {
+    if (!shouldUseRhttp && settings.routesAppThroughGateway) {
       final port = settings.current.proxyPort;
       final uri = options.uri;
       if (port != null && uri.scheme == 'https') {

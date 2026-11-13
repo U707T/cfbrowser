@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../../app_logger.dart';
-import '../../site_context.dart';
+import '../../../constants.dart';
 import '../../webview_render_gone.dart';
 import '../../webview_settings.dart';
 import '../doh/network_settings_service.dart';
@@ -78,7 +78,7 @@ class FetchOrderProbeService {
     _lastRun = DateTime.now();
     _runs++;
     final started = DateTime.now();
-    final url = Uri.https(SiteContext.current.host, probePath);
+    final url = Uri.https(Uri.parse(AppConstants.baseUrl).host, probePath);
     try {
       await _probe(url);
       AppLogger.info(
