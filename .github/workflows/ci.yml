@@ -78,28 +78,19 @@ jobs:
           cache: true
 
       # action 的 cache 只管 Flutter SDK；pub 与 Gradle 依赖另存。
-      # 拆成两份：pub 与 Gradle 的失效频率不同，合在一起任一方变化都会整份重下。
-      # Gradle 只存 modules-2（依赖本体）和 wrapper：caches/<版本> 下的 transforms、
-      # file-hashes 都是可再生的中间态，实测却是整份缓存的大头（runner 上 9 GB）。
-      - name: Cache pub
-        id: pubcache
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache/hosted
-          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
-          restore-keys: |
-            pub-${{ runner.os }}-
-
-      - name: Cache Gradle deps
-        id: gradlecache
+      # 不要只留 modules-2 而砍掉 caches/<版本>：实测这样 transforms 全丢，
+      # 配置阶段从 67 s 涨到 176 s，比省下的还原时间还贵。
+      - name: Cache pub and Gradle
+        id: pubgradle
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle/caches/modules-2
+            ~/.pub-cache/hosted
+            ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties') }}
+          key: pubgradle-${{ runner.os }}-${{ hashFiles('pubspec.lock', 'android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
-            gradle-${{ runner.os }}-
+            pubgradle-${{ runner.os }}-
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -247,8 +238,7 @@ jobs:
             grep -m1 'model name' /proc/cpuinfo || true
             free -g | head -3
             echo "=== cache ==="
-            echo "pub       cache-hit: ${{ steps.pubcache.outputs.cache-hit }}"
-            echo "gradle    cache-hit: ${{ steps.gradlecache.outputs.cache-hit }}"
+            echo "pubgradle cache-hit: ${{ steps.pubgradle.outputs.cache-hit }}"
             echo "cargo-ndk cache-hit: ${{ steps.cargondk.outputs.cache-hit }}"
             echo "rust      cache-hit: ${{ steps.rustcache.outputs.cache-hit }}"
             echo "cargokit  cache-hit: ${{ steps.cargokit.outputs.cache-hit }}"
