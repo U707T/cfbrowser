@@ -38,9 +38,13 @@ class DohProxyService {
   String? _currentServerIp;
   bool? _currentMitmConnect;
   bool? _currentH2Mitm;
+  bool? _currentBrowserTls;
   String? _currentUpstreamSignature;
   String? _currentDohRoutesUrl;
   String? _currentSelectMode;
+
+  /// 启动时带的自定义节点清单（拼成一个串比较）
+  String? _currentCustomNodes;
   String? _lastError;
   bool _processAuthRejected = false;
   // 进程模式下 stdout 打出的 DOH_ACCEL_UPDATE 行，等 App 取走
@@ -91,6 +95,7 @@ class DohProxyService {
     String? dohNodeListJson,
     String selectMode = 'off',
     String? selectStateJson,
+    List<String> customNodes = const [],
     bool shareMeasurements = false,
     String? atlasRoutesUrl,
     List<Map<String, Object>> publicDoh = const [],
@@ -100,6 +105,9 @@ class DohProxyService {
     String? appVersion,
     String? networkSig,
     List<String> preconnectHosts = const [],
+    bool browserTls = false,
+    String? fingerprintCachePath,
+    String? webviewUserAgent,
   }) async {
     final authSignature = _buildAuthSignature(dohAuthToken, dohEchAuthToken);
     final bootstrapSignature = _buildBootstrapSignature(
@@ -127,12 +135,14 @@ class DohProxyService {
           _currentServerIp == serverIp &&
           _currentMitmConnect == mitmConnect &&
           _currentH2Mitm == h2Mitm &&
+          _currentBrowserTls == browserTls &&
           _currentUpstreamSignature == upstreamSignature &&
           // 路由表 / 节点列表只是启动时的种子，内容变了不重启；只看接口地址
           _currentDohRoutesUrl == dohRoutesUrl &&
-          // 优选模式变了要重启；share / bearer / networkSig / selectState / appVersion
-          // 都是运行态（有专门的 FFI 入口或只在启动时回灌），不触发重启
-          _currentSelectMode == selectMode;
+          // 优选模式、自定义节点变了要重启；share / bearer / networkSig / selectState /
+          // appVersion 都是运行态（有专门的 FFI 入口或只在启动时回灌），不触发重启
+          _currentSelectMode == selectMode &&
+          _currentCustomNodes == customNodes.join('\n');
       if (sameConfig) {
         NetworkLogger.log('[DOH] 代理已在运行，端口: $_port');
         return true;
@@ -172,6 +182,7 @@ class DohProxyService {
         dohNodeListJson,
         selectMode: selectMode,
         selectStateJson: selectStateJson,
+        customNodes: customNodes,
         shareMeasurements: shareMeasurements,
         atlasRoutesUrl: atlasRoutesUrl,
         publicDoh: publicDoh,
@@ -181,6 +192,9 @@ class DohProxyService {
         appVersion: appVersion,
         networkSig: networkSig,
         preconnectHosts: preconnectHosts,
+        browserTls: browserTls,
+        fingerprintCachePath: fingerprintCachePath,
+        webviewUserAgent: webviewUserAgent,
       );
       // 桌面平台 FFI 加载失败时，回退到进程模式
       if (!result && DohProxyFfi.canFallbackToProcess) {
@@ -208,6 +222,7 @@ class DohProxyService {
           h2Mitm,
           dohRoutesUrl,
           selectMode: selectMode,
+          customNodes: customNodes,
         );
       }
       return result;
@@ -234,6 +249,7 @@ class DohProxyService {
         h2Mitm,
         dohRoutesUrl,
         selectMode: selectMode,
+        customNodes: customNodes,
       );
     }
   }
@@ -266,6 +282,7 @@ class DohProxyService {
     String? dohNodeListJson, {
     String selectMode = 'off',
     String? selectStateJson,
+    List<String> customNodes = const [],
     bool shareMeasurements = false,
     String? atlasRoutesUrl,
     List<Map<String, Object>> publicDoh = const [],
@@ -275,12 +292,18 @@ class DohProxyService {
     String? appVersion,
     String? networkSig,
     List<String> preconnectHosts = const [],
+    bool browserTls = false,
+    String? fingerprintCachePath,
+    String? webviewUserAgent,
   }) async {
     try {
       return await _enqueueFfiOp(() async {
-        NetworkLogger.log(
-          '[DOH] 使用 FFI 启动代理，模式: ${enableDoh ? "DoH 网关" : "纯上游代理"}',
-        );
+        final mode = enableDoh
+            ? 'DoH 网关'
+            : gatewayMode
+            ? '浏览器指纹网关（不开 DoH）'
+            : '纯上游代理';
+        NetworkLogger.log('[DOH] 使用 FFI 启动代理，模式: $mode');
 
         _currentPreferredPort = port;
         await _ensureFfiStopped();
@@ -311,6 +334,7 @@ class DohProxyService {
           dohNodeListJson: dohNodeListJson,
           selectMode: selectMode,
           selectStateJson: selectStateJson,
+          customNodes: customNodes,
           shareMeasurements: shareMeasurements,
           atlasRoutesUrl: atlasRoutesUrl,
           publicDoh: publicDoh,
@@ -320,6 +344,9 @@ class DohProxyService {
           appVersion: appVersion,
           networkSig: networkSig,
           preconnectHosts: preconnectHosts,
+            browserTls: browserTls,
+          fingerprintCachePath: fingerprintCachePath,
+          webviewUserAgent: webviewUserAgent,
         );
         if (resultPort <= 0) {
           // _callFfiStart 已设置更详细的 _lastError，仅在未设置时补充
@@ -347,6 +374,7 @@ class DohProxyService {
         _currentServerIp = serverIp;
         _currentMitmConnect = mitmConnect;
         _currentH2Mitm = h2Mitm;
+        _currentBrowserTls = browserTls;
         _currentUpstreamSignature = _buildUpstreamSignature(
           protocol: upstreamProtocol,
           host: upstreamHost,
@@ -357,6 +385,7 @@ class DohProxyService {
         );
         _currentDohRoutesUrl = dohRoutesUrl;
         _currentSelectMode = selectMode;
+        _currentCustomNodes = customNodes.join('\n');
         NetworkLogger.log('[DOH] FFI 代理已启动，端口: $_port');
         return true;
       });
@@ -389,8 +418,9 @@ class DohProxyService {
     bool mitmConnect,
     bool h2Mitm,
     String? dohRoutesUrl, {
-    // 进程模式不做本地优选，只记下模式让 sameConfig 比较稳定
+    // 进程模式不做本地优选，只记下模式和自定义节点让 sameConfig 比较稳定
     String selectMode = 'off',
+    List<String> customNodes = const [],
   }) async {
     try {
       final executablePath = await _getExecutablePath();
@@ -521,6 +551,7 @@ class DohProxyService {
           );
           _currentDohRoutesUrl = dohRoutesUrl;
           _currentSelectMode = selectMode;
+          _currentCustomNodes = customNodes.join('\n');
           NetworkLogger.log('[DOH] 代理已启动，端口: $_port');
           completed = true;
           completer.complete(true);
@@ -627,9 +658,11 @@ class DohProxyService {
     _currentServerIp = null;
     _currentMitmConnect = null;
     _currentH2Mitm = null;
+    _currentBrowserTls = null;
     _currentUpstreamSignature = null;
     _currentDohRoutesUrl = null;
     _currentSelectMode = null;
+    _currentCustomNodes = null;
     // 注意：不清除 _lastError，保留用于 UI 展示
   }
 
@@ -1050,6 +1083,12 @@ class DohProxyService {
     return DohProxyFfi.instance.netStats();
   }
 
+  /// 浏览器指纹模板的状态（见 [DohProxyFfi.fingerprintStatus]）；进程模式 / 库不支持返回 null
+  Map<String, dynamic>? fingerprintStatus() {
+    if (!DohProxyFfi.isAvailable || _process != null) return null;
+    return DohProxyFfi.instance.fingerprintStatus();
+  }
+
   Future<DohDnsCacheStats?> dnsCacheStats() async {
     if (!DohProxyFfi.isAvailable) {
       return DohProxyFfi.instance.dnsCacheStats();
@@ -1183,6 +1222,7 @@ class DohProxyService {
     String? dohNodeListJson,
     String selectMode = 'off',
     String? selectStateJson,
+    List<String> customNodes = const [],
     bool shareMeasurements = false,
     String? atlasRoutesUrl,
     List<Map<String, Object>> publicDoh = const [],
@@ -1192,6 +1232,9 @@ class DohProxyService {
     String? appVersion,
     String? networkSig,
     List<String> preconnectHosts = const [],
+    bool browserTls = false,
+    String? fingerprintCachePath,
+    String? webviewUserAgent,
   }) async {
     final sendPort = await _ensureFfiIsolate();
     final response = ReceivePort();
@@ -1223,6 +1266,7 @@ class DohProxyService {
       'dohNodeListJson': dohNodeListJson,
       'selectMode': selectMode,
       'selectStateJson': selectStateJson,
+      'customNodes': customNodes,
       'shareMeasurements': shareMeasurements,
       'atlasRoutesUrl': atlasRoutesUrl,
       'publicDoh': publicDoh,
@@ -1232,6 +1276,9 @@ class DohProxyService {
       'appVersion': appVersion,
       'networkSig': networkSig,
       'preconnectHosts': preconnectHosts,
+      'browserTls': browserTls,
+      'fingerprintCachePath': fingerprintCachePath,
+      'webviewUserAgent': webviewUserAgent,
       'preferredPort': port,
       'replyTo': response.sendPort,
     });
@@ -1587,9 +1634,14 @@ void _ffiIsolateEntry(SendPort mainSendPort) {
           final reportUrl = message['reportUrl'] as String?;
           final reportBearer = message['reportBearer'] as String?;
           final extraCoveredHosts = _stringList(message['extraCoveredHosts']);
+          final customNodes = _stringList(message['customNodes']);
           final appVersion = message['appVersion'] as String?;
           final networkSig = message['networkSig'] as String?;
           final preconnectHosts = _stringList(message['preconnectHosts']);
+          final browserTls = message['browserTls'] as bool? ?? false;
+          final fingerprintCachePath =
+              message['fingerprintCachePath'] as String?;
+          final webviewUserAgent = message['webviewUserAgent'] as String?;
           var resultPort = DohProxyFfi.instance.start(
             port: portValue,
             enableDoh: enableDoh,
@@ -1617,6 +1669,7 @@ void _ffiIsolateEntry(SendPort mainSendPort) {
             dohNodeListJson: dohNodeListJson,
             selectMode: selectMode,
             selectStateJson: selectStateJson,
+            customNodes: customNodes,
             shareMeasurements: shareMeasurements,
             atlasRoutesUrl: atlasRoutesUrl,
             publicDoh: publicDoh,
@@ -1626,6 +1679,9 @@ void _ffiIsolateEntry(SendPort mainSendPort) {
             appVersion: appVersion,
             networkSig: networkSig,
             preconnectHosts: preconnectHosts,
+            browserTls: browserTls,
+            fingerprintCachePath: fingerprintCachePath,
+            webviewUserAgent: webviewUserAgent,
           );
           if (resultPort <= 0 && preferredPort != 0) {
             resultPort = DohProxyFfi.instance.start(
@@ -1655,6 +1711,7 @@ void _ffiIsolateEntry(SendPort mainSendPort) {
               dohNodeListJson: dohNodeListJson,
               selectMode: selectMode,
               selectStateJson: selectStateJson,
+              customNodes: customNodes,
               shareMeasurements: shareMeasurements,
               atlasRoutesUrl: atlasRoutesUrl,
               publicDoh: publicDoh,
@@ -1664,6 +1721,9 @@ void _ffiIsolateEntry(SendPort mainSendPort) {
               appVersion: appVersion,
               networkSig: networkSig,
               preconnectHosts: preconnectHosts,
+              browserTls: browserTls,
+              fingerprintCachePath: fingerprintCachePath,
+              webviewUserAgent: webviewUserAgent,
             );
           }
           if (resultPort <= 0) {

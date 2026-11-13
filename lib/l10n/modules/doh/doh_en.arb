@@ -230,5 +230,151 @@
   "dohDetail_domainHelper": "Enter a domain without a scheme, path, or wildcard. Subdomains are included.",
   "dohDetail_invalidDomain": "Enter a valid domain without a scheme, port, path, or wildcard",
   "dohDetail_domainAlreadyCovered": "This domain is already covered by an existing rule",
-  "@dohDetail_echDomainsCount": {"placeholders": {"builtinCount": {"type": "int"}, "customCount": {"type": "int"}}}
+  "@dohDetail_echDomainsCount": {
+    "placeholders": {
+      "builtinCount": {
+        "type": "int"
+      },
+      "customCount": {
+        "type": "int"
+      }
+    }
+  },
+  "dohDetail_browserTls": "Browser fingerprint (experimental)",
+  "dohDetail_browserTlsEnabledDesc": "On: connections through the gateway copy this device's WebView handshake (TLS and HTTP/2) and request headers",
+  "dohDetail_browserTlsDisabledDesc": "Off: connections through the gateway use a generic TLS handshake",
+  "customNodes_entryCount": "{count} added",
+  "customNodes_add": "Add nodes",
+  "customNodes_entryInUse": "{count} added · in use",
+  "customNodes_resolvedTo": "via {ip}",
+  "customNodes_title": "Custom nodes",
+  "customNodes_stateUnresolved": "The domain didn't resolve to Cloudflare addresses",
+  "customNodes_entryNoneUsable": "{count} added · none reachable, using regular selection for now",
+  "customNodes_entryDesc": "Add Cloudflare IPs or domains you've tested yourself and connect through them first",
+  "customNodes_addLabel": "IPs or domains",
+  "customNodes_stateInUse": "In use",
+  "customNodes_stateInvalid": "Not a valid IP or domain",
+  "customNodes_remove": "Remove",
+  "customNodes_reasonHandshake": "handshake failed",
+  "customNodes_stateFailed": "Unreachable ({reason})",
+  "netStatus_noSelectGateway": "Gateway mode is off, so there's no node selection",
+  "customNodes_stateNoFamily": "This network has no {family} route; can't be used for now",
+  "customNodes_stateTesting": "Testing…",
+  "customNodes_retest": "Test again",
+  "customNodes_alreadyListed": "Already in the list",
+  "customNodes_reasonConnect": "connection failed",
+  "customNodes_addHelper": "One per line; commas or spaces also work",
+  "netStatus_noSelectPlatform": "Node selection isn't available on this platform",
+  "customNodes_footer": "Only addresses inside Cloudflare's ranges are accepted; use the upstream proxy for third-party relays. The IP protocol preference also applies to custom nodes. Measurements of custom nodes are never shared by \"Help selection\".",
+  "customNodes_listEmpty": "No custom nodes yet",
+  "customNodes_stateDemoted": "Dropped while in use; benched for an hour",
+  "customNodes_stateOk": "Reachable",
+  "customNodes_reasonTimeout": "timed out",
+  "customNodes_tooMany": "At most {max}; you can add {left} more",
+  "customNodes_statePending": "Waiting to be tested",
+  "customNodes_stateNotCloudflare": "Not a Cloudflare address; it won't be used",
+  "customNodes_intro": "Add up to {max} Cloudflare IPs or domains you've tested yourself. If any of them is reachable, the fastest one is used; if none is, the app falls back to regular node selection, so you never lose the connection.",
+  "customNodes_reasonResponse": "no valid response",
+  "customNodes_invalid": "Not a valid IP or domain: {items}",
+  "@customNodes_entryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_entryInUse": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_entryNoneUsable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_intro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_invalid": {
+    "placeholders": {
+      "items": {
+        "type": "String"
+      }
+    }
+  },
+  "@customNodes_tooMany": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      },
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_stateFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "@customNodes_stateNoFamily": {
+    "placeholders": {
+      "family": {
+        "type": "String"
+      }
+    }
+  },
+  "@customNodes_resolvedTo": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "cfSelect_ipFamily": "IP protocol",
+  "cfSelect_ipFamilyAuto": "Auto",
+  "cfSelect_ipFamilyV6": "Prefer IPv6",
+  "cfSelect_ipFamilyV4": "Prefer IPv4",
+  "cfSelect_ipFamilyAutoDesc": "Uses IPv6 when this network has it and falls back to IPv4 when IPv6 fails or is much slower. Shared carrier IPv4 exits get challenged more often; switching may need one more verification",
+  "cfSelect_ipFamilyV6Desc": "Uses IPv6 whenever it works, regardless of speed",
+  "cfSelect_ipFamilyV4Desc": "Uses IPv4 whenever it works (the behavior before 1.2.2). Pick this if IPv6 is flaky",
+  "netStatus_title": "Connection status",
+  "netStatus_searchDesc": "Current node, IPv4/IPv6, re-select",
+  "netStatus_starting": "Starting acceleration…",
+  "netStatus_restarting": "Restarting acceleration…",
+  "netStatus_startFailed": "Acceleration failed to start",
+  "netStatus_startFailedHint": "Acceleration isn't working, so linux.do may be unreachable. Tap Retry, and export the logs to report it if that doesn't help",
+  "netStatus_vpnPaused": "VPN connected, acceleration paused",
+  "netStatus_vpnPausedHint": "The VPN handles the connection; acceleration resumes when it disconnects",
+  "netStatus_accelOff": "Acceleration is off",
+  "netStatus_accelOffHint": "Connecting to linux.do directly, which usually fails in mainland China",
+  "netStatus_turnOn": "Turn on",
+  "netStatus_viaProxy": "Connected via upstream proxy",
+  "netStatus_accelOn": "Acceleration is on",
+  "netStatus_ready": "Connected",
+  "netStatus_node": "Node {ip}",
+  "@netStatus_node": {"placeholders": {"ip": {"type": "String"}}},
+  "cfSelect_modeTitle": "Selection mode",
+  "cfSelect_searchDesc": "Local selection, atlas pool only, custom nodes, help selection",
+  "accel_title": "Acceleration",
+  "accel_searchDesc": "DoH, ECH, device certificate, gateway status",
+  "accel_offConfirmTitle": "Turn off acceleration?",
+  "accel_offConfirmBody": "The app will connect to linux.do directly, which usually fails in mainland China. You don't need to turn this off for a VPN; \"Step aside for VPN\" handles that.",
+  "accel_offConfirmAction": "Turn off",
+  "dohDetail_accelConnect": "Authorize with linux.do Connect",
+  "dohDetail_accelAuthOk": "Authorized; switched to CFluxDo acceleration",
+  "dohDetail_accelAuthUnavailable": "This account can't use Connect; staying on public acceleration",
+  "dohDetail_accelAuthDenied": "The acceleration server rejected this account; staying on public acceleration",
+  "dohDetail_accelAuthPending": "Authorization didn't finish; it will retry automatically later"
 }

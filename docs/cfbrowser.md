@@ -71,11 +71,11 @@ cfbrowser 做三件事：改名、开门、把范围变成设置项。
 
 - **范围内**：本地网关接管 → 设备 CA 现签叶子 → 自己发 ECH 握手 → 钉住/竞速的 CF 边缘 IP。
 - **范围外**：`CONNECT` 隧道直通，端到端 TLS —— **不解密、不加速、不共享出口 IP**。
-- **两套匹配语义要分清**：`mitm_hosts` 按**子域后缀**匹配；`extra_covered_hosts`
-  （决定钉哪个出口）是**精确匹配**。所以范围里只写 `ldstatic.com` 能覆盖它的
-  所有子域的 MITM，但钉出口要另把 `cdn`/`cdn3`/`ping`/`linuxdo-uploads.s3`
-  逐个下发（`BrowserScopeService.staticAssetHosts`）。范围里用户自己加的域名，
-  只连同 `www.` 一起钉住，别的子域要单独列一行。
+- **两套匹配语义现在一致**：`mitm_hosts` 与 `extra_covered_hosts`（决定钉哪个出口）
+  都按**子域后缀**匹配（后者自 core/doh_proxy `f584d0e` 起，上游 `b45f73c`）。
+  范围里写 `ldstatic.com` / `example.com` 就覆盖它们所有子域的 MITM 与钉出口，
+  不用再逐个列 `cdn` / `cdn3` / `ping`。`BrowserScopeService.staticAssetHosts`
+  只在桌面端 WPE 预放行证书时用（子资源证书错误不回调，只能逐主机放行）。
 - **默认范围不是只有主站**：`ldstatic.com` 是 L 站的静态资源域（图片/表情/
   消息总线/直传），高墙地区对它同样是明文 SNI RST，漏掉它就表现为「站内图片
   全 502」（上游 `23e0c32b` 的实测结论）。
@@ -182,6 +182,8 @@ dart tool/flutterw.dart build apk --release --target-platform android-arm64 \
 - **同一个 IP 只服务同一个站点**：上游的竞速目标是范围里的第一个域名（默认 `linux.do`），
   多域名共用一个赢家 IP。CF 所有边缘都认任意 Host，所以大多数情况下没问题，
   但如果站点分布在不同的 CF 区域，可能不是各自最快。
+- **浏览器指纹只在安卓原生库带 `browser-tls` 时生效**（本仓 CI 已默认编入）。桌面端
+  原生库没编这个特性，开关显示但不起作用；关掉后回到通用 TLS 握手，方便对照。
 - **范围越大，设备 CA 参与解密的场景越多**。默认只留 `linux.do` + `ldstatic.com`
   是有意的：前者是主站，后者是它自己的静态资源域（图片/表情/消息总线/直传）。
 - **上游的 `帮助优选`（众包上报）仍然默认关闭**，打开会把测量数据与 linux.do 账号身份绑定。
@@ -213,6 +215,32 @@ dart tool/flutterw.dart build apk --release --target-platform android-arm64 \
 | `14fc9a24` | 非默认排序下不再弹「有新话题」 | 无 |
 | `5bb5da30` | 段落预热不再冻结子包兜底 handler（预热过的段落图片/emoji/链接/@ 失灵） | 测试文件手工合并 |
 | `c1be3e3c` | MessageBus 订阅与话题列表状态对齐官方（新增时效探针） | 去掉不存在的 background_gate 导入 |
+
+## 8. 已合并的上游修复（1.2.0）
+
+上游 1.3.0 → 1.3.3 的一轮网络核心同步。子模块 `core/doh_proxy` `c18d48d` → **`f584d0e`**；
+Dart 侧按顺序 cherry-pick，冲突集中在「本仓已去掉双站 / 保留 rhttp / 有浏览器待命」三处。
+
+| 上游提交 | 解决什么 | 冲突处理 |
+|---|---|---|
+| `ed252f34` | 原生请求补 Client Hints 低熵三件套 | 去掉 idcflare / SiteContext 导入 |
+| `e27befdf` | 网关出站照 WebView 的浏览器指纹，h2 MITM 安卓默认开 | 保留本仓可配置范围；去掉 `ipv6Auto` 参数 |
+| `690c8eba` | 后台 WebView 主动采样请求头顺序 | `SiteContext.current.host` → `AppConstants.baseUrl` |
+| `2ab8f953` | 渲染进程退出后刷新按钮重建 WebView | 本仓顶栏已换成占位页，改在底栏刷新按钮 |
+| `1b372568` | VPN 让路后安卓仍按浏览器指纹发请求 | 手写移植：新增 `fingerprintOnlyGateway` / `routesAppThroughGateway`，保留 rhttp |
+| `90c3b07c` | 让路期间连不上论坛自动恢复加速 | `isForumHost` 改单站点；保留 rhttp 上报 |
+| `e5073ca0` | 让路时内置网页也经网关（可采样） | 保留待命逻辑；`mitmConnect` 不再排除指纹网关 |
+| `49c18941` | 自定义节点（自填 CF IP / 优选域名） | 入口接到本仓旧版优选卡片；去掉 `ipv6Auto` |
+
+**依赖顺序**：`1b372568` 之后的三条都建立在 `routesAppThroughGateway` 上；`49c18941`
+的 FFI 字段依赖 `f584d0e` 的 `custom_nodes`。单独回退某一条时按上表从上往下看依赖。
+
+**构建变化**：`tool/project_tasks.dart` 的安卓 Rust 特性从 `ech` 变成 `ech,browser-tls`，
+需要在有 NDK（自带 libclang）的环境构建；CI 已按上游方式设置 `LIBCLANG_PATH` 回退。
+arm64 原生库因此从 ~9 MB 涨到 ~15 MB，APK 约 +5.6 MB。
+
+**未跟**：`8ebb340f` 删 rhttp（要连带改引擎选择 UI 与 18 个文件）、`856d055e` IP 三态自动
+（本仓仍是布尔值，核心两种都认）、双站 / 微应用 / VS Code 主题 / 多账号。
 
 未跟：`8ebb340f`（删 rhttp）等大重构、双站/多账号/微应用/主题等与浏览器定位无关的特性；
 `core/doh_proxy` 子模块仍是 `c18d48d`——升级会同时带进浏览器指纹与 h2 MITM，

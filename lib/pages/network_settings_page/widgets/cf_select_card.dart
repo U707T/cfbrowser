@@ -11,6 +11,7 @@ import '../../../services/network/doh_proxy/doh_proxy_ffi.dart';
 import '../../../services/network/proxy/proxy_settings_service.dart';
 import '../../../services/toast_service.dart';
 import '../../../utils/time_utils.dart';
+import '../custom_nodes_page.dart';
 import 'cf_select_privacy_dialog.dart';
 
 /// 连接方式卡片（本地优选）
@@ -109,6 +110,31 @@ class _CfSelectCardState extends State<CfSelectCard> {
                 child: _buildModeSelector(theme, settings.selectMode),
               ),
               _divider(theme),
+              // 自定义节点：两种优选方式下都优先于池里的节点
+              ListTile(
+                key: const ValueKey('cf-select-custom-nodes'),
+                leading: Icon(
+                  Symbols.push_pin_rounded,
+                  fill: settings.customNodes.isEmpty ? 0 : 1,
+                  color: settings.customNodes.isEmpty
+                      ? null
+                      : theme.colorScheme.primary,
+                ),
+                title: Text(context.l10n.customNodes_title),
+                subtitle: Text(
+                  customNodesSummary(
+                    context.l10n,
+                    settings.customNodes,
+                    service.selectorEligible
+                        ? service.selectStatusNotifier.value
+                        : null,
+                  ),
+                ),
+                trailing: const Icon(Symbols.chevron_right_rounded, size: 20),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CustomNodesPage()),
+                ),
+              ),
               // 当前状态
               _buildStatusRow(theme, service, settings, status),
               // 操作行

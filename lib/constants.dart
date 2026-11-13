@@ -4,8 +4,10 @@ import 'dart:ui' show Locale, PlatformDispatcher;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'config/site_customization.dart';
 import 'config/sites/linuxdo.dart';
+import 'services/network/client_hints.dart';
 import 'services/windows_webview_environment_service.dart';
 
 /// 应用常量
@@ -21,6 +23,10 @@ class AppConstants {
   static String? _cachedUserAgent;
   static final Completer<String> _uaCompleter = Completer<String>();
   static bool _uaInitialized = false;
+
+  /// [_cachedUserAgent] 是否来自真实 WebView（而不是内置默认 UA）
+  static bool _uaFromWebView = false;
+  static Map<String, String>? _cachedClientHints;
 
   /// macOS Safari 真实版本号（从 /Applications/Safari.app 读取），
   /// 用于补齐 WKWebView 默认 UA 缺失的 `Version/x.y`。
@@ -71,6 +77,8 @@ class AppConstants {
       final webViewUA = await InAppWebViewController.getDefaultUserAgent();
       // 清理 UA，使其看起来像普通浏览器
       _cachedUserAgent = _sanitizeUserAgent(webViewUA);
+      _uaFromWebView = true;
+      unawaited(_rememberWebViewUserAgent(_cachedUserAgent!));
       debugPrint('[AppConstants] WebView UA: $webViewUA');
       debugPrint('[AppConstants] Sanitized UA: $_cachedUserAgent');
     } catch (e) {
@@ -78,6 +86,21 @@ class AppConstants {
       _cachedUserAgent = _buildDefaultUserAgent();
     }
     _uaCompleter.complete(_cachedUserAgent!);
+  }
+
+  /// 上次探到的 WebView UA：本地代理比 UA 探测先起，起代理时拿它挑指纹预置档、
+  /// 核对落盘的指纹模板是否随 WebView 升级而过期
+  static const String _lastWebViewUaKey = 'webview_user_agent_last';
+
+  static Future<void> _rememberWebViewUserAgent(String ua) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getString(_lastWebViewUaKey) != ua) {
+        await prefs.setString(_lastWebViewUaKey, ua);
+      }
+    } catch (e) {
+      debugPrint('[AppConstants] 记录 WebView UA 失败: $e');
+    }
   }
 
   static Future<String?> _getDesktopWebViewUserAgent() async {
@@ -281,6 +304,32 @@ class AppConstants {
 
   /// 同步获取 User-Agent（需确保已初始化，否则返回默认值）
   static String get userAgent => _cachedUserAgent ?? _buildDefaultUserAgent();
+
+  /// 探到的 WebView UA（清理过 wv 标识）；还没探到或探测失败（用的内置默认 UA）时为 null。
+  /// 网关按它挑浏览器指纹的预置档、判断落盘的指纹模板是否随 WebView 升级而过期
+  static String? get webViewUserAgentIfKnown =>
+      _uaFromWebView ? _cachedUserAgent : null;
+
+  /// 本次探到的 WebView UA；还没探到时用上次记下的
+  static String? lastKnownWebViewUserAgent(SharedPreferences prefs) =>
+      webViewUserAgentIfKnown ?? prefs.getString(_lastWebViewUaKey);
+
+  /// 原生请求带的 Client Hints 低熵三件套，与 WebView 自己发的逐字一致（仅 Android）。
+  ///
+  /// UA 被我们覆写成普通 Chrome 的样子，WebView 发出的 `sec-ch-ua` 品牌却仍是
+  /// Android WebView（2026-11-08 模拟器 WebView 124 实测），原生请求照这个发，同一
+  /// 会话里两条通道才对得上；自称 Chrome 却一个 hint 都不带本身就不像浏览器。
+  /// 没拿到真实 WebView UA（用的内置默认 UA）时不发，免得版本号对不上；桌面
+  /// WebView2 / WPE 与 iOS 未实测，暂不发。
+  static Map<String, String>? get clientHints {
+    if (!Platform.isAndroid || !_uaFromWebView) return null;
+    final ua = _cachedUserAgent;
+    if (ua == null) return null;
+    return _cachedClientHints ??= ClientHints.fromUserAgent(
+      ua,
+      brand: 'Android WebView',
+    );
+  }
 
   /// WebView 内核层面的 UA 覆写。
   ///

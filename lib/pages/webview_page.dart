@@ -886,7 +886,11 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
             tooltip: _isLoading ? '停止' : context.l10n.common_refresh,
             onPressed: _isLoading
                 ? () => _controller?.stopLoading()
-                : () => _controller?.reload(),
+                // 渲染进程退出后 controller 已摘掉，直接 reload 不会有反应，
+                // 要走重建（上游 2ab8f953）
+                : () => webViewRenderGone
+                      ? reloadAfterRenderGone()
+                      : _controller?.reload(),
             icon: Icon(
               _isLoading ? Symbols.close_rounded : Symbols.refresh_rounded,
             ),
@@ -1454,7 +1458,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       return;
     }
     if (await controller.canGoBack()) {
-      await controller.goBack();
+      // 走 _goBack：它会记下这次遍历的目标 URL，标签历史才不会把「后退」
+      // 当成一次新导航（那会截断前进栈）
+      await _goBack();
       return;
     }
     final tab = _tabs.byId(_tabId);

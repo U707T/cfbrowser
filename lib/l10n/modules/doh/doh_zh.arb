@@ -237,5 +237,151 @@
   "dohDetail_domainHelper": "仅输入域名，不含协议、路径或通配符；保存后同时匹配子域名。",
   "dohDetail_invalidDomain": "请输入有效域名，不含协议、端口、路径或通配符",
   "dohDetail_domainAlreadyCovered": "该域名已被现有规则覆盖",
-  "@dohDetail_echDomainsCount": {"placeholders": {"builtinCount": {"type": "int"}, "customCount": {"type": "int"}}}
+  "@dohDetail_echDomainsCount": {
+    "placeholders": {
+      "builtinCount": {
+        "type": "int"
+      },
+      "customCount": {
+        "type": "int"
+      }
+    }
+  },
+  "dohDetail_browserTls": "浏览器指纹（实验）",
+  "dohDetail_browserTlsEnabledDesc": "已开启：经网关的连接照本机 WebView 的握手（TLS 与 HTTP/2）和请求头发出",
+  "dohDetail_browserTlsDisabledDesc": "已关闭：经网关的连接用通用的 TLS 握手",
+  "customNodes_entryCount": "已填 {count} 个",
+  "customNodes_add": "添加节点",
+  "customNodes_entryInUse": "已填 {count} 个 · 正在使用",
+  "customNodes_resolvedTo": "连到 {ip}",
+  "customNodes_title": "自定义节点",
+  "customNodes_stateUnresolved": "域名没有解析出 Cloudflare 地址",
+  "customNodes_entryNoneUsable": "已填 {count} 个 · 都没连上，暂时按平常的规则优选",
+  "customNodes_entryDesc": "填自己测出来的 Cloudflare IP 或优选域名，优先用它们连接",
+  "customNodes_addLabel": "IP 或域名",
+  "customNodes_stateInUse": "正在使用",
+  "customNodes_stateInvalid": "写法不对",
+  "customNodes_remove": "移除",
+  "customNodes_reasonHandshake": "加密握手失败",
+  "customNodes_stateFailed": "没连上（{reason}）",
+  "netStatus_noSelectGateway": "网关模式已关闭，不做节点优选",
+  "customNodes_stateNoFamily": "当前网络没有 {family} 出口，暂时用不上",
+  "customNodes_stateTesting": "正在测试…",
+  "customNodes_retest": "重新测试",
+  "customNodes_alreadyListed": "已经在清单里了",
+  "customNodes_reasonConnect": "连接失败",
+  "customNodes_addHelper": "每行一个，也可以用逗号或空格分开",
+  "netStatus_noSelectPlatform": "这个平台不做节点优选",
+  "customNodes_footer": "只接受 Cloudflare 网段内的地址；第三方中转请用上游代理。「IP 协议」的偏好同样作用于自定义节点。自定义节点的测速结果不会随「帮助优选」分享。",
+  "customNodes_listEmpty": "还没有自定义节点",
+  "customNodes_stateDemoted": "用着的时候连不上，先停用一小时",
+  "customNodes_stateOk": "可用",
+  "customNodes_reasonTimeout": "超时",
+  "customNodes_tooMany": "最多 {max} 个，还能再加 {left} 个",
+  "customNodes_statePending": "等待测试",
+  "customNodes_stateNotCloudflare": "不是 Cloudflare 的地址，不会使用",
+  "customNodes_intro": "填你自己测出来的 Cloudflare IP 或优选域名，最多 {max} 个。只要有一个能连上，就优先用其中最快的；都连不上时自动回到平常的节点优选，不会因此断网。",
+  "customNodes_reasonResponse": "没有正常响应",
+  "customNodes_invalid": "写法不对：{items}",
+  "@customNodes_entryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_entryInUse": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_entryNoneUsable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_intro": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_invalid": {
+    "placeholders": {
+      "items": {
+        "type": "String"
+      }
+    }
+  },
+  "@customNodes_tooMany": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      },
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "@customNodes_stateFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "@customNodes_stateNoFamily": {
+    "placeholders": {
+      "family": {
+        "type": "String"
+      }
+    }
+  },
+  "@customNodes_resolvedTo": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "cfSelect_ipFamily": "IP 协议",
+  "cfSelect_ipFamilyAuto": "自动",
+  "cfSelect_ipFamilyV6": "IPv6 优先",
+  "cfSelect_ipFamilyV4": "IPv4 优先",
+  "cfSelect_ipFamilyAutoDesc": "本机有 IPv6 时优先用 IPv6，不通或明显更慢时用 IPv4。运营商共享的 IPv4 出口更容易弹验证；切换后可能要重新验证一次",
+  "cfSelect_ipFamilyV6Desc": "IPv6 能连就用 IPv6，不比较快慢",
+  "cfSelect_ipFamilyV4Desc": "IPv4 能连就用 IPv4（1.2.2 之前的做法），IPv6 不稳定的网络选这个",
+  "netStatus_title": "连接状态",
+  "netStatus_searchDesc": "当前节点、IPv4/IPv6、重新优选",
+  "netStatus_starting": "正在启动连接加速…",
+  "netStatus_restarting": "正在重启连接加速…",
+  "netStatus_startFailed": "连接加速启动失败",
+  "netStatus_startFailedHint": "加速没有生效，可能连不上 linux.do。点重试；还不行请导出日志反馈",
+  "netStatus_vpnPaused": "VPN 已连接，连接加速已暂停",
+  "netStatus_vpnPausedHint": "由 VPN 负责连接，VPN 断开后自动恢复",
+  "netStatus_accelOff": "连接加速已关闭",
+  "netStatus_accelOffHint": "现在直接连接 linux.do，国内网络一般连不上",
+  "netStatus_turnOn": "开启",
+  "netStatus_viaProxy": "经上游代理连接",
+  "netStatus_accelOn": "连接加速已开启",
+  "netStatus_ready": "已连接",
+  "netStatus_node": "节点 {ip}",
+  "@netStatus_node": {"placeholders": {"ip": {"type": "String"}}},
+  "cfSelect_modeTitle": "优选方式",
+  "cfSelect_searchDesc": "本地优选、只用 atlas 池、自定义节点、帮助优选",
+  "accel_title": "连接加速",
+  "accel_searchDesc": "DoH、ECH、设备证书、网关状态",
+  "accel_offConfirmTitle": "关闭连接加速？",
+  "accel_offConfirmBody": "关闭后 App 会直接连接 linux.do，国内网络一般连不上。开 VPN 时不用手动关，「VPN 自动让路」会处理。",
+  "accel_offConfirmAction": "关闭",
+  "dohDetail_accelConnect": "用 L 站 Connect 授权",
+  "dohDetail_accelAuthOk": "授权成功，已切换到 CFluxDo 加速",
+  "dohDetail_accelAuthUnavailable": "此账号无法使用 Connect，继续使用公共加速",
+  "dohDetail_accelAuthDenied": "加速服务端拒绝了此账号，继续使用公共加速",
+  "dohDetail_accelAuthPending": "授权没有完成，稍后会自动重试"
 }
