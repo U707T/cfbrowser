@@ -95,7 +95,10 @@ class BrowserQuickLinksService {
           if (link.id.isEmpty || link.url.isEmpty) continue;
           restored.add(link);
         }
-        links.value = List<BrowserQuickLink>.unmodifiable(restored);
+        // 上限可能随版本调整，旧数据可能超出：恢复时截断，别让 UI 撑破
+        links.value = List<BrowserQuickLink>.unmodifiable(
+          restored.take(maxLinks),
+        );
       }
     } catch (e) {
       debugPrint('[QuickLinks] 恢复快捷访问失败: $e');
