@@ -167,15 +167,15 @@ jobs:
             -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" \
             | sed -n 's/.*SHA256: //p' | tr -d ':' | tr 'A-Z' 'a-z')
           echo "expected=$EXPECTED"
-          for apk in cfbrowser-arm64-v8a.apk; do
-            GOT=$(apksigner verify --print-certs "$apk" \
-              | sed -n 's/.*SHA-256 digest: //p' | head -1 | tr 'A-Z' 'a-z')
-            echo "$apk -> $GOT"
-            if [ "$GOT" != "$EXPECTED" ]; then
-              echo "::error::$apk 的签名指纹与预期不符（回落成 debug 签名了？）"
-              exit 1
-            fi
-          done
+          # runner 只装了 NDK，没有完整 build-tools，apksigner 不在 PATH；
+          # keytool 能直接读 APK 里的签名块，不必额外装 SDK 组件
+          GOT=$(keytool -printcert -jarfile cfbrowser-arm64-v8a.apk 2>/dev/null \
+            | sed -n 's/.*SHA256: //p' | head -1 | tr -d ':' | tr 'A-Z' 'a-z')
+          echo "apk -> $GOT"
+          if [ "$GOT" != "$EXPECTED" ]; then
+            echo "::error::APK 的签名指纹与预期不符（回落成 debug 签名了？）"
+            exit 1
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
