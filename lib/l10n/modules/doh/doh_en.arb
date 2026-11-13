@@ -376,5 +376,7 @@
   "dohDetail_accelAuthOk": "Authorized; switched to CFluxDo acceleration",
   "dohDetail_accelAuthUnavailable": "This account can't use Connect; staying on public acceleration",
   "dohDetail_accelAuthDenied": "The acceleration server rejected this account; staying on public acceleration",
-  "dohDetail_accelAuthPending": "Authorization didn't finish; it will retry automatically later"
+  "dohDetail_accelAuthPending": "Authorization didn't finish; it will retry automatically later",
+  "dohSettings_standby": "Standby: starts on the first visit to an accelerated site",
+  "dohSettings_startNow": "Start now"
 }

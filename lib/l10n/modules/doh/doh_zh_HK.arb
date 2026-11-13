@@ -383,5 +383,7 @@
   "dohDetail_accelAuthOk": "授權成功，已切換到 CFluxDo 加速",
   "dohDetail_accelAuthUnavailable": "此帳號無法使用 Connect，繼續使用公共加速",
   "dohDetail_accelAuthDenied": "加速服務端拒絕了此帳號，繼續使用公共加速",
-  "dohDetail_accelAuthPending": "授權沒有完成，稍後會自動重試"
+  "dohDetail_accelAuthPending": "授權沒有完成，稍後會自動重試",
+  "dohSettings_standby": "待命：首次訪問加速站點時啟動",
+  "dohSettings_startNow": "立即啟動"
 }

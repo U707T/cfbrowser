@@ -74,10 +74,21 @@ class _DohSettingsCardInner extends StatelessWidget {
     final proxyService = service.proxyService;
     final isRunning = proxyService.isRunning;
     final port = settings.proxyPort;
+    // 待命（新装或还没访问过加速站点）：网关按需启动，不是「正在启动」。
+    // 以前这里把它并进 showLoading，界面永远转圈，用户只能靠拨动某个开关
+    // （例如设备独有证书）间接触发重启才让 DoH 真正跑起来。
+    final standby =
+        service.isStandby &&
+        !isRunning &&
+        !isApplying &&
+        !service.lastStartFailed;
     final showLoading =
         isApplying ||
         service.pendingStart ||
-        (settings.dohEnabled && !isRunning && !service.lastStartFailed);
+        (settings.dohEnabled &&
+            !isRunning &&
+            !service.lastStartFailed &&
+            !standby);
     // VPN 活跃 + 自动切换开启 = 接管期，DOH 开关在此期间一律锁定
     // （本次 VPN 期间因连不上论坛恢复了加速的除外，开关照常生效）
     final vpnLocked = VpnAutoToggleService.instance.locksAcceleration;
@@ -169,6 +180,7 @@ class _DohSettingsCardInner extends StatelessWidget {
                 isRunning,
                 port,
                 showLoading,
+                standby,
               ),
               if (!isRunning && !isApplying && service.lastStartFailed)
                 _buildFailureHint(context, theme, service, proxyService),
@@ -203,6 +215,7 @@ class _DohSettingsCardInner extends StatelessWidget {
     bool isRunning,
     int? port,
     bool showLoading,
+    bool standby,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -210,7 +223,15 @@ class _DohSettingsCardInner extends StatelessWidget {
         children: [
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
-            child: showLoading
+            child: standby
+                ? _buildStatusChip(
+                    theme,
+                    key: const ValueKey('standby'),
+                    icon: Symbols.pause_circle_rounded,
+                    label: context.l10n.dohSettings_standby,
+                    color: theme.colorScheme.secondary,
+                  )
+                : showLoading
                 ? _buildStatusChip(
                     theme,
                     key: const ValueKey('applying'),
@@ -258,6 +279,13 @@ class _DohSettingsCardInner extends StatelessWidget {
               icon: const Icon(Symbols.refresh_rounded, size: 20),
               tooltip: context.l10n.dohSettings_restartProxy,
               visualDensity: VisualDensity.compact,
+            ),
+          ],
+          if (standby) ...[
+            const Spacer(),
+            TextButton(
+              onPressed: isApplying ? null : service.leaveStandby,
+              child: Text(context.l10n.dohSettings_startNow),
             ),
           ],
         ],
