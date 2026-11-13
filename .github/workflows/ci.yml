@@ -109,13 +109,13 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi
+          targets: aarch64-linux-android
 
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --locked
 
-      # core/doh_proxy 的 target/ 是全量重编的大头（rama + BoringSSL + bindgen）。
-      # 两个 ABI 共用同一份缓存：armv7 那次基本只重编自己的 codegen。
+      # core/doh_proxy 的 target/ 是全量重编的大头（rama + BoringSSL + bindgen），
+      # 有缓存后增量只有改动的那几个 crate。
       - name: Cache Rust build
         uses: actions/cache@v4
         with:
@@ -159,13 +159,6 @@ jobs:
           dart tool/flutterw.dart build apk --release --target-platform android-arm64
           cp build/app/outputs/flutter-apk/app-release.apk cfbrowser-arm64-v8a.apk
 
-      # armv7：Rust 侧复用上面那份 target/（只剩 armv7 的 codegen），
-      # Flutter 侧换个 target-platform 重打包即可
-      - name: Build armv7
-        run: |
-          dart tool/flutterw.dart build apk --release --target-platform android-arm
-          cp build/app/outputs/flutter-apk/app-release.apk cfbrowser-armeabi-v7a.apk
-
       # 守住签名：APK 证书指纹必须等于 secrets 里那把，回落 debug 就失败
       - name: Verify APK signing
         run: |
@@ -174,7 +167,7 @@ jobs:
             -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" \
             | sed -n 's/.*SHA256: //p' | tr -d ':' | tr 'A-Z' 'a-z')
           echo "expected=$EXPECTED"
-          for apk in cfbrowser-arm64-v8a.apk cfbrowser-armeabi-v7a.apk; do
+          for apk in cfbrowser-arm64-v8a.apk; do
             GOT=$(apksigner verify --print-certs "$apk" \
               | sed -n 's/.*SHA-256 digest: //p' | head -1 | tr 'A-Z' 'a-z')
             echo "$apk -> $GOT"
@@ -188,17 +181,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cfbrowser-apk
-          path: |
-            cfbrowser-arm64-v8a.apk
-            cfbrowser-armeabi-v7a.apk
+          path: cfbrowser-arm64-v8a.apk
           if-no-files-found: error
 
       - name: Create release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            cfbrowser-arm64-v8a.apk
-            cfbrowser-armeabi-v7a.apk
+          files: cfbrowser-arm64-v8a.apk
           generate_release_notes: true
           prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') }}

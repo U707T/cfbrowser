@@ -8,7 +8,7 @@
 > 面向国内网络环境的 [Linux.do](https://linux.do/) 第三方 Android 客户端（另有 Windows / Linux 桌面预览版），基于 [FluxDO](https://github.com/Lingyan000/fluxdo) 独立发行
 
 [![GitHub Release](https://img.shields.io/github/v/release/1molchuan/fluxdo?style=for-the-badge&logo=github&label=GitHub%20Releases)](https://github.com/1molchuan/fluxdo/releases)
-[![Platform](https://img.shields.io/badge/platform-Android%20arm64%20%7C%20armv7%20%7C%20Windows%20%7C%20Linux-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/1molchuan/fluxdo/releases)
+[![Platform](https://img.shields.io/badge/platform-Android%20arm64%20%7C%20Windows%20%7C%20Linux-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/1molchuan/fluxdo/releases)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=for-the-badge)](LICENSE)
 
 cfluxdo 源自 FluxDO 0.2.28，已脱离 fork 关系独立维护，并持续同步上游（目前到 v0.2.29）。它保留了 FluxDO 的全部论坛功能，重点解决国内网络下访问 linux.do 时遇到的 DNS 污染、频繁弹 Cloudflare 验证、无征兆掉登录等问题。以 Android 为主，Windows、Linux 桌面端为预览版。
@@ -17,7 +17,6 @@ cfluxdo 源自 FluxDO 0.2.28，已脱离 fork 关系独立维护，并持续同�
 
 - 到 [Releases](https://github.com/1molchuan/fluxdo/releases) 下载对应平台和架构的安装包，旁边有同名的 `.sha256` 校验文件：
   - `cfluxdo-<版本>-arm64-v8a.apk`：64 位 ARM，2015 年以后的手机几乎都是，优先选这个。
-  - `cfluxdo-<版本>-armeabi-v7a.apk`：32 位 ARM，只给装不上 arm64 包（报 `INSTALL_FAILED_NO_MATCHING_ABIS`）的老机器。
   - `cfluxdo-<版本>-windows-x86_64.zip`：Windows 10/11 64 位桌面预览版，解压后运行 `cfluxdo.exe`，需要 WebView2 运行时（Windows 11 自带）。没有代码签名，第一次运行如果出现「Windows 已保护你的电脑」，点「更多信息 → 仍要运行」。
   - `cfluxdo-<版本>-linux-x86_64.flatpak`：Linux 桌面预览版，`flatpak install --user <文件名>` 安装，第一次会从 Flathub 下载 GNOME 运行时。
 - 包名是 `com.github.molchuan.cfluxdo`，与官方 FluxDO 不同：两者可以并存，但不能互相覆盖安装，登录态和设置也互不相通。
@@ -57,7 +56,7 @@ cfluxdo 源自 FluxDO 0.2.28，已脱离 fork 关系独立维护，并持续同�
 前置要求：
 
 - Flutter 3.47（Dart SDK ^3.13）、Android SDK、NDK 27.3
-- Rust 工具链、`cargo-ndk`，以及 `aarch64-linux-android`、`armv7-linux-androideabi` 两个 target，用于编译 `core/doh_proxy`
+- Rust 工具链、`cargo-ndk`，以及 `aarch64-linux-android` target，用于编译 `core/doh_proxy`
 - `just`（可选，仅作为本地命令入口）
 
 ```bash
@@ -66,8 +65,6 @@ cd fluxdo
 dart run melos bootstrap                 # 初始化 workspace
 dart run tool/project_prep.dart app      # pub get、l10n 生成、代理证书同步，等价于 just sync
 dart tool/flutterw.dart build apk --release --target-platform android-arm64 \
-  --build-name 1.2.1 --build-number 2026102408
-dart tool/flutterw.dart build apk --release --target-platform android-arm \
   --build-name 1.2.1 --build-number 2026102408
 ```
 

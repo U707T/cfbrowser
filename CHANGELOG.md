@@ -14,6 +14,11 @@
   签名直接失败。
 - ⚠️ 装过 v1.2.1 及更早版本的用户需要**卸载一次**再装本版，之后即可正常覆盖升级。
 
+### 📦 只出 arm64 一个包
+
+- 不再构建与发布 `armeabi-v7a`：CI 少编一遍 Rust 与 Flutter，出包快一倍；
+  32 位 ARM 的机器已基本退出使用，装不上时可用上一版 1.2.1 的 armv7 包。
+
 ### ⚡ CI 提速
 
 - Rust 的 `core/doh_proxy/target` 与 cargo registry 加缓存（BoringSSL + rama 全量重编
