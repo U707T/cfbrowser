@@ -1148,6 +1148,17 @@ class NetworkSettingsService {
       }
 
       await _applyWebViewProxy();
+    } catch (e, st) {
+      // 启动/停止途中抛异常（FFI、证书、端口）：不要让 _applyDebounce 的回调
+      // 变成一个没人接的异步错误，也不要把「正在启动」永远挂在那里
+      _setStartFailed(true);
+      _setPendingStart(false);
+      debugPrint('[DOH] 应用代理状态失败: $e\n$st');
+      try {
+        await _clearWebViewProxy();
+      } catch (_) {
+        // 清理失败不掩盖上面的错误
+      }
     } finally {
       _applyDepth--;
       if (_applyDepth == 0) {
