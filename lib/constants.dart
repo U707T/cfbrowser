@@ -4,6 +4,7 @@ import 'dart:ui' show Locale, PlatformDispatcher;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'config/site_customization.dart';
 import 'config/sites/linuxdo.dart';
 import 'services/network/client_hints.dart';
