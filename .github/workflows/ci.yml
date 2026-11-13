@@ -79,6 +79,7 @@ jobs:
 
       # action 的 cache 只管 Flutter SDK；pub 与 Gradle 依赖另存
       - name: Cache pub and Gradle
+        id: pubgradle
         uses: actions/cache@v4
         with:
           path: |
@@ -117,6 +118,7 @@ jobs:
       # core/doh_proxy 的 target/ 是全量重编的大头（rama + BoringSSL + bindgen），
       # 有缓存后增量只有改动的那几个 crate。
       - name: Cache Rust build
+        id: rustcache
         uses: actions/cache@v4
         with:
           path: |
@@ -153,11 +155,86 @@ jobs:
           echo "keystore $(stat -c%s android/keystore/release.jks) bytes"
 
 
+      # ============ 以下 DIAG 步骤只存在于 diag/gradle-timing 分支，测完删除 ============
+      # 目的：把 assembleRelease 的 ~790 s 拆到「任务 × 起止时间 × 是否命中缓存」。
+      # 说明：Gradle 的 --profile 加不进来（flutter 每次构建都会用 SDK 模板覆盖
+      # android/gradlew，且 startParameter 在 init script 里改已来不及），
+      # 所以改用 init script 打点：信息量是 --profile 的超集（多了时间线）。
+      - name: 'DIAG · 注入 Gradle 任务打点'
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/zz-diag-timeline.gradle <<'GRADLE'
+          println "[[DIAG]] init-loaded @${System.currentTimeMillis()}"
+          gradle.taskGraph.whenReady { g ->
+              println "[[DIAG]] graph-ready tasks=${g.allTasks.size()} @${System.currentTimeMillis()}"
+          }
+          gradle.taskGraph.beforeTask { t ->
+              println "[[DIAG-START]] ${t.path} @${System.currentTimeMillis()}"
+          }
+          gradle.taskGraph.afterTask { t, s ->
+              String st = s.failure != null ? 'FAILED' : (s.upToDate ? 'UP-TO-DATE' : (s.fromCache ? 'FROM-CACHE' : (s.skipped ? 'SKIPPED' : 'EXECUTED')))
+              println "[[DIAG-END]] ${t.path} @${System.currentTimeMillis()} ${st}"
+          }
+          GRADLE
+          cat ~/.gradle/init.d/zz-diag-timeline.gradle
+
       # flutterw 会先跑 project_prep（pub get / l10n / 代理证书），再 cargo ndk 编译 Rust
       - name: Build arm64
         run: |
-          dart tool/flutterw.dart build apk --release --target-platform android-arm64
+          set -euo pipefail
+          echo "DIAG build begin: $(date -u +%FT%TZ)"
+          dart tool/flutterw.dart build apk --release --target-platform android-arm64 2>&1 \
+            | tee "$RUNNER_TEMP/build.log"
+          echo "DIAG build end: $(date -u +%FT%TZ)"
           cp build/app/outputs/flutter-apk/app-release.apk cfbrowser-arm64-v8a.apk
+
+      - name: 'DIAG · 任务时间线'
+        if: always()
+        run: |
+          python3 tool/ci/diag_timeline.py "$RUNNER_TEMP/build.log" "$RUNNER_TEMP/build-nolegacy.log" 2>&1 | tee timeline.txt
+
+      - name: 'DIAG · 计量'
+        if: always()
+        run: |
+          set -xo pipefail
+          {
+            echo "=== runner ==="
+            nproc
+            grep -m1 'model name' /proc/cpuinfo || true
+            free -g | head -3
+            echo "=== cache ==="
+            echo "pubgradle cache-hit: ${{ steps.pubgradle.outputs.cache-hit }}"
+            echo "rust      cache-hit: ${{ steps.rustcache.outputs.cache-hit }}"
+            du -sh ~/.gradle ~/.cargo 2>/dev/null || true
+            echo "=== apk ==="
+            ls -l build/app/outputs/flutter-apk/app-release.apk
+            unzip -v build/app/outputs/flutter-apk/app-release.apk | awk 'NR<4 || $8 ~ /^lib\//'
+            echo "=== .so 原始体积 + 单核 deflate 成本（AGP 打包是单线程 zipflinger，gzip -6 为代理）==="
+            SO=$(find build/app/intermediates -type d -path '*stripped_native_libs*' -name 'arm64-v8a' | head -1)
+            echo "SO_DIR=$SO"
+            du -sh "$SO" || true
+            ls -l "$SO" | sort -k5 -n | tail -12
+            bytes=$(du -sb "$SO" | cut -f1)
+            s=$(date +%s%N); cat "$SO"/*.so | gzip -6 > /dev/null; e=$(date +%s%N)
+            echo "deflate bytes=$bytes ms=$(( (e - s) / 1000000 ))"
+            echo "=== cargokit 的 rust target 目录（subproject buildDir = build/<name>/build）==="
+            du -sh build/*/build 2>/dev/null | sort -rh | head -10 || true
+            echo "=== 各 subproject build 体积 top 10 ==="
+            du -sh build/* 2>/dev/null | sort -rh | head -10 || true
+          } 2>&1 | tee measurement.txt
+
+      - name: 'DIAG · 上传诊断产物'
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diag-timeline
+          path: |
+            timeline.txt
+            measurement.txt
+            ${{ runner.temp }}/build.log
+          if-no-files-found: warn
+      # ============ DIAG 结束 ============
 
       # 守住签名：APK 证书指纹必须等于 secrets 里那把，回落 debug 就失败
       - name: Verify APK signing
@@ -191,3 +268,16 @@ jobs:
           files: cfbrowser-arm64-v8a.apk
           generate_release_notes: true
           prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') }}
+
+      # 只在 diag 分支跑：把 useLegacyPackaging 关掉再打一次包，量出「压缩 .so」到底值多少秒。
+      # 增量构建（javac/dex/R8 都 up-to-date），所以耗时差 ≈ packageRelease 里的 deflate 成本。
+      - name: 'DIAG · A/B：useLegacyPackaging=false 再打一次包'
+        if: always()
+        run: |
+          set -uo pipefail
+          echo "DIAG ab begin: $(date -u +%FT%TZ)"
+          dart tool/flutterw.dart build apk --release --target-platform android-arm64 \
+            --android-project-arg=cf.legacyPackaging=false 2>&1 | tee "$RUNNER_TEMP/build-nolegacy.log"
+          echo "DIAG ab end: $(date -u +%FT%TZ)"
+          ls -l build/app/outputs/flutter-apk/app-release.apk
+          cp build/app/outputs/flutter-apk/app-release.apk cfbrowser-arm64-v8a-nolegacy.apk

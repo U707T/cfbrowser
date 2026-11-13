@@ -81,7 +81,9 @@ android {
     // 如果以后改走 AAB / Play，可去掉这一行让 Play 自己按设备下发。
     packaging {
         jniLibs {
-            useLegacyPackaging = true
+            // DIAG 分支：默认仍是 true，可用 -Pcf.legacyPackaging=false 关掉量成本
+            useLegacyPackaging =
+                (project.findProperty("cf.legacyPackaging") as? String)?.toBoolean() ?: true
         }
     }
 
