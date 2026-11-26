@@ -117,24 +117,60 @@ void main() {
       expect(ports.log, contains('startClearanceRefresh:current_user_ready'));
     });
 
-    test('预加载失败：不判定会话、不启动登录后启动项；重试成功后才继续', () async {
-      ports = FakeStartupPorts(preloadedUser: aliceJson)
-        ..preloadError = Exception('offline');
+    test('预加载失败仍结算会话；重新进论坛只重试一次预加载，不重复 priming', () async {
+      final offline = Exception('offline');
+      ports = FakeStartupPorts(preloadedUser: aliceJson, storedSession: false)
+        ..preloadError = offline
+        ..preloadGate = Completer<void>();
       startup = build(ports);
       startup.registerPostLogin(FakePostLoginStart(ports.log));
       startup.storesReady();
-      startup.launch();
-      await settle();
+      startup.launch(reason: 'main_page');
+      final firstVerdict = startup.verdict();
+      final failed = expectLater(
+        startup.ensurePreloaded(),
+        throwsA(same(offline)),
+      );
+      ports.preloadGate!.complete();
+      await failed;
 
-      expect(ports.log, contains('preload:failed'));
-      expect(startup.phase.value, StartupPhase.preload);
-      expect(startup.verdictNow, isNull);
+      expect(
+        await firstVerdict.timeout(const Duration(seconds: 1)),
+        isA<SessionVerdict>().having((v) => v.loggedIn, 'loggedIn', isFalse),
+      );
+      expect(ports.storedSessionChecks, 1);
       expect(ports.log, isNot(contains('message_bus:start')));
 
-      await startup.ensurePreloaded(reason: 'preheat_gate');
-      await settle();
-      expect(startup.isLoggedIn, isTrue);
-      expect(ports.log, contains('message_bus:start'));
+      ports.preloadGate = Completer<void>();
+      startup.launch(reason: 'main_page');
+      startup.launch(reason: 'deep_link');
+      expect(ports.log.where((step) => step == 'preload'), hasLength(2));
+      ports.preloadGate!.complete();
+      await startup.ensurePreloaded();
+      startup.launch(reason: 'in_app_browser');
+      expect(startup.verdictNow?.user?.username, 'alice');
+      expect(ports.log.where((step) => step == 'preload'), hasLength(2));
+      expect(ports.log.where((step) => step == 'prime'), hasLength(1));
+      expect(
+        ports.log.where((step) => step == 'message_bus:start'),
+        hasLength(1),
+      );
+    });
+
+    test('预加载失败不会把可恢复的本地会话判为登出', () async {
+      ports = FakeStartupPorts(storedSession: true)
+        ..preloadError = Exception('offline');
+      startup = build(ports);
+      startup.storesReady();
+      startup.launch(reason: 'main_page');
+
+      final verdict = await startup.verdict().timeout(
+        const Duration(seconds: 1),
+      );
+      expect(verdict.loggedIn, isTrue);
+      expect(verdict.source, SessionVerdictSource.storedSession);
+      expect(ports.storedSessionChecks, 1);
+      expect(ports.log, isNot(contains('afterPreload')));
     });
   });
 
@@ -300,7 +336,7 @@ void main() {
       expect(ports.storedSessionChecks, 0);
     });
 
-    test('启动页错误页上退出登录再重试：匿名预加载 → 判定未登录，不启动登录后启动项', () async {
+    test('启动页错误页退出登录会停止启动项，匿名预加载重试不再启动', () async {
       ports = FakeStartupPorts(preloadedUser: aliceJson)
         ..preloadError = Exception('offline');
       startup = build(ports);
@@ -310,23 +346,23 @@ void main() {
       await settle();
       expect(ports.log, contains('preload:failed'));
 
-      // 错误页「退出登录」：清掉用户名与 _t，广播登出（启动判定还没开始，不另起）
+      expect(startup.verdictNow?.source, SessionVerdictSource.storedSession);
+
+      // 错误页「退出登录」：清掉用户名与 _t，广播登出。
       ports.preloadedUser = null;
       ports.storedSession = false;
       ports.auth.add(null);
       await settle();
-      expect(ports.storedSessionChecks, 0);
+      expect(ports.storedSessionChecks, 2);
+      expect(startup.isLoggedIn, isFalse);
+      expect(ports.log, contains('message_bus:stop'));
 
-      // 「重试连接」
+      // 「重试连接」得到匿名首页，不会重启登录后启动项或重复查本地会话。
       await startup.ensurePreloaded(reason: 'preheat_gate');
       await settle();
       expect(startup.isLoggedIn, isFalse);
-      expect(ports.storedSessionChecks, 1);
-      expect(ports.log, isNot(contains('message_bus:start')));
-      expect(
-        ports.log.where((e) => e.startsWith('startClearanceRefresh')),
-        isEmpty,
-      );
+      expect(ports.storedSessionChecks, 2);
+      expect(ports.log.where((e) => e == 'message_bus:start'), hasLength(1));
     });
 
     test('首启引导页里登录：登录广播后判定为已登录；引导结束后不重复预加载，频道注册即启动', () async {

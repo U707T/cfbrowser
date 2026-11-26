@@ -107,6 +107,7 @@ void main() {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(() => server.close(force: true));
     server.listen((request) async {
+      request.response.headers.set(HttpHeaders.etagHeader, '"v1"');
       if (request.uri.path != '/file') {
         request.response.statusCode = HttpStatus.notFound;
         await request.response.close();
@@ -159,6 +160,7 @@ void main() {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(() => server.close(force: true));
     server.listen((request) async {
+      request.response.headers.set(HttpHeaders.etagHeader, '"v1"');
       request.response.statusCode = HttpStatus.ok;
       request.response.headers.contentLength = content.length;
       request.response.add(content);
@@ -190,6 +192,7 @@ void main() {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(() => server.close(force: true));
     server.listen((request) async {
+      request.response.headers.set(HttpHeaders.etagHeader, '"v1"');
       final range = request.headers.value(HttpHeaders.rangeHeader);
       if (range == null) {
         request.response.statusCode = HttpStatus.ok;
@@ -242,6 +245,7 @@ void main() {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(() => server.close(force: true));
     server.listen((request) async {
+      request.response.headers.set(HttpHeaders.etagHeader, '"v1"');
       final range = request.headers.value(HttpHeaders.rangeHeader);
       if (range == null) {
         request.response.statusCode = HttpStatus.ok;
@@ -288,6 +292,7 @@ void main() {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(() => server.close(force: true));
     server.listen((request) async {
+      request.response.headers.set(HttpHeaders.etagHeader, '"v1"');
       final range = request.headers.value(HttpHeaders.rangeHeader);
       if (range == null) {
         request.response.statusCode = HttpStatus.ok;
@@ -341,6 +346,7 @@ void main() {
       await server.close(force: true);
     });
     server.listen((request) async {
+      request.response.headers.set(HttpHeaders.etagHeader, '"v1"');
       final range = request.headers.value(HttpHeaders.rangeHeader);
       if (range == null) {
         request.response.statusCode = HttpStatus.ok;
@@ -381,6 +387,101 @@ void main() {
       onProgress: (_, _) {},
       stallTimeout: const Duration(milliseconds: 300),
       watchdogInterval: const Duration(milliseconds: 80),
+    );
+
+    await expectLater(
+      downloader.download,
+      throwsA(isA<SegmentedDownloadUnsupported>()),
+    );
+  });
+
+  test('缺少强 ETag（无 ETag 或仅弱 ETag）时不分段，交给上层回退单连接', () async {
+    final content = Uint8List.fromList(
+      List<int>.generate(3 * 1024 * 1024, (index) => index % 223),
+    );
+    var variant = 0;
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(() => server.close(force: true));
+    server.listen((request) async {
+      if (variant == 1) {
+        request.response.headers.set(HttpHeaders.etagHeader, 'W/"v1"');
+      } else if (variant == 2) {
+        request.response.headers.set(
+          HttpHeaders.lastModifiedHeader,
+          HttpDate.format(DateTime.utc(2026, 11, 23)),
+        );
+      }
+      final range = request.headers.value(HttpHeaders.rangeHeader);
+      final match = RegExp(r'^bytes=(\d+)-(\d+)$').firstMatch(range!)!;
+      final start = int.parse(match.group(1)!);
+      final end = int.parse(match.group(2)!);
+      final slice = content.sublist(start, end + 1);
+      request.response.statusCode = HttpStatus.partialContent;
+      request.response.headers.set(
+        HttpHeaders.contentRangeHeader,
+        'bytes $start-$end/${content.length}',
+      );
+      request.response.headers.contentLength = slice.length;
+      request.response.add(slice);
+      await request.response.close();
+    });
+
+    final directory = await Directory.systemTemp.createTemp(
+      'segmented_no_validator_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    for (variant = 0; variant < 3; variant++) {
+      final downloader = SegmentedDownloader(
+        dio: Dio(),
+        url: 'http://${server.address.address}:${server.port}/file',
+        temporaryPath: '${directory.path}/download_$variant.part',
+        onProgress: (_, _) {},
+      );
+      await expectLater(
+        downloader.download,
+        throwsA(isA<SegmentedDownloadUnsupported>()),
+      );
+    }
+  });
+
+  test('分段途中 ETag 变化时拒绝拼接新旧内容', () async {
+    final content = Uint8List.fromList(
+      List<int>.generate(3 * 1024 * 1024, (index) => index % 229),
+    );
+    var segmentCount = 0;
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(() => server.close(force: true));
+    server.listen((request) async {
+      final range = request.headers.value(HttpHeaders.rangeHeader);
+      final match = RegExp(r'^bytes=(\d+)-(\d+)$').firstMatch(range!)!;
+      final start = int.parse(match.group(1)!);
+      final end = int.parse(match.group(2)!);
+      final isProbe = start == 0 && end == 0;
+      if (!isProbe) segmentCount++;
+      request.response.headers.set(
+        HttpHeaders.etagHeader,
+        !isProbe && segmentCount == 2 ? '"v2"' : '"v1"',
+      );
+      final slice = content.sublist(start, end + 1);
+      request.response.statusCode = HttpStatus.partialContent;
+      request.response.headers.set(
+        HttpHeaders.contentRangeHeader,
+        'bytes $start-$end/${content.length}',
+      );
+      request.response.headers.contentLength = slice.length;
+      request.response.add(slice);
+      await request.response.close();
+    });
+
+    final directory = await Directory.systemTemp.createTemp(
+      'segmented_etag_change_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final downloader = SegmentedDownloader(
+      dio: Dio(),
+      url: 'http://${server.address.address}:${server.port}/file',
+      temporaryPath: '${directory.path}/download.part',
+      onProgress: (_, _) {},
     );
 
     await expectLater(

@@ -25,13 +25,28 @@ class BrowserTabsService {
   /// 标签总数上限。超过时关闭最早的非当前标签，避免无上限增长。
   static const int maxTabs = 50;
 
-  final ValueNotifier<List<BrowserTab>> tabs =
-      ValueNotifier<List<BrowserTab>>(const <BrowserTab>[]);
+  /// 最近关闭的标签最多记多少个；只存在内存，不写盘（关掉的页面可能含
+  /// 隐私内容，也不应在重启后复活）。
+  static const int maxRecentlyClosed = 20;
+
+  final ValueNotifier<List<BrowserTab>> tabs = ValueNotifier<List<BrowserTab>>(
+    const <BrowserTab>[],
+  );
 
   final ValueNotifier<String?> activeTabId = ValueNotifier<String?>(null);
 
   SharedPreferences? _prefs;
   int _idSequence = 0;
+
+  /// 最近关闭的标签（栈顶最新），只在内存里，供「重新打开」使用。
+  final List<BrowserTab> _recentlyClosed = <BrowserTab>[];
+
+  /// 最近关闭的标签数量（界面据此显示「重新打开」）。
+  final ValueNotifier<int> recentlyClosedCount = ValueNotifier<int>(0);
+
+  /// 最近关闭的标签，栈顶在前；无痕标签不会进入。
+  List<BrowserTab> get recentlyClosed =>
+      List<BrowserTab>.unmodifiable(_recentlyClosed.reversed);
 
   Future<void> initialize(SharedPreferences prefs) async {
     if (_prefs != null) return;
@@ -60,7 +75,8 @@ class BrowserTabsService {
     }
     final storedActive = prefs.getString(_activeKey);
     final active = storedActive == null ? null : byId(storedActive);
-    activeTabId.value = active?.id ?? (tabs.value.isEmpty ? null : tabs.value.first.id);
+    activeTabId.value =
+        active?.id ?? (tabs.value.isEmpty ? null : tabs.value.first.id);
   }
 
   BrowserTab? byId(String id) {
@@ -83,9 +99,7 @@ class BrowserTabsService {
     bool desktopMode = false,
   }) {
     final cleanUrl = url.trim();
-    final history = _isWebUrl(cleanUrl)
-        ? <String>[cleanUrl]
-        : const <String>[];
+    final history = _isWebUrl(cleanUrl) ? <String>[cleanUrl] : const <String>[];
     final tab = BrowserTab(
       id: _nextId(),
       url: cleanUrl,
@@ -126,7 +140,8 @@ class BrowserTabsService {
     final index = list.indexWhere((tab) => tab.id == id);
     if (index < 0) return active;
     final wasActive = activeTabId.value == id;
-    list.removeAt(index);
+    final closed = list.removeAt(index);
+    _rememberClosed(closed);
     _emit(list);
     if (list.isEmpty) {
       activeTabId.value = null;
@@ -144,9 +159,78 @@ class BrowserTabsService {
   }
 
   void closeAll() {
+    final activeId = activeTabId.value;
+    final closing = <BrowserTab>[
+      for (final tab in tabs.value)
+        if (tab.id != activeId) tab,
+      for (final tab in tabs.value)
+        if (tab.id == activeId) tab,
+    ];
+    for (final tab in closing) {
+      _rememberClosed(tab);
+    }
     _emit(const <BrowserTab>[]);
     activeTabId.value = null;
     _persist();
+  }
+
+  /// 重新打开最近关闭的那个标签；没有可恢复的标签时返回 null。
+  ///
+  /// 只恢复地址、标题、桌面版设置与 URL 级历史，不恢复页面状态（与切标签
+  /// 的既有语义一致）。当前标签为空标签页时会先把它关掉，避免恢复后
+  /// 多出一个空白页。
+  BrowserTab? reopenLastClosed() {
+    while (_recentlyClosed.isNotEmpty) {
+      final closed = _recentlyClosed.removeLast();
+      _syncClosedCount();
+      final blankActive = active;
+      final reuseBlank =
+          blankActive != null &&
+          blankActive.url.isEmpty &&
+          !blankActive.isPrivate;
+      if (reuseBlank) {
+        _emit(<BrowserTab>[
+          for (final tab in tabs.value)
+            if (tab.id != blankActive.id) tab,
+        ]);
+        if (activeTabId.value == blankActive.id) activeTabId.value = null;
+      }
+      final reopened = create(
+        url: closed.url,
+        title: closed.title,
+        desktopMode: closed.desktopMode,
+      );
+      if (closed.history.isNotEmpty) {
+        final history = closed.history;
+        _replaceAt(
+          _indexOf(reopened.id),
+          reopened.copyWith(
+            history: List<String>.unmodifiable(history),
+            historyIndex: closed.historyIndex
+                .clamp(0, history.length - 1)
+                .toInt(),
+          ),
+        );
+      }
+      return byId(reopened.id);
+    }
+    return null;
+  }
+
+  void _rememberClosed(BrowserTab tab) {
+    if (tab.isPrivate || tab.url.isEmpty) return;
+    _recentlyClosed.add(tab);
+    if (_recentlyClosed.length > maxRecentlyClosed) {
+      _recentlyClosed.removeRange(
+        0,
+        _recentlyClosed.length - maxRecentlyClosed,
+      );
+    }
+    _syncClosedCount();
+  }
+
+  void _syncClosedCount() {
+    recentlyClosedCount.value = _recentlyClosed.length;
   }
 
   void updateTitle(String id, String title) {
@@ -294,6 +378,8 @@ class BrowserTabsService {
     _prefs = null;
     tabs.value = const <BrowserTab>[];
     activeTabId.value = null;
+    _recentlyClosed.clear();
+    _syncClosedCount();
     _idSequence = 0;
   }
 
@@ -316,9 +402,12 @@ class BrowserTabsService {
     final prefs = _prefs;
     if (prefs == null) return;
     final persisted = tabs.value.where((tab) => !tab.isPrivate).toList();
-    unawaited(prefs.setString(_tabsKey, jsonEncode(
-      persisted.map((tab) => tab.toJson()).toList(),
-    )));
+    unawaited(
+      prefs.setString(
+        _tabsKey,
+        jsonEncode(persisted.map((tab) => tab.toJson()).toList()),
+      ),
+    );
     final active = activeTabId.value;
     final activeTab = active == null ? null : byId(active);
     if (activeTab == null || activeTab.isPrivate) {

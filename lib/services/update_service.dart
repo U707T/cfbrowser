@@ -14,6 +14,7 @@ import '../l10n/s.dart';
 class ApkAsset {
   final String downloadUrl;
   final String? sha256Url;
+  final String? sha256;
   final String architecture;
   final int size;
   final String name;
@@ -21,26 +22,36 @@ class ApkAsset {
   ApkAsset({
     required this.downloadUrl,
     this.sha256Url,
+    this.sha256,
     required this.architecture,
     required this.size,
     required this.name,
   });
 
   Map<String, dynamic> toJson() => {
-        'downloadUrl': downloadUrl,
-        'sha256Url': sha256Url,
-        'architecture': architecture,
-        'size': size,
-        'name': name,
-      };
+    'downloadUrl': downloadUrl,
+    'sha256Url': sha256Url,
+    'sha256': sha256,
+    'architecture': architecture,
+    'size': size,
+    'name': name,
+  };
 
   factory ApkAsset.fromJson(Map<String, dynamic> json) => ApkAsset(
-        downloadUrl: json['downloadUrl'] as String,
-        sha256Url: json['sha256Url'] as String?,
-        architecture: json['architecture'] as String,
-        size: json['size'] as int,
-        name: json['name'] as String,
-      );
+    downloadUrl: json['downloadUrl'] as String,
+    sha256Url: json['sha256Url'] as String?,
+    sha256: normalizeSha256(json['sha256']),
+    architecture: json['architecture'] as String,
+    size: json['size'] as int,
+    name: json['name'] as String,
+  );
+
+  static String? normalizeSha256(Object? value) {
+    if (value is! String || !RegExp(r'^[a-fA-F0-9]{64}$').hasMatch(value)) {
+      return null;
+    }
+    return value.toLowerCase();
+  }
 }
 
 /// 更新信息模型
@@ -62,38 +73,40 @@ class UpdateInfo {
   });
 
   Map<String, dynamic> toJson() => {
-        'currentVersion': currentVersion,
-        'remoteVersion': remoteVersion,
-        'releaseUrl': releaseUrl,
-        'releaseNotes': releaseNotes,
-        'hasUpdate': hasUpdate,
-        'apkAssets': apkAssets.map((e) => e.toJson()).toList(),
-      };
+    'currentVersion': currentVersion,
+    'remoteVersion': remoteVersion,
+    'releaseUrl': releaseUrl,
+    'releaseNotes': releaseNotes,
+    'hasUpdate': hasUpdate,
+    'apkAssets': apkAssets.map((e) => e.toJson()).toList(),
+  };
 
   factory UpdateInfo.fromJson(Map<String, dynamic> json) => UpdateInfo(
-        currentVersion: json['currentVersion'] as String,
-        remoteVersion: json['remoteVersion'] as String,
-        releaseUrl: json['releaseUrl'] as String,
-        releaseNotes: json['releaseNotes'] as String,
-        hasUpdate: json['hasUpdate'] as bool,
-        apkAssets: (json['apkAssets'] as List<dynamic>?)
-                ?.map((e) => ApkAsset.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-      );
+    currentVersion: json['currentVersion'] as String,
+    remoteVersion: json['remoteVersion'] as String,
+    releaseUrl: json['releaseUrl'] as String,
+    releaseNotes: json['releaseNotes'] as String,
+    hasUpdate: json['hasUpdate'] as bool,
+    apkAssets:
+        (json['apkAssets'] as List<dynamic>?)
+            ?.map((e) => ApkAsset.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [],
+  );
 }
 
 /// 应用更新检查服务
 class UpdateService {
-  // cfluxdo 从 fork 的 Release 检查更新(包名与签名都和官方版不同,不能装官方包)
-  static const String _repository = '1molchuan/fluxdo';
+  // 只检查 cfbrowser 发布，不能跳转到包名和签名都不同的上游。
+  static const String _repository = 'U707T/cfbrowser';
   static const String _apiUrl =
       'https://api.github.com/repos/$_repository/releases/latest';
   static const String _autoCheckUpdateKey = 'auto_check_update';
   static const String _githubProxyKey = 'github_proxy_url';
-  static const String _cacheKey = 'update_cache';
-  static const String _cacheTimeKey = 'update_cache_time';
-  static const String _etagKey = 'update_etag';
+  // 废弃旧键，防止升级后仍展示此前缓存的上游安装包。
+  static const String _cacheKey = 'cfbrowser_update_cache';
+  static const String _cacheTimeKey = 'cfbrowser_update_cache_time';
+  static const String _etagKey = 'cfbrowser_update_etag';
 
   // 缓存有效期（1 小时）
   static const Duration _cacheValidDuration = Duration(hours: 1);
@@ -102,8 +115,8 @@ class UpdateService {
   final SharedPreferences? _prefs;
 
   UpdateService({Dio? dio, SharedPreferences? prefs})
-      : _dio = dio ?? Dio(),
-        _prefs = prefs;
+    : _dio = dio ?? Dio(),
+      _prefs = prefs;
 
   /// 获取自动检查更新设置
   bool getAutoCheckUpdate() {
@@ -163,8 +176,8 @@ class UpdateService {
     return packageInfo.version;
   }
 
-  /// 发行包提供的 ABI，按优先级排列(见 README 下载说明)：64 位机优先装 arm64 包
-  static const List<String> releaseAbis = ['arm64-v8a', 'armeabi-v7a'];
+  /// 当前正式发布仅提供 Android arm64 安装包。
+  static const List<String> releaseAbis = ['arm64-v8a'];
 
   /// 当前设备应装哪种发行包：按设备自己声明的 ABI 顺序（64 位机把 arm64-v8a
   /// 排在前面），取第一个我们有包的；都没有返回 null
@@ -223,8 +236,7 @@ class UpdateService {
 
     try {
       final storedEtag = _prefs?.getString(_etagKey);
-      var updateInfo =
-          await _fetchUpdateInfo(currentVersion, etag: storedEtag);
+      var updateInfo = await _fetchUpdateInfo(currentVersion, etag: storedEtag);
       if (updateInfo == null && storedEtag != null) {
         // 304 但本地缓存已不在(缓存解析失败、备份恢复只带回了 ETag):
         // 此前这里会把 304 的空 body 当 Release JSON 解析直接抛类型错误,
@@ -240,8 +252,10 @@ class UpdateService {
     } on DioException catch (e) {
       // 403/429 速率限制时尝试使用缓存
       if (e.response?.statusCode == 403 || e.response?.statusCode == 429) {
-        final cachedInfo =
-            _getCachedUpdateInfo(currentVersion, ignoreExpiry: true);
+        final cachedInfo = _getCachedUpdateInfo(
+          currentVersion,
+          ignoreExpiry: true,
+        );
         if (cachedInfo != null) {
           return cachedInfo;
         }
@@ -265,7 +279,7 @@ class UpdateService {
       options: Options(
         responseType: ResponseType.json,
         headers: {
-          'User-Agent': 'FluxDO-App',
+          'User-Agent': 'cfbrowser-App',
           'Accept': 'application/vnd.github.v3+json',
           if (etag != null) 'If-None-Match': etag,
         },
@@ -275,12 +289,16 @@ class UpdateService {
     );
 
     if (response.statusCode == 304) {
-      final cachedInfo =
-          _getCachedUpdateInfo(currentVersion, ignoreExpiry: true);
+      final cachedInfo = _getCachedUpdateInfo(
+        currentVersion,
+        ignoreExpiry: true,
+      );
       if (cachedInfo != null) {
         // 内容未变,只续一下缓存时间
         await _prefs?.setInt(
-            _cacheTimeKey, DateTime.now().millisecondsSinceEpoch);
+          _cacheTimeKey,
+          DateTime.now().millisecondsSinceEpoch,
+        );
       }
       return cachedInfo;
     }
@@ -289,8 +307,10 @@ class UpdateService {
     if (data is! Map) {
       throw Exception('Unexpected GitHub release payload');
     }
-    final updateInfo =
-        _parseUpdateInfo(Map<String, dynamic>.from(data), currentVersion);
+    final updateInfo = _parseUpdateInfo(
+      Map<String, dynamic>.from(data),
+      currentVersion,
+    );
     await _cacheUpdateInfo(updateInfo);
 
     final newEtag = response.headers.value('etag');
@@ -301,8 +321,10 @@ class UpdateService {
   }
 
   /// 从缓存获取更新信息
-  UpdateInfo? _getCachedUpdateInfo(String currentVersion,
-      {bool ignoreExpiry = false}) {
+  UpdateInfo? _getCachedUpdateInfo(
+    String currentVersion, {
+    bool ignoreExpiry = false,
+  }) {
     if (_prefs == null) return null;
 
     final cacheJson = _prefs.getString(_cacheKey);
@@ -319,11 +341,13 @@ class UpdateService {
     }
 
     try {
-      final cached =
-          UpdateInfo.fromJson(jsonDecode(cacheJson) as Map<String, dynamic>);
+      final cached = UpdateInfo.fromJson(
+        jsonDecode(cacheJson) as Map<String, dynamic>,
+      );
 
       // 重新计算 hasUpdate（因为当前版本可能已变化）
-      final hasUpdate = _compareVersions(cached.remoteVersion, currentVersion) > 0;
+      final hasUpdate =
+          _compareVersions(cached.remoteVersion, currentVersion) > 0;
 
       return UpdateInfo(
         currentVersion: currentVersion,
@@ -347,12 +371,16 @@ class UpdateService {
   }
 
   /// 解析更新信息
-  UpdateInfo _parseUpdateInfo(Map<String, dynamic> data, String currentVersion) {
+  UpdateInfo _parseUpdateInfo(
+    Map<String, dynamic> data,
+    String currentVersion,
+  ) {
     // 只去掉前缀 v(上游 tag 习惯);不能 replaceAll,会吃掉 -dev 之类
     // 预发布标识里的字母
     final tagName = data['tag_name'] as String;
-    final remoteVersion =
-        tagName.startsWith('v') ? tagName.substring(1) : tagName;
+    final remoteVersion = tagName.startsWith('v')
+        ? tagName.substring(1)
+        : tagName;
     final releaseUrl = data['html_url'] as String;
     var releaseNotes = data['body'] as String? ?? '';
 
@@ -387,45 +415,76 @@ class UpdateService {
 
     // 首先收集所有 sha256 文件的下载链接
     for (final asset in assets) {
-      final name = asset['name'] as String? ?? '';
-      if (name.endsWith('.sha256')) {
-        final apkName = name.replaceAll('.sha256', '');
-        sha256Map[apkName] = asset['browser_download_url'] as String;
+      if (asset is! Map) continue;
+      final name = asset['name'];
+      final url = asset['browser_download_url'];
+      if (name is String &&
+          name.endsWith('.sha256') &&
+          _isOfficialAssetUrl(url, name)) {
+        final apkName = name.substring(0, name.length - '.sha256'.length);
+        sha256Map[apkName] = url as String;
       }
     }
 
     // 然后解析 APK 文件
     for (final asset in assets) {
-      final name = asset['name'] as String? ?? '';
-      if (!name.endsWith('.apk')) continue;
+      if (asset is! Map) continue;
+      final name = asset['name'];
+      final url = asset['browser_download_url'];
+      if (name is! String || !_isOfficialAssetUrl(url, name)) continue;
 
-      // 从文件名中提取架构
-      // 例如：cfluxdo-1.0.0-beta.2-arm64-v8a.apk
-      final architecture = _extractArchitecture(name);
+      final architecture = abiOfFileName(name);
       if (architecture == null) continue;
 
-      apkAssets.add(ApkAsset(
-        downloadUrl: asset['browser_download_url'] as String,
-        sha256Url: sha256Map[name],
-        architecture: architecture,
-        size: asset['size'] as int? ?? 0,
-        name: name,
-      ));
+      final digest = asset['digest'];
+      apkAssets.add(
+        ApkAsset(
+          downloadUrl: url as String,
+          sha256Url: sha256Map[name],
+          sha256: digest is String && digest.startsWith('sha256:')
+              ? ApkAsset.normalizeSha256(digest.substring(7))
+              : null,
+          architecture: architecture,
+          size: asset['size'] is int ? asset['size'] as int : 0,
+          name: name,
+        ),
+      );
     }
 
     return apkAssets;
   }
 
-  /// 从 APK 文件名中识别 ABI（`cfluxdo-1.1.0-arm64-v8a.apk`）；不是发行 ABI 的文件一律忽略
+  static bool _isOfficialAssetUrl(Object? value, String name) {
+    if (value is! String) return false;
+    final uri = Uri.tryParse(value);
+    if (uri == null ||
+        uri.scheme != 'https' ||
+        uri.host != 'github.com' ||
+        uri.userInfo.isNotEmpty ||
+        uri.port != 443) {
+      return false;
+    }
+    final segments = uri.pathSegments;
+    return segments.length == 6 &&
+        '${segments[0]}/${segments[1]}'.toLowerCase() ==
+            _repository.toLowerCase() &&
+        segments[2] == 'releases' &&
+        segments[3] == 'download' &&
+        segments.last == name;
+  }
+
+  /// 从本产品的 APK 文件名中识别 ABI；忽略其他项目或未发行的架构。
   @visibleForTesting
   static String? abiOfFileName(String fileName) {
     for (final abi in releaseAbis) {
-      if (fileName.endsWith('-$abi.apk')) return abi;
+      if (fileName == 'cfbrowser-$abi.apk' ||
+          (fileName.startsWith('cfbrowser-') &&
+              fileName.endsWith('-$abi.apk'))) {
+        return abi;
+      }
     }
     return null;
   }
-
-  String? _extractArchitecture(String fileName) => abiOfFileName(fileName);
 
   /// 获取当前设备可安装的 APK 资源：按设备 ABI 优先级，取 Release 里有包的第一个
   Future<ApkAsset?> getMatchingApkAsset(UpdateInfo updateInfo) async {
@@ -441,7 +500,10 @@ class UpdateService {
 
   /// 纯函数版：设备声明的 ABI 顺序里，第一个 Release 里有包的
   @visibleForTesting
-  static ApkAsset? pickApkAsset(List<String> deviceAbis, List<ApkAsset> assets) {
+  static ApkAsset? pickApkAsset(
+    List<String> deviceAbis,
+    List<ApkAsset> assets,
+  ) {
     for (final abi in deviceAbis) {
       if (!releaseAbis.contains(abi)) continue;
       for (final asset in assets) {
@@ -462,12 +524,22 @@ class UpdateService {
   /// 0.2.28.1);`-` 之后是预发布标识(1.0.0-beta):数字段相同时无标识
   /// 大于有标识,都有标识按 semver 规则比较。非数字段按 0 处理,不抛异常
   /// (1.0.0-beta 之前的版本在这里 int.parse 会炸,手动检查直接报错)。
-  int _compareVersions(String v1, String v2) {
+  /// [candidate] 是否比 [current] 新；供纯逻辑回归与手动检查复用。
+  @visibleForTesting
+  static bool isNewerVersion(String candidate, String current) {
+    final normalized = candidate.startsWith('v')
+        ? candidate.substring(1)
+        : candidate;
+    return _compareVersions(normalized, current) > 0;
+  }
+
+  static int _compareVersions(String v1, String v2) {
     final (numbers1, pre1) = _splitVersion(v1);
     final (numbers2, pre2) = _splitVersion(v2);
 
-    final length =
-        numbers1.length > numbers2.length ? numbers1.length : numbers2.length;
+    final length = numbers1.length > numbers2.length
+        ? numbers1.length
+        : numbers2.length;
     for (int i = 0; i < length; i++) {
       final p1 = i < numbers1.length ? numbers1[i] : 0;
       final p2 = i < numbers2.length ? numbers2[i] : 0;
@@ -483,11 +555,12 @@ class UpdateService {
   /// 非数字段,其余按 ASCII;公共前缀相同时段数少的小。
   /// 直接比字符串会得出 beta.10 < beta.2、beta.2 < beta,到 beta.10 或
   /// 正式版 1.0.0 时推送就乱了。
-  int _comparePreRelease(String a, String b) {
+  static int _comparePreRelease(String a, String b) {
     final partsA = a.split('.');
     final partsB = b.split('.');
-    final length =
-        partsA.length < partsB.length ? partsA.length : partsB.length;
+    final length = partsA.length < partsB.length
+        ? partsA.length
+        : partsB.length;
     for (var i = 0; i < length; i++) {
       final numA = int.tryParse(partsA[i]);
       final numB = int.tryParse(partsB[i]);
@@ -507,7 +580,7 @@ class UpdateService {
   }
 
   /// 拆成数字段与预发布标识;`+` 之后的构建号不参与比较。
-  (List<int>, String?) _splitVersion(String version) {
+  static (List<int>, String?) _splitVersion(String version) {
     final plus = version.indexOf('+');
     final core = plus == -1 ? version : version.substring(0, plus);
     final dash = core.indexOf('-');

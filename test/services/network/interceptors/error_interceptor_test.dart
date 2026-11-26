@@ -4,11 +4,14 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cfbrowser/services/network/exceptions/api_exception.dart';
 import 'package:cfbrowser/services/network/interceptors/error_interceptor.dart';
+import 'package:cfbrowser/services/network/recovery/policies.dart';
+import 'package:cfbrowser/services/network/recovery/recovery_policy.dart';
 
 /// ErrorInterceptor 的「结果保真」契约:
 /// 把 429/5xx 转成类型化异常时,必须保留原始 response,
 /// 否则下游拦截器(CF 验证/网络日志)与调用方只能看到 statusCode=null。
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   test('429 转 RateLimitException 后下游与调用方仍可见原始 response', () async {
     final downstream = _CaptureInterceptor();
     final dio = _buildDio(
@@ -41,6 +44,87 @@ void main() {
     expect(rateLimit.retryAfterSeconds, 7);
     // 异常自身也挂着 response,供业务层提取服务端文案
     expect(rateLimit.response?.statusCode, 429);
+  });
+
+  test('第三方接口返回结构化 error 时，原始 400 错误继续传给下游与调用方', () async {
+    final downstream = _CaptureInterceptor();
+    final dio = _buildDio(
+      statusCode: 400,
+      body: '{"error":{"code":"BAD_RETURN_URL","message":"回调地址不被允许"}}',
+      headers: {
+        Headers.contentTypeHeader: ['application/json'],
+      },
+      downstream: downstream,
+    );
+
+    await expectLater(
+      dio.get<dynamic>('/api/auth/init'),
+      throwsA(
+        isA<DioException>()
+            .having((e) => e.type, 'type', DioExceptionType.badResponse)
+            .having((e) => e.response?.statusCode, 'statusCode', 400)
+            .having((e) => e.response?.data, 'data', {
+              'error': {'code': 'BAD_RETURN_URL', 'message': '回调地址不被允许'},
+            }),
+      ),
+    );
+    expect(downstream.seenStatusCode, 400);
+  });
+
+  group('429 错误文案', () {
+    for (final (label, body, message) in <(String, String, String?)>[
+      ('优先使用 error 字符串', '{"error":"限流","errors":["备用"]}', '限流'),
+      ('读取结构化 error.message', '{"error":{"message":"请求过多"}}', '请求过多'),
+      ('退回 errors 首项', '{"error":{"message":false},"errors":["太快"]}', '太快'),
+      ('忽略无效 error', '{"error":42}', null),
+      ('忽略非列表 errors', '{"errors":{"message":"无效"}}', null),
+      ('忽略非对象响应', '["无效"]', null),
+    ]) {
+      test('$label，拦截器和恢复策略都保留原始 response', () async {
+        final downstream = _CaptureInterceptor();
+        final dio = _buildDio(
+          statusCode: 429,
+          body: body,
+          headers: {
+            'retry-after': ['600'],
+            Headers.contentTypeHeader: ['application/json'],
+          },
+          downstream: downstream,
+        );
+        final Response<dynamic> response;
+        try {
+          await dio.get<dynamic>('/latest.json');
+          throw StateError('请求应失败');
+        } on DioException catch (error) {
+          expect(error.type, DioExceptionType.badResponse);
+          expect(error.response?.statusCode, 429);
+          expect(downstream.seenStatusCode, 429);
+          expect(error.error, same(downstream.seenError));
+          final rateLimit = error.error as RateLimitException;
+          expect(rateLimit.message, message);
+          expect(rateLimit.response, same(error.response));
+          response = error.response!;
+        }
+
+        final original = DioException.badResponse(
+          statusCode: 429,
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+        const policy = RateLimitPolicy();
+        final decision = await policy.decide(
+          AttemptOutcome.failure(error: original, attemptIndex: 0),
+        );
+        expect(decision, isA<RecoveryFail>());
+        final failure = (decision as RecoveryFail).error;
+        expect(failure.type, original.type);
+        expect(failure.response, same(response));
+        final rateLimit = failure.error as RateLimitException;
+        expect(rateLimit.message, message);
+        expect(rateLimit.retryAfterSeconds, 600);
+        expect(rateLimit.response, same(response));
+      });
+    }
   });
 
   test('503 转 ServerException 后仍可见原始 response', () async {

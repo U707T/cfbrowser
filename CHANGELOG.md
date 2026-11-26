@@ -2,6 +2,48 @@
 
 所有版本的变更记录。beta / rc 版本提交在 stable 发版时会折叠并入对应 stable 版本。
 
+## [1.3.0] - 2026-11-26
+
+### ⭐ 书签：可搜索、可导入导出
+
+- 新增 `lib/pages/bookmark_list_page.dart`：标题 / 网址搜索，左滑改名、分享、删除；
+  改名只更新标题，保留收藏时间与顺序。
+- 新增 `lib/services/browser/bookmark_transfer.dart`：Netscape 书签 HTML 与 JSON 备份
+  的导入导出。HTML 兼容 Chrome / Edge / Firefox / Safari；导入时丢弃 `javascript:`、
+  `chrome://` 等非网页链接并按 URL 去重，可选「合并」或「替换」，单次上限 5000 条。
+- `WebBookmarkNotifier` 新增 `importBookmarks` / `replaceAll`，仍是顺序写入、写成功才
+  更新界面；已有网址不会被导入覆盖（保留用户改过的标题）。
+- 首页与页面菜单里的「书签」直达书签页，历史单独保留为「历史记录」。
+
+### 🔍 地址栏搜索引擎可切换
+
+- 新增 `lib/services/browser/browser_search_engine.dart`：Bing（默认）/ 百度 / Google /
+  DuckDuckGo / 搜狗，选择写进 `browser_search_engine_v1`，冷启动恢复。
+- 首页与页内地址输入统一走 `BrowserUrl.normalize(template: ...)`；输入网址仍然直开，
+  只有搜索词才套模板。
+
+### 🌐 网页加载失败页
+
+- `WebViewPage` 接入 `onReceivedError`，只处理主框架失败：显示站点、原因，并提供
+  「重试」与「返回上一页」；子资源失败不会把整页换成错误页。
+- 新导航开始时清除错误态，避免旧失败回调残留。
+
+### 🗂 误关标签恢复
+
+- `BrowserTabsService` 增加内存关闭栈（最多 20 个，不含无痕与空白标签），
+  `reopenLastClosed()` 恢复地址、标题、桌面版设置与 URL 历史；当前空标签会被复用。
+- 首页菜单、页面菜单、标签面板都提供入口，数量实时显示。
+
+### 🛠 其他修复
+
+- 应用内检查更新只查本项目发布，旧缓存 / ETag 隔离，只接受本产品 arm64 资产；
+  取不到有效 SHA-256 时不启动应用内安装。
+- 分段下载只接受强 ETag，缺失或弱 ETag 回退单连接；每个分段响应的 ETag 必须与探测
+  一致，避免文件途中被替换后拼出混合内容。
+- 冷启动先恢复加速范围再启动网关；Windows 等代理决策完成后再创建 WebView2 环境。
+- 首页快捷访问不再提前请求各站 favicon。
+- 结构化 API 错误解析移植上游修复，`error` 为对象时不再强转失败。
+
 ## [1.2.2] - 2026-11-13
 
 ### 🔑 固定签名：以后更新不用再卸载重装

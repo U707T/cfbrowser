@@ -51,6 +51,7 @@ import 'services/network/doh/cf_select_notice.dart';
 import 'services/network/doh/cfhub_probe_auth_service.dart';
 import 'services/browser/browser_scope_service.dart';
 import 'services/browser/browser_quick_links_service.dart';
+import 'services/browser/browser_search_engine.dart';
 import 'services/browser/browser_tabs_service.dart';
 import 'services/network/doh/network_settings_service.dart';
 import 'services/network/proxy/proxy_settings_service.dart';
@@ -300,7 +301,7 @@ Future<void> main(List<String> args) async {
   // 阶段 1：并行执行所有不相互依赖的初始化
   final futures = <Future<dynamic>>[
     SharedPreferences.getInstance(),
-    AppConstants.initUserAgent(),
+    if (!Platform.isWindows) AppConstants.initUserAgent(),
     LogWriter.init(),
     ProxyCertificate.initialize(),
     // Windows 深链协议注册(discourse:// / fluxdo://):写 HKCU 免管理员,
@@ -387,24 +388,22 @@ Future<void> main(List<String> args) async {
   } catch (e) {
     debugPrint('[Main] 初始 VPN 状态同步失败: $e');
   }
-  await NetworkSettingsService.instance.initialize(prefs);
   // cfbrowser：读取「加速范围」（MITM/ECH 域名），必须在网关启动前完成
   await BrowserScopeService.instance.initialize(prefs);
+  await NetworkSettingsService.instance.initialize(prefs);
   // cfbrowser：恢复上次打开的标签页（只恢复非无痕标签）
   await BrowserTabsService.instance.initialize(prefs);
   // cfbrowser：恢复/初始化首页快捷访问
   await BrowserQuickLinksService.instance.initialize(prefs);
+  // cfbrowser：恢复地址栏搜索引擎（纯本地偏好，不联网）
+  await BrowserSearchEngineService.instance.initialize(prefs);
   StartupTimeline.mark('proxy');
-  // WindowsWebViewEnvironmentService 必须等 NetworkSettingsService 把本次
-  // 会话真正要用的代理端口定下来之后再创建 Environment。之前放在最早那批
-  // 并行初始化里,等的是"猜的"8s 超时——NetworkSettingsService 前面还排
-  // 着 rhttp(自己就留了最多 5s 预算)等好几个服务,8s 经常等不到真实端口
-  // 就用旧端口摆烂,导致 WebView2 全程连着一个不存在的代理、CF 验证怎么
-  // 也过不去。现在严格排在 NetworkSettingsService 完全初始化(本地代理
-  // 已经启动、setProxy() 已经真正调用过)之后再建,proxyDecision 这时
-  // 早就 complete 了,创建时直接读到确定值,不用再赌超时。
+  // Windows 探测真实 UA 会创建无头 WebView；必须等网络设置为本次会话
+  // 确定代理后再做。否则阶段 1 会等待代理决策，而代理初始化又在等阶段 1
+  // 完成，最终只能等超时，并可能让 WebView2 使用上次的端口直到重启。
   if (Platform.isWindows) {
     await WindowsWebViewEnvironmentService.instance.initialize();
+    await AppConstants.initUserAgent();
   }
   StartupTimeline.mark('network');
 

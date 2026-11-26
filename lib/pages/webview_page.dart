@@ -13,6 +13,7 @@ import '../constants.dart';
 import '../models/browser_tab.dart';
 import '../services/browser/browser_scope_service.dart';
 import '../services/browser/browser_tabs_service.dart';
+import '../services/browser/browser_search_engine.dart';
 import '../services/browser/browser_url.dart';
 import '../services/network/doh/network_settings_service.dart';
 import '../utils/frame_jank_monitor.dart';
@@ -31,9 +32,12 @@ import '../widgets/common/app_link_confirm_dialog.dart';
 import '../providers/web_bookmark_provider.dart';
 import '../providers/web_history_provider.dart';
 import '../providers/download_provider.dart';
+
 import 'package:common_ui/common_ui.dart';
+
 import '../l10n/s.dart';
 import '../utils/dialog_utils.dart';
+import 'bookmark_list_page.dart';
 import 'my_browser_page.dart';
 
 /// 通用内置浏览器页面。
@@ -140,6 +144,12 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   /// 没消费掉就说明这次遍历没成功，后续导航仍按新导航处理。
   String? _pendingTraversalTarget;
 
+  /// 主文档加载失败时的提示（null 表示当前没有错误页）。
+  ///
+  /// 只认主框架的失败：图片、统计脚本、广告位这类子资源失败是常态，
+  /// 不能因此把整页换成错误页。
+  _LoadFailure? _loadFailure;
+
   late final BrowserTabsService _tabs;
   late final String _tabId;
   late final bool _isPrivate;
@@ -173,7 +183,8 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     _tabs = BrowserTabsService.instance;
 
     final existing = widget.tabId == null ? null : _tabs.byId(widget.tabId!);
-    final tab = existing ??
+    final tab =
+        existing ??
         _tabs.create(
           url: widget.url,
           title: widget.title ?? '',
@@ -186,10 +197,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     _tabs.tabs.addListener(_onTabsChanged);
 
     _currentUrl = widget.url.isNotEmpty ? widget.url : tab.url;
-    _currentTitle =
-        (widget.title != null && widget.title!.isNotEmpty)
-            ? widget.title!
-            : tab.title;
+    _currentTitle = (widget.title != null && widget.title!.isNotEmpty)
+        ? widget.title!
+        : tab.title;
     // 新标签页没有要加载的地址，不要一进来就挂一条进度条。
     _isLoading = _currentUrl.isNotEmpty;
 
@@ -274,11 +284,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     // 把 jar 里仍有效的值推过去，页面下一次请求就能恢复登录态（口径在
     // WebViewUses）。
     unawaited(
-      use.checkpoint(
-        WebViewUseOutcome.loaded,
-        reason: reason,
-        url: siteUrl,
-      ),
+      use.checkpoint(WebViewUseOutcome.loaded, reason: reason, url: siteUrl),
     );
   }
 
@@ -419,9 +425,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                     child: Text(
                       _currentTitle.isNotEmpty
                           ? _currentTitle
-                          : (_currentUrl.isNotEmpty
-                                ? _currentUrl
-                                : '输入网址'),
+                          : (_currentUrl.isNotEmpty ? _currentUrl : '输入网址'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -469,139 +473,158 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
             // 弹窗页只保留关闭：标签按钮/菜单在多窗口里切走会把弹窗顶掉。
             if (!_isPopup) ...[
               ValueListenableBuilder<List<BrowserTab>>(
-              valueListenable: _tabs.tabs,
-              builder: (context, tabs, _) {
-                return IconButton(
-                  tooltip: '标签页',
-                  onPressed: _showTabs,
-                  icon: Badge.count(
-                    count: tabs.length,
-                    isLabelVisible: tabs.length > 1,
-                    child: const Icon(Symbols.tab_rounded),
+                valueListenable: _tabs.tabs,
+                builder: (context, tabs, _) {
+                  return IconButton(
+                    tooltip: '标签页',
+                    onPressed: _showTabs,
+                    icon: Badge.count(
+                      count: tabs.length,
+                      isLabelVisible: tabs.length > 1,
+                      child: const Icon(Symbols.tab_rounded),
+                    ),
+                  );
+                },
+              ),
+              SwipeDismissiblePopupMenuButton<String>(
+                onSelected: _handleMenuAction,
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'new_tab',
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.add_rounded),
+                        const SizedBox(width: 8),
+                        const Text('新建标签页'),
+                      ],
+                    ),
                   ),
-                );
-              },
-            ),
-            SwipeDismissiblePopupMenuButton<String>(
-              onSelected: _handleMenuAction,
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'new_tab',
-                  child: Row(
-                    children: [
-                      const Icon(Symbols.add_rounded),
-                      const SizedBox(width: 8),
-                      const Text('新建标签页'),
-                    ],
+                  PopupMenuItem(
+                    value: 'new_private_tab',
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.visibility_off_rounded),
+                        const SizedBox(width: 8),
+                        const Text('无痕标签页'),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'new_private_tab',
-                  child: Row(
-                    children: [
-                      const Icon(Symbols.visibility_off_rounded),
-                      const SizedBox(width: 8),
-                      const Text('无痕标签页'),
-                    ],
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'find',
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.find_in_page_rounded),
+                        const SizedBox(width: 8),
+                        const Text('在页面中查找'),
+                      ],
+                    ),
                   ),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'find',
-                  child: Row(
-                    children: [
-                      const Icon(Symbols.find_in_page_rounded),
-                      const SizedBox(width: 8),
-                      const Text('在页面中查找'),
-                    ],
+                  PopupMenuItem(
+                    value: 'toggle_desktop',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Symbols.desktop_windows_rounded,
+                          fill: _desktopMode ? 1 : 0,
+                        ),
+                        const SizedBox(width: 8),
+                        const Expanded(child: Text('桌面版网站')),
+                        if (_desktopMode)
+                          const Icon(Symbols.check_rounded, size: 18),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'toggle_desktop',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Symbols.desktop_windows_rounded,
-                        fill: _desktopMode ? 1 : 0,
-                      ),
-                      const SizedBox(width: 8),
-                      const Expanded(child: Text('桌面版网站')),
-                      if (_desktopMode)
-                        const Icon(Symbols.check_rounded, size: 18),
-                    ],
+                  PopupMenuItem(
+                    value: 'reopen_closed',
+                    enabled: _tabs.recentlyClosed.isNotEmpty,
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.reopen_window_rounded),
+                        const SizedBox(width: 8),
+                        const Text('重新打开关闭的标签'),
+                      ],
+                    ),
                   ),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'toggle_bookmark',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Symbols.star_rounded,
-                        fill: isBookmarked ? 1 : 0,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isBookmarked
-                            ? context.l10n.webview_removeBookmark
-                            : context.l10n.webview_addBookmark,
-                      ),
-                    ],
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'toggle_bookmark',
+                    enabled: !_isPrivate && BrowserUrl.isWebUrl(_currentUrl),
+                    child: Row(
+                      children: [
+                        Icon(Symbols.star_rounded, fill: isBookmarked ? 1 : 0),
+                        const SizedBox(width: 8),
+                        Text(
+                          isBookmarked
+                              ? context.l10n.webview_removeBookmark
+                              : context.l10n.webview_addBookmark,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'share',
-                  child: Row(
-                    children: [
-                      const Icon(Symbols.share_rounded),
-                      const SizedBox(width: 8),
-                      const Text('分享页面'),
-                    ],
+                  PopupMenuItem(
+                    value: 'share',
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.share_rounded),
+                        const SizedBox(width: 8),
+                        const Text('分享页面'),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'library',
-                  child: Row(
-                    children: [
-                      const Icon(Symbols.collections_bookmark_rounded),
-                      const SizedBox(width: 8),
-                      const Text('书签与历史'),
-                    ],
+                  PopupMenuItem(
+                    value: 'bookmarks',
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.star_rounded),
+                        const SizedBox(width: 8),
+                        const Text('书签'),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'copy_url',
-                  child: Row(
-                    children: [
-                      const Icon(Symbols.content_copy_rounded),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.common_copyLink),
-                    ],
+                  PopupMenuItem(
+                    value: 'library',
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.collections_bookmark_rounded),
+                        const SizedBox(width: 8),
+                        const Text('历史记录'),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'open_external',
-                  child: Row(
-                    children: [
-                      const Icon(Symbols.open_in_browser_rounded),
-                      const SizedBox(width: 8),
-                      Text(context.l10n.webview_openExternal),
-                    ],
+                  PopupMenuItem(
+                    value: 'copy_url',
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.content_copy_rounded),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.common_copyLink),
+                      ],
+                    ),
                   ),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'home',
-                  child: Row(
-                    children: [
-                      const Icon(Symbols.home_rounded),
-                      const SizedBox(width: 8),
-                      const Text('回到主页'),
-                    ],
+                  PopupMenuItem(
+                    value: 'open_external',
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.open_in_browser_rounded),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.webview_openExternal),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'home',
+                    child: Row(
+                      children: [
+                        const Icon(Symbols.home_rounded),
+                        const SizedBox(width: 8),
+                        const Text('回到主页'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ],
         ),
@@ -644,10 +667,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                                 challenge,
                               ),
                           onRenderProcessGone: (_, detail) =>
-                              handleWebViewRenderGone(
-                                'in_app_browser',
-                                detail,
-                              ),
+                              handleWebViewRenderGone('in_app_browser', detail),
                           onWebViewCreated: (controller) async {
                             _controller = controller;
                             // 老 WKWebView 的 JS 运行时错误回传到 LogWriter。
@@ -671,9 +691,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                               final use = _webViewUse;
                               if (use != null) await use.ready;
                               await controller.loadUrl(
-                                urlRequest: URLRequest(
-                                  url: WebUri(initialUrl),
-                                ),
+                                urlRequest: URLRequest(url: WebUri(initialUrl)),
                               );
                             }
                             // Android: 启用 WebAuthn/PassKey 支持
@@ -686,6 +704,9 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                           },
                           onLoadStart: (controller, url) {
                             final urlString = url?.toString() ?? '';
+                            if (_loadFailure != null) {
+                              setState(() => _loadFailure = null);
+                            }
                             // 新标签页的 about:blank 不算一次导航，否则快捷入口
                             // 会被一个空白页盖掉。
                             if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
@@ -753,9 +774,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                                 controller
                                     .injectCSSCode(source: widget.injectCss!)
                                     .catchError((Object e) {
-                                      debugPrint(
-                                        '[WebViewPage] 注入 CSS 失败: $e',
-                                      );
+                                      debugPrint('[WebViewPage] 注入 CSS 失败: $e');
                                     }),
                               );
                             }
@@ -766,7 +785,10 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                                     .read(webHistoryProvider.notifier)
                                     .record(urlString, _currentTitle);
                               }
-                              _recordNavigation(urlString, title: _currentTitle);
+                              _recordNavigation(
+                                urlString,
+                                title: _currentTitle,
+                              );
                             }
                           },
                           onUpdateVisitedHistory:
@@ -776,11 +798,10 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                                 final bool canGoForward;
                                 try {
                                   canGoBack = await controller.canGoBack();
-                                  canGoForward = await controller.canGoForward();
+                                  canGoForward = await controller
+                                      .canGoForward();
                                 } catch (e) {
-                                  debugPrint(
-                                    '[WebViewPage] 读取历史状态失败: $e',
-                                  );
+                                  debugPrint('[WebViewPage] 读取历史状态失败: $e');
                                   return;
                                 }
                                 if (!mounted ||
@@ -788,7 +809,8 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                                   return;
                                 }
                                 final urlString = url?.toString();
-                                if (_currentUrl.isEmpty && _isBlankUrl(urlString)) {
+                                if (_currentUrl.isEmpty &&
+                                    _isBlankUrl(urlString)) {
                                   return;
                                 }
                                 setState(() {
@@ -810,14 +832,30 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                               _tabs.updateTitle(_tabId, title);
                             }
                           },
+                          onReceivedError: (controller, request, error) {
+                            if (request.isForMainFrame == false) return;
+                            final failedUrl = request.url.toString();
+                            // 上一次导航的失败回调可能在新的导航开始后才到，
+                            // 与当前地址对不上就不算这次的错。
+                            if (_currentUrl.isNotEmpty &&
+                                failedUrl != _currentUrl) {
+                              return;
+                            }
+                            setState(() {
+                              _isLoading = false;
+                              _loadFailure = _LoadFailure(
+                                url: failedUrl,
+                                message: error.description,
+                              );
+                            });
+                          },
                           onDownloadStarting: (controller, request) {
                             final url = request.url.toString();
                             ref
                                 .read(downloadProvider.notifier)
                                 .startDownload(
                                   url: url,
-                                  suggestedFilename:
-                                      request.suggestedFilename,
+                                  suggestedFilename: request.suggestedFilename,
                                   mimeType: request.mimeType,
                                   contentLength: request.contentLength,
                                 );
@@ -828,7 +866,7 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                               handled: true,
                               action: DownloadStartResponseAction.CANCEL,
                             );
-                        },
+                          },
                         ),
                         getController: () => _controller,
                       ),
@@ -837,6 +875,8 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
                       !_isPopup &&
                       _webViewSnapshot == null)
                     _buildNewTabPage(theme),
+                  if (_loadFailure != null && _webViewSnapshot == null)
+                    _buildErrorPage(theme, _loadFailure!),
                   if (_webViewSnapshot != null)
                     Positioned.fill(
                       child: RepaintBoundary(
@@ -999,6 +1039,73 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     );
   }
 
+  /// 主文档加载失败时盖在 WebView 上的提示页。
+  ///
+  /// 保留原 WebView 不销毁：点「重试」直接 reload，失败多半是网络问题，
+  /// 不需要重建整个标签页。
+  Widget _buildErrorPage(ThemeData theme, _LoadFailure failure) {
+    final host = BrowserUrl.hostOf(failure.url);
+    return Container(
+      color: theme.colorScheme.surface,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Symbols.cloud_off_rounded,
+            size: 56,
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '无法打开这个页面',
+            style: theme.textTheme.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            host.isEmpty ? failure.url : host,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          if (failure.message.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              failure.message,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _navigateToUrl(failure.url),
+                icon: const Icon(Symbols.refresh_rounded, size: 18),
+                label: const Text('重试'),
+              ),
+              const SizedBox(width: 12),
+              if (_tabs.byId(_tabId)?.canGoBack == true)
+                TextButton.icon(
+                  onPressed: _goBack,
+                  icon: const Icon(Symbols.arrow_back_rounded, size: 18),
+                  label: const Text('返回上一页'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _goBack() async {
     final controller = _controller;
     if (controller == null) return;
@@ -1062,6 +1169,13 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     } catch (e) {
       if (mounted) ToastService.showError('分享失败：$e');
     }
+  }
+
+  void _openBookmarks() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const BookmarkListPage()),
+    );
   }
 
   void _openLibrary() {
@@ -1241,11 +1355,22 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       case 'toggle_desktop':
         _toggleDesktopMode();
         break;
+      case 'reopen_closed':
+        final reopened = _tabs.reopenLastClosed();
+        if (reopened == null) {
+          ToastService.showError('没有可重新打开的标签');
+        } else if (mounted) {
+          _switchToTab(reopened);
+        }
+        break;
       case 'toggle_bookmark':
         _toggleBookmark();
         break;
       case 'share':
         _share();
+        break;
+      case 'bookmarks':
+        _openBookmarks();
         break;
       case 'library':
         _openLibrary();
@@ -1422,7 +1547,10 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   }
 
   Future<void> _navigateToUrl(String input) async {
-    final url = BrowserUrl.normalize(input);
+    final url = BrowserUrl.normalize(
+      input,
+      template: BrowserSearchEngineService.instance.template,
+    );
     if (url.isEmpty) return;
     final controller = _controller;
     if (controller == null) return;
@@ -1439,16 +1567,22 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
     }
   }
 
-  void _toggleBookmark() {
-    if (_currentUrl.isEmpty) return;
-    final added = ref
-        .read(webBookmarkProvider.notifier)
-        .toggle(_currentUrl, _currentTitle);
-    ToastService.showSuccess(
-      added
-          ? S.current.webview_bookmarkAdded
-          : S.current.webview_bookmarkRemoved,
-    );
+  Future<void> _toggleBookmark() async {
+    final url = _currentUrl;
+    if (_isPrivate || !BrowserUrl.isWebUrl(url)) return;
+    try {
+      final added = await ref
+          .read(webBookmarkProvider.notifier)
+          .toggle(url, _currentTitle);
+      if (!mounted) return;
+      ToastService.showSuccess(
+        added
+            ? S.current.webview_bookmarkAdded
+            : S.current.webview_bookmarkRemoved,
+      );
+    } catch (_) {
+      if (mounted) ToastService.showError('未能保存书签更改，请重试');
+    }
   }
 
   Future<void> _handleBackNavigation() async {
@@ -1494,4 +1628,12 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       }
     }
   }
+}
+
+/// 主文档加载失败的信息（只在内存里，用于错误页展示）。
+class _LoadFailure {
+  const _LoadFailure({required this.url, required this.message});
+
+  final String url;
+  final String message;
 }

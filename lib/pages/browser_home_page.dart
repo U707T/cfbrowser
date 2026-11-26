@@ -8,17 +8,21 @@ import '../models/browser_tab.dart';
 import '../providers/read_later_provider.dart' show appReadyProvider;
 import '../providers/web_history_provider.dart';
 import '../services/browser/browser_tabs_service.dart';
+import '../services/browser/browser_search_engine.dart';
 import '../services/browser/browser_url.dart';
 import '../services/browser_trust_coordinator.dart';
 import '../services/connectivity_service.dart';
 import '../services/deep_link_service.dart';
 import '../services/migration_notice.dart';
+import '../services/toast_service.dart';
+import '../utils/dialog_utils.dart';
 import 'login_page.dart';
 import '../services/network/doh/network_settings_service.dart';
 import '../widgets/browser/browser_tabs_sheet.dart';
 import '../widgets/browser/quick_access_grid.dart';
 import 'browser_scope_page.dart';
 import 'network_settings_page/network_settings_page.dart';
+import 'bookmark_list_page.dart';
 import 'download_list_page.dart';
 import 'my_browser_page.dart';
 import 'settings_page.dart';
@@ -68,7 +72,10 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
   }
 
   void _go(String raw) {
-    final url = BrowserUrl.normalize(raw);
+    final url = BrowserUrl.normalize(
+      raw,
+      template: BrowserSearchEngineService.instance.template,
+    );
     if (url.isEmpty) return;
     _focusNode.unfocus();
     // 当前标签还是空白页时直接复用它，避免地址栏每输一次就多一个空标签。
@@ -112,6 +119,41 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
     );
   }
 
+  void _openBookmarks() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const BookmarkListPage()),
+    );
+  }
+
+  /// 选搜索引擎：写偏好，地址栏与页内地址输入同时生效。
+  Future<void> _chooseSearchEngine() async {
+    final service = BrowserSearchEngineService.instance;
+    final current = service.current.value;
+    final picked = await showAppDialog<BrowserSearchEngine>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('搜索引擎'),
+        children: [
+          for (final engine in BrowserSearchEngine.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, engine),
+              child: Row(
+                children: [
+                  Expanded(child: Text(engine.label)),
+                  if (engine == current) const Icon(Symbols.check_rounded),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+    if (picked == null || !mounted) return;
+    await service.select(picked);
+    if (!mounted) return;
+    ToastService.showSuccess('搜索已切换到 ${picked.label}');
+  }
+
   void _openDownloads() {
     Navigator.push(
       context,
@@ -146,6 +188,15 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
       case 'library':
         _openLibrary();
         break;
+      case 'bookmarks':
+        _openBookmarks();
+        break;
+      case 'search_engine':
+        unawaited(_chooseSearchEngine());
+        break;
+      case 'reopen':
+        _reopenClosedTab();
+        break;
       case 'downloads':
         _openDownloads();
         break;
@@ -159,6 +210,15 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
         _openSettings();
         break;
     }
+  }
+
+  void _reopenClosedTab() {
+    final tab = BrowserTabsService.instance.reopenLastClosed();
+    if (tab == null) {
+      ToastService.showError('没有可重新打开的标签');
+      return;
+    }
+    _openTab(tab);
   }
 
   @override
@@ -191,84 +251,122 @@ class _BrowserHomePageState extends ConsumerState<BrowserHomePage> {
               );
             },
           ),
-          PopupMenuButton<String>(
-            tooltip: '更多',
-            icon: const Icon(Symbols.more_vert_rounded),
-            onSelected: _handleMenuAction,
-            itemBuilder: (context) => [
-              if (widget.onOpenForum != null)
+          ValueListenableBuilder<int>(
+            valueListenable: tabsService.recentlyClosedCount,
+            builder: (context, closedCount, _) => PopupMenuButton<String>(
+              tooltip: '更多',
+              icon: const Icon(Symbols.more_vert_rounded),
+              onSelected: _handleMenuAction,
+              itemBuilder: (context) => [
+                if (widget.onOpenForum != null)
+                  const PopupMenuItem(
+                    value: 'forum',
+                    child: Row(
+                      children: [
+                        Icon(Symbols.forum_rounded),
+                        SizedBox(width: 10),
+                        Text('Linux.do 论坛'),
+                      ],
+                    ),
+                  ),
                 const PopupMenuItem(
-                  value: 'forum',
+                  value: 'login',
                   child: Row(
                     children: [
-                      Icon(Symbols.forum_rounded),
+                      Icon(Symbols.login_rounded),
                       SizedBox(width: 10),
-                      Text('Linux.do 论坛'),
+                      Text('登录 linux.do'),
                     ],
                   ),
                 ),
-              const PopupMenuItem(
-                value: 'login',
-                child: Row(
-                  children: [
-                    Icon(Symbols.login_rounded),
-                    SizedBox(width: 10),
-                    Text('登录 linux.do'),
-                  ],
+                const PopupMenuItem(
+                  value: 'library',
+                  child: Row(
+                    children: [
+                      Icon(Symbols.collections_bookmark_rounded),
+                      SizedBox(width: 10),
+                      Text('书签与历史'),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'library',
-                child: Row(
-                  children: [
-                    Icon(Symbols.collections_bookmark_rounded),
-                    SizedBox(width: 10),
-                    Text('书签与历史'),
-                  ],
+                const PopupMenuItem(
+                  value: 'bookmarks',
+                  child: Row(
+                    children: [
+                      Icon(Symbols.star_rounded),
+                      SizedBox(width: 10),
+                      Text('书签'),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'downloads',
-                child: Row(
-                  children: [
-                    Icon(Symbols.download_rounded),
-                    SizedBox(width: 10),
-                    Text('下载'),
-                  ],
+                PopupMenuItem(
+                  value: 'reopen',
+                  enabled: closedCount > 0,
+                  child: Row(
+                    children: [
+                      const Icon(Symbols.reopen_window_rounded),
+                      const SizedBox(width: 10),
+                      Text(
+                        closedCount > 0
+                            ? '重新打开关闭的标签（$closedCount）'
+                            : '重新打开关闭的标签',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
-                value: 'network',
-                child: Row(
-                  children: [
-                    Icon(Symbols.bolt_rounded),
-                    SizedBox(width: 10),
-                    Text('网络与优选（DoH）'),
-                  ],
+                const PopupMenuItem(
+                  value: 'downloads',
+                  child: Row(
+                    children: [
+                      Icon(Symbols.download_rounded),
+                      SizedBox(width: 10),
+                      Text('下载'),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'scope',
-                child: Row(
-                  children: [
-                    Icon(Symbols.tune_rounded),
-                    SizedBox(width: 10),
-                    Text('加速范围'),
-                  ],
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'network',
+                  child: Row(
+                    children: [
+                      Icon(Symbols.bolt_rounded),
+                      SizedBox(width: 10),
+                      Text('网络与优选（DoH）'),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'settings',
-                child: Row(
-                  children: [
-                    Icon(Symbols.settings_rounded),
-                    SizedBox(width: 10),
-                    Text('设置'),
-                  ],
+                const PopupMenuItem(
+                  value: 'scope',
+                  child: Row(
+                    children: [
+                      Icon(Symbols.tune_rounded),
+                      SizedBox(width: 10),
+                      Text('加速范围'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const PopupMenuItem(
+                  value: 'search_engine',
+                  child: Row(
+                    children: [
+                      Icon(Symbols.manage_search_rounded),
+                      SizedBox(width: 10),
+                      Text('搜索引擎'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: Row(
+                    children: [
+                      Icon(Symbols.settings_rounded),
+                      SizedBox(width: 10),
+                      Text('设置'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

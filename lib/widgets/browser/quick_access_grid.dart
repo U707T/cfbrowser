@@ -5,7 +5,6 @@ import '../../services/browser/browser_quick_links_service.dart';
 import '../../services/browser/browser_url.dart';
 import '../../services/toast_service.dart';
 import '../../utils/dialog_utils.dart';
-import '../common/cached_image.dart';
 
 /// Via 风格的快捷访问网格：站点图标 + 名称，末尾一个添加入口。
 class QuickAccessGrid extends StatelessWidget {
@@ -66,10 +65,7 @@ class QuickAccessGrid extends StatelessWidget {
     );
   }
 
-  Future<void> _showActions(
-    BuildContext context,
-    BrowserQuickLink link,
-  ) async {
+  Future<void> _showActions(BuildContext context, BrowserQuickLink link) async {
     final action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -80,7 +76,11 @@ class QuickAccessGrid extends StatelessWidget {
           ListTile(
             leading: const Icon(Symbols.open_in_new_rounded),
             title: const Text('打开'),
-            subtitle: Text(link.url, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(
+              link.url,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             onTap: () => Navigator.pop(ctx, 'open'),
           ),
           ListTile(
@@ -143,7 +143,8 @@ class QuickAccessGrid extends StatelessWidget {
                   labelText: '名称（可选）',
                   hintText: '留空则使用域名',
                 ),
-                onSubmitted: (_) => _submitEditor(ctx, urlController, titleController),
+                onSubmitted: (_) =>
+                    _submitEditor(ctx, urlController, titleController),
               ),
             ],
           ),
@@ -154,8 +155,7 @@ class QuickAccessGrid extends StatelessWidget {
             child: const Text('取消'),
           ),
           FilledButton(
-            onPressed: () =>
-                _submitEditor(ctx, urlController, titleController),
+            onPressed: () => _submitEditor(ctx, urlController, titleController),
             child: Text(link == null ? '添加' : '保存'),
           ),
         ],
@@ -169,7 +169,9 @@ class QuickAccessGrid extends StatelessWidget {
     if (link == null) {
       final added = service.add(url: result.$2, title: result.$1);
       if (added == null) {
-        ToastService.showError('最多只能添加 ${BrowserQuickLinksService.maxLinks} 个快捷访问');
+        ToastService.showError(
+          '最多只能添加 ${BrowserQuickLinksService.maxLinks} 个快捷访问',
+        );
       }
     } else {
       service.update(link.id, url: result.$2, title: result.$1);
@@ -258,7 +260,6 @@ class _SiteIcon extends StatelessWidget {
       hash = (hash * 31 + unit) & 0x7fffffff;
     }
     final color = _palette[hash % _palette.length];
-    final faviconUrl = host.isEmpty ? null : 'https://$host/favicon.ico';
 
     return Container(
       width: 48,
@@ -268,34 +269,16 @@ class _SiteIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Center(
-            child: Text(
-              letter,
-              style: TextStyle(
-                color: color,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+      // 不因展示快捷入口而在用户点击前访问站点。
+      child: Center(
+        child: Text(
+          letter,
+          style: TextStyle(
+            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
           ),
-          if (faviconUrl != null)
-            Padding(
-              padding: const EdgeInsets.all(9),
-              // 走 App 的缓存/网关链路：Image.network 直连会绕过代理与 ECH，
-              // 墙内取 favicon 常常直接失败，而且每次进首页都重新请求。
-              child: CachedImage(
-                url: faviconUrl,
-                fit: BoxFit.contain,
-                memCacheWidth: 96,
-                memCacheHeight: 96,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }

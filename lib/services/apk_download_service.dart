@@ -20,11 +20,7 @@ class ApkDownloadProgress {
   final int progress; // 0-100
   final String? error;
 
-  ApkDownloadProgress({
-    required this.status,
-    this.progress = 0,
-    this.error,
-  });
+  ApkDownloadProgress({required this.status, this.progress = 0, this.error});
 }
 
 /// APK 下载安装服务
@@ -42,27 +38,26 @@ class ApkDownloadService {
 
     // 应用用户配置的 GitHub 反代前缀（未配置时保持直连）
     final githubProxy = await UpdateService.getGithubProxy();
-    final downloadUrl =
-        UpdateService.applyGithubProxy(asset.downloadUrl, githubProxy);
+    final downloadUrl = UpdateService.applyGithubProxy(
+      asset.downloadUrl,
+      githubProxy,
+    );
 
-    // 阶段 1：获取 SHA256 校验和（如果有）
-    String? expectedSha256;
-    if (asset.sha256Url != null) {
-      yield ApkDownloadProgress(
-        status: ApkDownloadStatus.verifying,
-        progress: 0,
-      );
-
-      try {
-        expectedSha256 = await _fetchSha256Checksum(
-          UpdateService.applyGithubProxy(asset.sha256Url!, githubProxy),
-        );
-      } catch (e) {
-        // SHA256 获取失败不影响下载
-      }
+    // 优先使用官方 Release API 的摘要；旧发布的校验文件也只从官方地址读取。
+    var expectedSha256 = ApkAsset.normalizeSha256(asset.sha256);
+    if (expectedSha256 == null && asset.sha256Url != null) {
+      yield ApkDownloadProgress(status: ApkDownloadStatus.verifying);
+      expectedSha256 = await _fetchSha256Checksum(asset.sha256Url!);
     }
 
     if (_cancelled) return;
+    if (expectedSha256 == null) {
+      yield ApkDownloadProgress(
+        status: ApkDownloadStatus.error,
+        error: '无法获取官方安装包校验值，请到项目发布页下载并手动验证。',
+      );
+      return;
+    }
 
     // 阶段 2：使用 ota_update 下载并安装 APK
     yield ApkDownloadProgress(
@@ -122,7 +117,9 @@ class ApkDownloadService {
           case OtaStatus.DOWNLOAD_ERROR:
             yield ApkDownloadProgress(
               status: ApkDownloadStatus.error,
-              error: S.current.download_failedWithError(event.value ?? S.current.error_unknown),
+              error: S.current.download_failedWithError(
+                event.value ?? S.current.error_unknown,
+              ),
             );
             break;
 
@@ -143,7 +140,9 @@ class ApkDownloadService {
           case OtaStatus.INSTALLATION_ERROR:
             yield ApkDownloadProgress(
               status: ApkDownloadStatus.error,
-              error: S.current.download_installFailed(event.value ?? S.current.error_unknown),
+              error: S.current.download_installFailed(
+                event.value ?? S.current.error_unknown,
+              ),
             );
             break;
 
@@ -168,7 +167,7 @@ class ApkDownloadService {
         // SHA256 文件格式通常为："hash  filename" 或仅 "hash"
         final content = response.data!.trim();
         final parts = content.split(RegExp(r'\s+'));
-        return parts.first;
+        return ApkAsset.normalizeSha256(parts.first);
       }
     } catch (e) {
       // 忽略获取 SHA256 失败

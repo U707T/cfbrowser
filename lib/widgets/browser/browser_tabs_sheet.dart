@@ -67,8 +67,27 @@ class _BrowserTabsSheet extends StatelessWidget {
                           style: theme.textTheme.titleMedium,
                         ),
                         const Spacer(),
+                        ValueListenableBuilder<int>(
+                          valueListenable: service.recentlyClosedCount,
+                          builder: (context, count, _) {
+                            if (count == 0) return const SizedBox.shrink();
+                            return TextButton.icon(
+                              onPressed: () {
+                                final reopened = service.reopenLastClosed();
+                                Navigator.pop(context);
+                                if (reopened != null) onSelect(reopened);
+                              },
+                              icon: const Icon(
+                                Symbols.reopen_window_rounded,
+                                size: 18,
+                              ),
+                              label: Text('恢复（$count）'),
+                            );
+                          },
+                        ),
                         TextButton.icon(
-                          onPressed: () => _createTab(context, isPrivate: false),
+                          onPressed: () =>
+                              _createTab(context, isPrivate: false),
                           icon: const Icon(Symbols.add_rounded, size: 18),
                           label: const Text('新建'),
                         ),
@@ -115,7 +134,8 @@ class _BrowserTabsSheet extends StatelessWidget {
                               return ListTile(
                                 selected: selected,
                                 selectedTileColor: theme
-                                    .colorScheme.primaryContainer
+                                    .colorScheme
+                                    .primaryContainer
                                     .withValues(alpha: 0.35),
                                 leading: Icon(
                                   tab.isPrivate

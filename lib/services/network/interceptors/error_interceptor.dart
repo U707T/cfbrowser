@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../l10n/s.dart';
 import '../../toast_service.dart';
 import '../cf/cf_challenge_classifier.dart';
+import '../discourse_error_message.dart';
 import '../exceptions/api_exception.dart';
 import '../flux_request_spec.dart';
 import '../recovery/retry_after.dart';
@@ -50,15 +51,7 @@ class ErrorInterceptor extends Interceptor {
         ? spec.showErrorToast
         : _mutationMethods.contains(method);
 
-    // 提取错误信息
-    String? errorMessage;
-    final data = err.response?.data;
-    if (data is Map<String, dynamic>) {
-      // Discourse API 错误格式
-      errorMessage =
-          data['error'] as String? ??
-          (data['errors'] as List?)?.firstOrNull?.toString();
-    }
+    final errorMessage = extractDiscourseErrorMessage(err.response?.data);
 
     // 转成类型化异常供 UI 层处理。
     //

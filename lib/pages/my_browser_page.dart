@@ -3,7 +3,6 @@ import 'package:app_icons/app_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ai_model_manager/ai_model_manager.dart'
     show SwipeActionCell, SwipeAction, SwipeActionScope;
-import '../models/web_bookmark.dart';
 import '../models/web_history_item.dart';
 import '../providers/web_bookmark_provider.dart';
 import '../providers/web_history_provider.dart';
@@ -11,6 +10,7 @@ import '../utils/time_utils.dart';
 import '../l10n/s.dart';
 import '../utils/dialog_utils.dart';
 import 'package:m3e_ui/m3e_ui.dart';
+import 'bookmark_list_page.dart';
 import 'webview_page.dart';
 import 'download_list_page.dart';
 import '../widgets/layout/master_detail_layout.dart';
@@ -51,7 +51,7 @@ class MyBrowserPage extends ConsumerWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => const _BookmarkListPage()),
+                      builder: (_) => const BookmarkListPage()),
                 ),
               ),
               _EntryTile(
@@ -209,213 +209,6 @@ class _EntryTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// 收藏列表页（二级页面）
-// ---------------------------------------------------------------------------
-
-class _BookmarkListPage extends ConsumerWidget {
-  const _BookmarkListPage();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bookmarks = ref.watch(webBookmarkProvider);
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.myBrowser_bookmarks),
-        actions: [
-          IconButton(
-            icon: const Icon(Symbols.add_rounded),
-            tooltip: context.l10n.myBrowser_addManually,
-            onPressed: () => _showAddDialog(context, ref),
-          ),
-        ],
-      ),
-      body: bookmarks.isEmpty
-          ? mojianEmptyState(context, Symbols.star_rounded, context.l10n.myBrowser_empty) ?? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Symbols.star_rounded,
-                      size: 64,
-                      color: theme.colorScheme.onSurfaceVariant
-                          .withValues(alpha: 0.4)),
-                  const SizedBox(height: 16),
-                  Text(
-                    context.l10n.myBrowser_empty,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : SwipeActionScope(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: bookmarks.length,
-                itemBuilder: (context, index) {
-                  final item = bookmarks[index];
-                  return Padding(
-                    padding: EdgeInsets.only(
-                        bottom: index < bookmarks.length - 1 ? 12 : 0),
-                    child: SwipeActionCell(
-                      key: ValueKey(item.url),
-                      trailingActions: [
-                        SwipeAction(
-                          icon: Symbols.edit_rounded,
-                          color: Colors.blue,
-                          label: S.current.myBrowser_edit,
-                          onPressed: () =>
-                              _showEditDialog(context, ref, item),
-                        ),
-                        SwipeAction(
-                          icon: Symbols.delete_rounded,
-                          color: Colors.red,
-                          label: S.current.myBrowser_delete,
-                          onPressed: () =>
-                              _confirmDelete(context, ref, item),
-                        ),
-                      ],
-                      child: _BookmarkCard(
-                        item: item,
-                        onTap: () => WebViewPage.open(context, item.url,
-                            title: item.title),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-    );
-  }
-
-  void _showAddDialog(BuildContext context, WidgetRef ref) {
-    final urlController = TextEditingController();
-    final titleController = TextEditingController();
-
-    showAppDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(S.current.myBrowser_addManually),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: urlController,
-              autofocus: true,
-              keyboardType: TextInputType.url,
-              decoration: InputDecoration(
-                labelText: S.current.myBrowser_inputUrl,
-                hintText: 'https://',
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(
-                labelText: S.current.myBrowser_inputTitle,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(S.current.common_cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              var url = urlController.text.trim();
-              if (url.isEmpty) return;
-              if (!url.startsWith('http://') &&
-                  !url.startsWith('https://')) {
-                url = 'https://$url';
-              }
-              ref.read(webBookmarkProvider.notifier).add(
-                    WebBookmark(
-                      url: url,
-                      title: titleController.text.trim(),
-                      createdAt: DateTime.now(),
-                    ),
-                  );
-              Navigator.pop(ctx);
-            },
-            child: Text(S.current.common_confirm),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditDialog(
-      BuildContext context, WidgetRef ref, WebBookmark item) {
-    final titleController = TextEditingController(text: item.title);
-
-    showAppDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(S.current.myBrowser_editTitle),
-        content: TextField(
-          controller: titleController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: S.current.myBrowser_inputTitle,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(S.current.common_cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final notifier = ref.read(webBookmarkProvider.notifier);
-              notifier.removeByUrl(item.url);
-              notifier.add(WebBookmark(
-                url: item.url,
-                title: titleController.text.trim(),
-                createdAt: item.createdAt,
-              ));
-              Navigator.pop(ctx);
-            },
-            child: Text(S.current.common_confirm),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDelete(
-      BuildContext context, WidgetRef ref, WebBookmark item) {
-    showAppDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(S.current.myBrowser_delete),
-        content: Text(S.current.myBrowser_confirmDelete),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(S.current.common_cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              ref
-                  .read(webBookmarkProvider.notifier)
-                  .removeByUrl(item.url);
-              Navigator.pop(ctx);
-            },
-            style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(ctx).colorScheme.error),
-            child: Text(S.current.myBrowser_delete),
-          ),
-        ],
       ),
     );
   }
@@ -582,83 +375,6 @@ class _HistoryCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         TimeUtils.formatRelativeTime(item.visitedAt),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Icon(Symbols.chevron_right_rounded,
-                color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 收藏卡片 — 不包 Card，由外层 SwipeActionCell 提供容器
-class _BookmarkCard extends StatelessWidget {
-  final WebBookmark item;
-  final VoidCallback onTap;
-
-  const _BookmarkCard({required this.item, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final uri = Uri.tryParse(item.url);
-    final host = uri?.host ?? '';
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Symbols.language_rounded,
-                color: theme.colorScheme.primary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.title.isNotEmpty ? item.title : item.url,
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          host.isNotEmpty ? host : item.url,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        TimeUtils.formatRelativeTime(item.createdAt),
                         style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 11),

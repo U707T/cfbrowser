@@ -8,8 +8,8 @@ import 'app_startup.dart';
 /// 直接 push 话题页、或用户在站内浏览器里打开 linux.do，都不经过 MainPage，
 /// 以前这些路径会一直拿不到预热过的会话。
 ///
-/// [AppStartup.launch] 自身幂等（`_launched`），[leaveStandby] 也共享同一个
-/// Future，所以三处调用（首页、站内 WebView、深链）重复触发没有副作用。
+/// [AppStartup.launch] 只做一次会话接线与 priming；预加载仍在进行时不会
+/// 重复启动，失败后可由下次入口重试。结束待命的并发调用共享同一个 Future。
 Future<void> ensureForumNetworkReady({String reason = 'browser'}) async {
   await NetworkSettingsService.instance.leaveStandby();
   AppStartup.instance.launch(reason: reason);

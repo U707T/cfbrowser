@@ -209,6 +209,12 @@ class SegmentedDownloader {
     _segmentSize = plan.segments.first.length;
     _total = plan.total;
     _validator = probe.validator;
+    if (_validator == null) {
+      // 213 个分段各用 If-Range 的前提是有一个强验证器。没有 ETag /
+      // Last-Modified 时，并发分段可能各自拿到不同版本、拼出混合文件；
+      // 交给调用方回退单连接。
+      throw const SegmentedDownloadUnsupported('响应缺少 ETag/Last-Modified 验证器');
+    }
     _minWorkers = plan.minWorkers;
     _maxWorkers = plan.maxWorkers;
     _targetWorkers = plan.initialWorkers;
@@ -286,6 +292,14 @@ class SegmentedDownloader {
     );
   }
 
+  /// 返回可用于 If-Range 的强 ETag；其余（缺失、弱 ETag）返回 null。
+  static String? _strongEtag(String? value) {
+    if (value == null) return null;
+    final trimmed = value.trim();
+    if (trimmed.isEmpty || trimmed.startsWith('W/')) return null;
+    return trimmed;
+  }
+
   Future<_ProbeResult?> _probe() async {
     final probeToken = CancelToken();
     final caller = _callerCancelToken;
@@ -338,9 +352,9 @@ class SegmentedDownloader {
       }
       return _ProbeResult(
         total: contentRange.total,
-        validator:
-            response.headers.value('etag') ??
-            response.headers.value('last-modified'),
+        // 只有强 ETag 能安全用于 If-Range：Last-Modified 只有秒级精度，
+        // 弱 ETag（W/ 前缀）按规范也不得用于 If-Range。
+        validator: _strongEtag(response.headers.value('etag')),
       );
     } catch (error) {
       if (error is DioException && error.type == DioExceptionType.cancel) {
@@ -366,8 +380,7 @@ class SegmentedDownloader {
           'Range': 'bytes=${segment.start}-${segment.end}',
           'Accept-Encoding': 'identity',
         };
-        final validator = _validator;
-        if (validator != null) headers['If-Range'] = validator;
+        headers['If-Range'] = _validator!;
 
         final response = await _dio.get<ResponseBody>(
           _url,
@@ -415,14 +428,10 @@ class SegmentedDownloader {
           await _closeBody(body);
           throw const SegmentedDownloadUnsupported('分段响应被压缩');
         }
-        // If-Range 只是请求头，服务端可以选择忽略。这里再核对一次
-        // ETag/Last-Modified，避免文件在下载途中被替换后拼出新旧混合内容。
-        final responseValidator =
-            response.headers.value('etag') ??
-            response.headers.value('last-modified');
-        if (_validator != null &&
-            responseValidator != null &&
-            responseValidator != _validator) {
+        // If-Range 只是请求头，服务端可以选择忽略。这里再核对一次强
+        // ETag，避免文件在下载途中被替换后拼出新旧混合内容。
+        final responseValidator = _strongEtag(response.headers.value('etag'));
+        if (responseValidator != _validator) {
           await _closeBody(body);
           throw const SegmentedDownloadUnsupported('文件在下载过程中发生变化');
         }

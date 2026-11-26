@@ -5,22 +5,16 @@
 
 # cfbrowser
 
-> 面向国内网络环境的 [Linux.do](https://linux.do/) 第三方 Android 客户端（另有 Windows / Linux 桌面预览版），基于 [FluxDO](https://github.com/Lingyan000/fluxdo) 独立发行
+> 基于 [CFluxDo](https://github.com/1molchuan/CFluxDo) 的 Android 浏览器，保留 Linux.do 论坛入口，并提供可配置的加速范围。Windows 和 Linux 是源码预览目标。
 
-[![GitHub Release](https://img.shields.io/github/v/release/1molchuan/fluxdo?style=for-the-badge&logo=github&label=GitHub%20Releases)](https://github.com/1molchuan/fluxdo/releases)
-[![Platform](https://img.shields.io/badge/platform-Android%20arm64%20%7C%20Windows%20%7C%20Linux-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/1molchuan/fluxdo/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/U707T/cfbrowser?style=for-the-badge&logo=github&label=GitHub%20Releases)](https://github.com/U707T/cfbrowser/releases)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=for-the-badge)](LICENSE)
-
-cfluxdo 源自 FluxDO 0.2.28，已脱离 fork 关系独立维护，并持续同步上游（目前到 v0.2.29）。它保留了 FluxDO 的全部论坛功能，重点解决国内网络下访问 linux.do 时遇到的 DNS 污染、频繁弹 Cloudflare 验证、无征兆掉登录等问题。以 Android 为主，Windows、Linux 桌面端为预览版。
 
 ## 下载安装
 
-- 到 [Releases](https://github.com/1molchuan/fluxdo/releases) 下载对应平台和架构的安装包，旁边有同名的 `.sha256` 校验文件：
-  - `cfluxdo-<版本>-arm64-v8a.apk`：64 位 ARM，2015 年以后的手机几乎都是，优先选这个。
-  - `cfluxdo-<版本>-windows-x86_64.zip`：Windows 10/11 64 位桌面预览版，解压后运行 `cfluxdo.exe`，需要 WebView2 运行时（Windows 11 自带）。没有代码签名，第一次运行如果出现「Windows 已保护你的电脑」，点「更多信息 → 仍要运行」。
-  - `cfluxdo-<版本>-linux-x86_64.flatpak`：Linux 桌面预览版，`flatpak install --user <文件名>` 安装，第一次会从 Flathub 下载 GNOME 运行时。
-- 包名是 `com.github.molchuan.cfluxdo`，与官方 FluxDO 不同：两者可以并存，但不能互相覆盖安装，登录态和设置也互不相通。
-- 应用内「关于 → 检查更新」会从本仓库的 Releases 获取正式版：Android 按手机架构挑选安装包在应用内下载；桌面版只提示并打开下载页面。
+- 到 [cfbrowser Releases](https://github.com/U707T/cfbrowser/releases) 下载 `cfbrowser-arm64-v8a.apk`。正式版目前仅提供 Android arm64；下载后可用同名 `.sha256` 文件检查。
+- Android 包名是 `com.github.molchuan.cfbrowser`，可与 FluxDO 和 CFluxDo 并存，互不覆盖。1.2.1 及更早的 cfbrowser 采用不同签名，升级到 1.2.2 前请先备份数据，再卸载旧版；正常覆盖升级不需要卸载。
+- 应用内「关于 → 检查更新」只查询本项目正式版，应用内安装前会校验 APK 摘要。桌面预览仅提示并打开发布页面。
 
 ## 它怎么连接 linux.do
 

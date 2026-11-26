@@ -59,7 +59,14 @@ jobs:
             test/services/browser_quick_links_service_test.dart \
             test/services/browser_tabs_service_test.dart \
             test/services/segmented_download_test.dart \
-            test/services/proxy_leaf_trust_test.dart
+            test/services/proxy_leaf_trust_test.dart \
+            test/services/web_bookmark_provider_test.dart \
+            test/services/startup/app_startup_test.dart \
+            test/services/startup/offline_preload_resume_test.dart \
+            test/services/network/interceptors/error_interceptor_test.dart \
+            test/services/update_service_abi_test.dart \
+            test/services/bookmark_transfer_test.dart \
+            test/services/browser_search_engine_test.dart
 
   build-android:
     runs-on: ubuntu-latest

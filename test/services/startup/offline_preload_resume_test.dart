@@ -24,69 +24,64 @@ import 'app_startup_fakes.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test(
-    '离线期间直连按原节奏重试并失败，回退请求被切网掐断后重放成功：不用点重试就进到会话判定',
-    () async {
-      final adapter = _TimelineAdapter([
-        // 直连：离线，本地网关回 502（与旧版相同：首发 + 3 次退避）
-        _Step.offline,
-        _Step.offline,
-        _Step.offline,
-        _Step.offline,
-        // 回退直连：网络刚恢复，蜂窝 → Wi-Fi 切换掐断连接
-        _Step.droppedByHandover,
-        // 1 s 后重放：走 Wi-Fi，成功
-        _Step.ok,
-      ]);
-      final dio = DiscourseDio.create(
-        kind: DiscourseDioKind.api,
-        enableCookies: false,
-      )..httpClientAdapter = adapter;
+  test('离线期间直连按原节奏重试并失败，回退请求被切网掐断后重放成功：不用点重试就进到会话判定', () async {
+    final adapter = _TimelineAdapter([
+      // 直连：离线，本地网关回 502（与旧版相同：首发 + 3 次退避）
+      _Step.offline,
+      _Step.offline,
+      _Step.offline,
+      _Step.offline,
+      // 回退直连：网络刚恢复，蜂窝 → Wi-Fi 切换掐断连接
+      _Step.droppedByHandover,
+      // 1 s 后重放：走 Wi-Fi，成功
+      _Step.ok,
+    ]);
+    final dio = DiscourseDio.create(
+      kind: DiscourseDioKind.api,
+      enableCookies: false,
+    )..httpClientAdapter = adapter;
 
-      final ports = FakeStartupPorts(preloadedUser: aliceJson)
-        ..preloadBody = () async {
-          // 与 BrowserTrust 的预加载同构：直连失败 → （启动期 WebView，此处
-          // 不参与）→ 回退直连，回退再失败才是终局失败
-          try {
-            await dio.get<String>('https://linux.do/');
-            fail('离线时直连不应成功');
-          } on DioException catch (e) {
-            expect(e.response?.statusCode, 502);
-          }
+    final ports = FakeStartupPorts(preloadedUser: aliceJson)
+      ..preloadBody = () async {
+        // 与 BrowserTrust 的预加载同构：直连失败 → （启动期 WebView，此处
+        // 不参与）→ 回退直连，回退再失败才是终局失败
+        try {
           await dio.get<String>('https://linux.do/');
-        };
-      final startup = AppStartup(ports: ports)
-        ..registerPostLogin(FakePostLoginStart(ports.log));
-      startup.storesReady();
-      startup.launch();
+          fail('离线时直连不应成功');
+        } on DioException catch (e) {
+          expect(e.response?.statusCode, 502);
+        }
+        await dio.get<String>('https://linux.do/');
+      };
+    final startup = AppStartup(ports: ports)
+      ..registerPostLogin(FakePostLoginStart(ports.log));
+    startup.storesReady();
+    startup.launch();
 
-      // 启动页只等 ensurePreloaded：不会以错误结束
-      await startup.ensurePreloaded(reason: 'preheat_gate');
-      await Future<void>.delayed(Duration.zero);
+    // 启动页只等 ensurePreloaded：不会以错误结束
+    await startup.ensurePreloaded(reason: 'preheat_gate');
+    await Future<void>.delayed(Duration.zero);
 
-      // 没有任何用户操作就走到了会话判定与登录后启动项
-      expect(ports.log, isNot(contains('preload:failed')));
-      expect(startup.isLoggedIn, isTrue);
-      expect(startup.verdictNow?.user?.username, 'alice');
-      expect(ports.log, contains('message_bus:start'));
-      expect(ports.log.where((e) => e == 'preload'), hasLength(1));
+    // 没有任何用户操作就走到了会话判定与登录后启动项
+    expect(ports.log, isNot(contains('preload:failed')));
+    expect(startup.isLoggedIn, isTrue);
+    expect(startup.verdictNow?.user?.username, 'alice');
+    expect(ports.log, contains('message_bus:start'));
+    expect(ports.log.where((e) => e == 'preload'), hasLength(1));
 
-      // 尝试次数与节奏：直连 4 次（间隔 1 / 2 / 4 s，与旧版一致），回退 2 次
-      // （被掐断后 1 s 重放）
-      expect(adapter.calls, hasLength(6));
-      final gaps = <double>[
-        for (var i = 1; i < adapter.calls.length; i++)
-          adapter.calls[i].difference(adapter.calls[i - 1]).inMilliseconds /
-              1000,
-      ];
-      expect(gaps[0], closeTo(1, 0.5));
-      expect(gaps[1], closeTo(2, 0.5));
-      expect(gaps[2], closeTo(4, 0.5));
-      // gaps[3] 是直连失败到回退直连之间（真机上是 WebView 阶段），不约束
-      expect(gaps[4], closeTo(1, 0.5));
-    },
-    timeout: const Timeout(Duration(seconds: 60)),
-  );
+    // 尝试次数与节奏：直连 4 次（间隔 1 / 2 / 4 s，与旧版一致），回退 2 次
+    // （被掐断后 1 s 重放）
+    expect(adapter.calls, hasLength(6));
+    final gaps = <double>[
+      for (var i = 1; i < adapter.calls.length; i++)
+        adapter.calls[i].difference(adapter.calls[i - 1]).inMilliseconds / 1000,
+    ];
+    expect(gaps[0], closeTo(1, 0.5));
+    expect(gaps[1], closeTo(2, 0.5));
+    expect(gaps[2], closeTo(4, 0.5));
+    // gaps[3] 是直连失败到回退直连之间（真机上是 WebView 阶段），不约束
+    expect(gaps[4], closeTo(1, 0.5));
+  }, timeout: const Timeout(Duration(seconds: 60)));
 
   test('网络一直不回来：回退直连按原节奏重试后失败，错误页照旧出现', () async {
     final adapter = _TimelineAdapter([_Step.offline]);
@@ -105,7 +100,11 @@ void main() {
       throwsA(isA<DioException>()),
     );
     expect(adapter.calls, hasLength(4), reason: '首发 + 3 次退避，与旧版相同');
-    expect(startup.verdictNow, isNull);
+    expect(
+      (await startup.verdict()).source,
+      SessionVerdictSource.storedSession,
+    );
+    expect(ports.storedSessionChecks, 1);
     expect(ports.log, contains('preload:failed'));
   }, timeout: const Timeout(Duration(seconds: 60)));
 }

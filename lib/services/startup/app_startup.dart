@@ -182,6 +182,7 @@ class AppStartup {
   bool _launched = false;
   String _launchReason = 'startup';
   Future<void>? _activePreload;
+  bool _preloadSucceeded = false;
   bool _warmedUp = false;
   StartupPreloadPath? _preloadPath;
 
@@ -210,12 +211,18 @@ class AppStartup {
     _attachSessionHooks();
   }
 
-  /// 阶段 3→6：网络栈（DoH / 代理 / VPN）落定后由 main() 调用，不阻塞 runApp。
+  /// 首次需要论坛网络时调用，不阻塞界面。
   ///
-  /// priming 与预加载并行开始（与以前一致）；预加载成功后在后台做会话判定，
-  /// 判定为已登录再启动登录后启动项。
+  /// priming 与预加载并行开始；预加载结束后在后台判定会话。重新进入论坛
+  /// 可以重试失败的预加载，但不会重复接线或 priming。
   void launch({String reason = 'startup'}) {
-    if (_launched) return;
+    if (_launched) {
+      if (!_preloadSucceeded && _activePreload == null) {
+        _launchReason = reason;
+        _preloadInBackground(reason);
+      }
+      return;
+    }
     _launched = true;
     _launchReason = reason;
     if (!_hooksAttached) {
@@ -228,13 +235,16 @@ class AppStartup {
     _authSub ??= _ports.authStateChanges.listen((_) => _onAuthStateChanged());
     _enter(StartupPhase.prime);
     _ports.prime(reason: reason);
+    _preloadInBackground(reason);
+  }
+
+  void _preloadInBackground(String reason) {
     unawaited(ensurePreloaded(reason: reason).catchError((Object _) {}));
   }
 
-  /// 预加载（复用进行中的那次）+ 预热；第一次成功后开始会话判定。
+  /// 预加载（复用进行中的那次）+ 预热；首次尝试结束后开始会话判定。
   ///
-  /// 失败时抛错（启动页显示错误与重试）。会话判定不在这个 Future 里：
-  /// 启动页只等预加载，与以前一致。
+  /// 失败仍抛给等待预加载的调用方，但会话判定独立回退至本地会话检查。
   Future<void> ensurePreloaded({String reason = 'unknown'}) {
     final active = _activePreload;
     if (active != null) return active;
@@ -256,11 +266,20 @@ class AppStartup {
           progress: ReporterPreloadProgress(_reporter),
         );
         _preloadPath = path ?? _preloadPath;
+      } catch (error) {
+        _log(
+          'startup preload failed: reason=$reason type=${error.runtimeType}',
+          warning: true,
+        );
+        _startStartupVerdict();
+        rethrow;
       } finally {
         // 无论成功失败都清掉启动页状态，避免手动重试时先显示旧阶段
         _reporter.clear();
       }
     }
+    final refreshVerdict = !_preloadSucceeded && _startupVerdictStarted;
+    _preloadSucceeded = true;
     if (!_warmedUp) {
       _warmedUp = true;
       try {
@@ -269,7 +288,13 @@ class AppStartup {
         _log('afterPreload failed: $e', warning: true);
       }
     }
-    _startStartupVerdict();
+    if (refreshVerdict && _ports.preloadedUserJson != null) {
+      // 补上首次未拿到的当前用户，并让尚未完成的旧会话检查失效。
+      _epoch++;
+      _resolveInBackground(reason: _launchReason);
+    } else {
+      _startStartupVerdict();
+    }
   }
 
   void _startStartupVerdict() {
@@ -277,8 +302,14 @@ class AppStartup {
     _startupVerdictStarted = true;
     _enter(StartupPhase.sessionVerdict);
     _authSub ??= _ports.authStateChanges.listen((_) => _onAuthStateChanged());
-    final future = _resolve(reason: _launchReason, startup: true);
+    _resolveInBackground(reason: _launchReason, startup: true);
     _startupVerdictReady.complete();
+  }
+
+  void _resolveInBackground({required String reason, bool startup = false}) {
+    final future = Future<SessionVerdict>.sync(
+      () => _resolve(reason: reason, startup: startup),
+    );
     unawaited(
       future.then<void>(
         (_) {},
@@ -308,7 +339,7 @@ class AppStartup {
 
   /// 当前登录态纪元的判定。
   ///
-  /// 冷启动时等启动序列自己的判定（预加载完成后才开始，不另起一次）；之后
+  /// 冷启动时等启动序列自己的判定（预加载结束后才开始，不另起一次）；之后
   /// 复用本纪元已有的判定。登录成功 / 登出广播会开启新纪元并重新判定。
   Future<SessionVerdict> verdict() {
     final r = _resolution;
@@ -316,7 +347,7 @@ class AppStartup {
     if (_launched && !_startupVerdictStarted) {
       return _startupVerdictReady.future.then((_) => verdict());
     }
-    return _resolve(reason: 'verdict');
+    return Future.sync(() => _resolve(reason: 'verdict'));
   }
 
   void _onAuthStateChanged() {

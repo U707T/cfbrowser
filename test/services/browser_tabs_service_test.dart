@@ -155,4 +155,63 @@ void main() {
     expect(service.tabs.value.map((tab) => tab.id), contains(normal.id));
     expect(service.tabs.value.any((tab) => tab.isPrivate), isFalse);
   });
+
+  test('重新打开最近关闭的标签：恢复地址、桌面版与 URL 历史', () {
+    final tab = service.create(url: 'https://example.com/a');
+    service.recordNavigation(tab.id, 'https://example.com/b');
+    service.setDesktopMode(tab.id, true);
+    service.updateTitle(tab.id, '标题');
+    expect(service.recentlyClosedCount.value, 0);
+
+    service.close(tab.id);
+    expect(service.tabs.value, isEmpty);
+    expect(service.recentlyClosedCount.value, 1);
+
+    final reopened = service.reopenLastClosed()!;
+    expect(reopened.url, 'https://example.com/b');
+    expect(reopened.title, '标题');
+    expect(reopened.desktopMode, isTrue);
+    expect(reopened.history, <String>[
+      'https://example.com/a',
+      'https://example.com/b',
+    ]);
+    expect(reopened.historyIndex, 1);
+    expect(service.activeTabId.value, reopened.id);
+    expect(service.reopenLastClosed(), isNull);
+  });
+
+  test('重新打开时复用当前空标签页，无痕标签与空标签不进关闭栈', () {
+    final blank = service.create();
+    service.create(url: 'https://example.com/a', isPrivate: true);
+    service.close(service.tabs.value.last.id);
+    expect(service.recentlyClosedCount.value, 0);
+
+    service.close(blank.id);
+    expect(service.recentlyClosedCount.value, 0);
+
+    final kept = service.create(url: 'https://example.com/b');
+    service.create();
+    expect(service.tabs.value.length, 2);
+    service.close(kept.id);
+    final before = service.tabs.value.length;
+    final reopened = service.reopenLastClosed()!;
+    expect(reopened.url, 'https://example.com/b');
+    // 空标签被这次恢复占用，没有再额外新增一个标签。
+    expect(service.tabs.value.length, before);
+    expect(service.tabs.value.where((item) => item.url.isEmpty), isEmpty);
+    expect(service.activeTabId.value, reopened.id);
+  });
+
+  test('全部关闭后可以按关闭顺序逐个恢复（后关的先恢复）', () {
+    final first = service.create(url: 'https://example.com/1');
+    service.create(url: 'https://example.com/2');
+    service.closeAll();
+    expect(service.tabs.value, isEmpty);
+    expect(first.id, isNotEmpty);
+    expect(service.recentlyClosedCount.value, 2);
+
+    expect(service.reopenLastClosed()!.url, 'https://example.com/2');
+    expect(service.reopenLastClosed()!.url, 'https://example.com/1');
+    expect(service.reopenLastClosed(), isNull);
+  });
 }

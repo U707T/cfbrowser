@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
+import '../discourse_error_message.dart';
 import '../exceptions/api_exception.dart';
 import 'recovery_policy.dart';
 import 'retry_after.dart';
@@ -65,20 +66,11 @@ class RateLimitPolicy implements RecoveryPolicy {
       err.copyWith(
         error: RateLimitException(
           waitSeconds,
-          _errorMessageOf(err.response),
+          extractDiscourseErrorMessage(err.response?.data),
           err.response,
         ),
       ),
     );
-  }
-
-  static String? _errorMessageOf(Response<dynamic>? response) {
-    final data = response?.data;
-    if (data is Map<String, dynamic>) {
-      return data['error'] as String? ??
-          (data['errors'] as List?)?.firstOrNull?.toString();
-    }
-    return null;
   }
 }
 
