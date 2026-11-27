@@ -13,6 +13,7 @@ import '../constants.dart';
 import '../models/browser_tab.dart';
 import '../services/browser/browser_scope_service.dart';
 import '../services/browser/browser_tabs_service.dart';
+import '../services/browser/browser_predictive_back.dart';
 import '../services/browser/browser_search_engine.dart';
 import '../services/browser/browser_url.dart';
 import '../services/network/doh/network_settings_service.dart';
@@ -144,6 +145,13 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   /// 没消费掉就说明这次遍历没成功，后续导航仍按新导航处理。
   String? _pendingTraversalTarget;
 
+  /// Android 预测返回手势接管。
+  ///
+  /// 有网页历史时 `PopScope.canPop` 为 false，框架与本仓的「全屏侧滑返回」
+  /// 都据此放弃认领手势（见 [BrowserPredictiveBack] 的类注释），因此这里
+  /// 自己认领，把系统手势映射成浏览器后退。
+  late final BrowserPredictiveBack _predictiveBack;
+
   /// 主文档加载失败时的提示（null 表示当前没有错误页）。
   ///
   /// 只认主框架的失败：图片、统计脚本、广告位这类子资源失败是常态，
@@ -219,12 +227,28 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
 
     // 可见 WebView(hybrid composition)在位期间会参与每帧合成,
     // 打点让诊断时间轴能对齐"WebView 页在前台"与掉帧段
+    _predictiveBack = BrowserPredictiveBack(
+      isEnabled: _canSwipeBack,
+      onBack: () => unawaited(_handleBackNavigation()),
+    )..attach();
+
     FrameJankMonitor.logEvent('WEBVIEW', 'WebViewPage mount');
+  }
+
+  /// 系统返回手势是否应由本页接管：有网页历史或标签历史可回退。
+  ///
+  /// 只在同一个函数里判定，认领与提交共用，避免出现「认领了却什么都不做」。
+  bool _canSwipeBack() {
+    if (_isPopup) return false;
+    if (webViewRenderGone) return false;
+    if (_controller == null) return false;
+    return (_canGoBack || (_tabs.byId(_tabId)?.canGoBack ?? false));
   }
 
   @override
   void dispose() {
     FrameJankMonitor.logEvent('WEBVIEW', 'WebViewPage dispose');
+    _predictiveBack.dispose();
     _tabs.tabs.removeListener(_onTabsChanged);
     _sessionTokenReconcileTimer?.cancel();
     _sessionTokenReconcileTimer = null;
@@ -1109,31 +1133,61 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
   Future<void> _goBack() async {
     final controller = _controller;
     if (controller == null) return;
-    if (await controller.canGoBack()) {
+    // 渲染进程退出后 controller 已摘掉，历史查询会抛平台异常；
+    // 这里兜住并回落到标签级历史，避免手势/返回键直接变成未处理错误。
+    bool canGoBack = false;
+    try {
+      canGoBack = await controller.canGoBack();
+    } catch (e) {
+      debugPrint('[WebViewPage] 读取后退状态失败: $e');
+    }
+    if (canGoBack) {
       // 告诉 recordNavigation 这一次是遍历而不是新导航。
       _pendingTraversalTarget = _tabs.byId(_tabId)?.backUrl;
-      await controller.goBack();
+      try {
+        await controller.goBack();
+      } catch (e) {
+        debugPrint('[WebViewPage] 网页后退失败: $e');
+      }
       return;
     }
     final url = _tabs.stepBack(_tabId);
     if (url != null) {
       _pendingTraversalTarget = null;
-      await controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+      try {
+        await controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+      } catch (e) {
+        debugPrint('[WebViewPage] 标签历史后退失败: $e');
+      }
     }
   }
 
   Future<void> _goForward() async {
     final controller = _controller;
     if (controller == null) return;
-    if (await controller.canGoForward()) {
+    bool canGoForward = false;
+    try {
+      canGoForward = await controller.canGoForward();
+    } catch (e) {
+      debugPrint('[WebViewPage] 读取前进状态失败: $e');
+    }
+    if (canGoForward) {
       _pendingTraversalTarget = _tabs.byId(_tabId)?.forwardUrl;
-      await controller.goForward();
+      try {
+        await controller.goForward();
+      } catch (e) {
+        debugPrint('[WebViewPage] 网页前进失败: $e');
+      }
       return;
     }
     final url = _tabs.stepForward(_tabId);
     if (url != null) {
       _pendingTraversalTarget = null;
-      await controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+      try {
+        await controller.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+      } catch (e) {
+        debugPrint('[WebViewPage] 标签历史前进失败: $e');
+      }
     }
   }
 
@@ -1591,7 +1645,13 @@ class _WebViewPageState extends ConsumerState<WebViewPage>
       if (mounted) Navigator.of(context).pop();
       return;
     }
-    if (await controller.canGoBack()) {
+    bool canGoBack = false;
+    try {
+      canGoBack = await controller.canGoBack();
+    } catch (e) {
+      debugPrint('[WebViewPage] 读取后退状态失败: $e');
+    }
+    if (canGoBack) {
       // 走 _goBack：它会记下这次遍历的目标 URL，标签历史才不会把「后退」
       // 当成一次新导航（那会截断前进栈）
       await _goBack();

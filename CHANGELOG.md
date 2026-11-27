@@ -2,6 +2,35 @@
 
 所有版本的变更记录。beta / rc 版本提交在 stable 发版时会折叠并入对应 stable 版本。
 
+## [1.3.1] - 2026-11-27
+
+### ↩️ 修复：网页里的手势返回没有反应
+
+- **现象**：网页有后退历史时，右滑返回既不走网页后退，也不退出页面。
+- **根因**：`WebViewPage` 用 `PopScope(canPop: false)` 拦住系统返回，以便「返回键先退网页」。
+  这会让路由的 `popGestureEnabled` 与 `popDisposition` 一起变成不可 pop，框架据此
+  不给该路由挂预测返回探测器；而 `FullscreenSwipeBackTransitionsBuilder` 也以
+  `popGestureEnabled` 为闸门，并且命中 WebView 平台视图时本来就主动弃权。两条认领
+  路径同时失效。
+- **修复**：新增 `lib/services/browser/browser_predictive_back.dart`，浏览器页按
+  `PredictiveBackOverlayHandler` 的同一套 observer 协议自行认领系统返回手势：
+  有网页历史或标签历史时右滑即后退，提交时走与返回键相同的 `_handleBackNavigation`；
+  无历史时返回 false 交回框架，保留系统原有的整页退出动画。
+- **防呆**：认领与提交共用同一个 `_canSwipeBack()` 判定，避免「认领了却什么都不做」；
+  手势活跃期重发 start 视为同一手势；锁屏/进后台自己收尾，避免
+  `userGestureInProgress` 卡住导致手势永久失效。
+
+### 🛡 加固：前进/后退的异常处理
+
+- `_goBack` / `_goForward` / `_handleBackNavigation` 的 `canGoBack()` 等平台查询加
+  try/catch：WebView 渲染进程被系统回收后，按返回不再抛未处理异常，统一回落到
+  标签级历史。
+
+### 📝 文档
+
+- 新增 `docs/missing-features.md`：逐项列出仍缺的浏览体验、平台兼容、网络层与工程
+  验证事项，并给出优先级建议。
+
 ## [1.3.0] - 2026-11-26
 
 > 逐文件细节、验证记录与仍未实现的部分见 [docs/release-1.3.0-detailed.md](docs/release-1.3.0-detailed.md)。

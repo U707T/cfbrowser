@@ -66,7 +66,8 @@ jobs:
             test/services/network/interceptors/error_interceptor_test.dart \
             test/services/update_service_abi_test.dart \
             test/services/bookmark_transfer_test.dart \
-            test/services/browser_search_engine_test.dart
+            test/services/browser_search_engine_test.dart \
+            test/services/browser_predictive_back_test.dart
 
   build-android:
     runs-on: ubuntu-latest
