@@ -4,6 +4,8 @@
 
 ## [1.3.0] - 2026-11-26
 
+> 逐文件细节、验证记录与仍未实现的部分见 [docs/release-1.3.0-detailed.md](docs/release-1.3.0-detailed.md)。
+
 ### ⭐ 书签：可搜索、可导入导出
 
 - 新增 `lib/pages/bookmark_list_page.dart`：标题 / 网址搜索，左滑改名、分享、删除；
