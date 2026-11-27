@@ -202,7 +202,7 @@ HTML 导出示例：
 | `test/services/startup/app_startup_test.dart` | +58 −22 | 新增预加载失败相关用例 |
 | `test/services/startup/offline_preload_resume_test.dart` | +58 −59 | 调整到新语义 |
 | `.github/workflows/ci.yml` | +8 −1 | 定向测试清单补齐 |
-| `CHANGELOG.md` | +42 | 1.3.0 条目 |
+| `CHANGELOG.md` | +43 | 1.3.0 条目 + 详细日志链接 |
 | `README.md` | +5 −11 | 下载与升级说明改为本项目 |
 | `docs/cfbrowser.md` | +1 −3 | 子模块基线描述纠正 |
 | `docs/browser-audit-2026-11-23.md` | +53 | 审查与验收清单 |
@@ -224,9 +224,11 @@ CI（GitHub Actions）：
 | 运行 | 触发 | 结果 |
 | --- | --- | --- |
 | [45852570114](https://github.com/U707T/cfbrowser/actions/runs/45852570114) | tag `v1.3.0` | analyze-and-test ✅ / build-android ✅ / 签名校验 ✅ / 发布 ✅ |
-| [45852493761](https://github.com/U707T/cfbrowser/actions/runs/45852493761) | push `main` | ✅（`Create release` 因非 tag 跳过） |
-| CI（`e318254`） | push `main` | ✅ |
+| [45852493761](https://github.com/U707T/cfbrowser/actions/runs/45852493761) | push `main`（`7a73f90`） | analyze-and-test ✅ / build-android ✅（`Create release` 因非 tag 跳过） |
+| 未记录编号 | push `main`（`e318254`） | ✅ |
 | [45930792475](https://github.com/U707T/cfbrowser/actions/runs/45930792475) | push `main`（`384d0e3`） | analyze-and-test ✅ / build-android ✅ |
+| [45933033365](https://github.com/U707T/cfbrowser/actions/runs/45933033365) | push `main`（`13d7177`） | analyze-and-test ✅ / build-android ✅ |
+| [45934924116](https://github.com/U707T/cfbrowser/actions/runs/45934924116) | push `main`（`7735963`） | analyze-and-test ✅ / build-android ✅ |
 
 签名校验比对的是固定发布密钥的 SHA-256，不是 debug 证书，说明这一版可以覆盖升级 1.2.2。
 
@@ -254,10 +256,13 @@ CI（GitHub Actions）：
 ## 十四、提交历史
 
 ```text
+7735963 📝 CHANGELOG 链接 1.3.0 详细日志并修正提交指向
 13d7177 📝 补 1.3.0 详细更新日志
 384d0e3 🎨 统一换行符为 LF
 e318254 📝 审查报告同步 1.3.0 已发布状态
 7a73f90 ✨ 浏览器能力补齐与书签导入导出（1.3.0）   ← tag v1.3.0
 ```
+
+APK 由 tag 指向的 `7a73f90` 构建，之后四个提交只改文档，不影响已验证的产物；它们仍各自跑过一遍 CI 编译与定向测试。
 
 `384d0e3` 说明：1.3.0 的首次提交把 8 个文件以 CRLF 写回，与仓库其余部分的 LF 不一致，会让这些文件在 diff / blame 里显示为整份重写。该提交只做换行归一，内容未变，diff 规模从 +5247 / −3474 降到 +2710 / −937。
