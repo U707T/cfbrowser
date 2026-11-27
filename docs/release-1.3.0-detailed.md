@@ -229,6 +229,9 @@ CI（GitHub Actions）：
 | [45930792475](https://github.com/U707T/cfbrowser/actions/runs/45930792475) | push `main`（`384d0e3`） | analyze-and-test ✅ / build-android ✅ |
 | [45933033365](https://github.com/U707T/cfbrowser/actions/runs/45933033365) | push `main`（`13d7177`） | analyze-and-test ✅ / build-android ✅ |
 | [45934924116](https://github.com/U707T/cfbrowser/actions/runs/45934924116) | push `main`（`7735963`） | analyze-and-test ✅ / build-android ✅ |
+| [45936954803](https://github.com/U707T/cfbrowser/actions/runs/45936954803) | push `main`（`d5c114a`） | analyze-and-test ✅ / build-android ✅ |
+
+`95eb6ad` 那次运行显示 `cancelled`，是被紧随其后的 `d5c114a` 按 `concurrency: cancel-in-progress` 取消，不是失败；同一批内容在 `d5c114a` 上重新跑过并通过。
 
 签名校验比对的是固定发布密钥的 SHA-256，不是 debug 证书，说明这一版可以覆盖升级 1.2.2。
 
@@ -256,6 +259,8 @@ CI（GitHub Actions）：
 ## 十四、提交历史
 
 ```text
+d5c114a 📝 修正搜索引擎可达性表述
+95eb6ad 📝 详细日志补齐 CI 记录与提交历史
 7735963 📝 CHANGELOG 链接 1.3.0 详细日志并修正提交指向
 13d7177 📝 补 1.3.0 详细更新日志
 384d0e3 🎨 统一换行符为 LF
@@ -263,6 +268,6 @@ e318254 📝 审查报告同步 1.3.0 已发布状态
 7a73f90 ✨ 浏览器能力补齐与书签导入导出（1.3.0）   ← tag v1.3.0
 ```
 
-APK 由 tag 指向的 `7a73f90` 构建，之后四个提交只改文档，不影响已验证的产物；它们仍各自跑过一遍 CI 编译与定向测试。
+APK 由 tag 指向的 `7a73f90` 构建，之后五个提交只改文档，不影响已验证的产物；它们仍各自跑过一遍 CI 编译与定向测试。
 
 `384d0e3` 说明：1.3.0 的首次提交把 8 个文件以 CRLF 写回，与仓库其余部分的 LF 不一致，会让这些文件在 diff / blame 里显示为整份重写。该提交只做换行归一，内容未变，diff 规模从 +5247 / −3474 降到 +2710 / −937。
